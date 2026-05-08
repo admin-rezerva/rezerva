@@ -5,15 +5,13 @@ import { renderUnified, setupUnifiedEvents } from './webPublica.general.unified.
 
 let _fullEmpresaData = {};
 
-function _render(empresaData = _fullEmpresaData) {
+async function _render(empresaData = _fullEmpresaData) {
     const container = document.getElementById('general-settings-form');
     if (!container) return;
 
-    // Usar los datos proporcionados o los globales
     const datosParaRender = empresaData || _fullEmpresaData;
 
-    // Siempre mostrar el formulario unificado
-    container.innerHTML = renderUnified(datosParaRender);
+    container.innerHTML = await renderUnified(datosParaRender);
 
     // El callback onComplete se pasa a setupUnifiedEvents
     // Recibe los datos actualizados directamente del backend
@@ -47,7 +45,7 @@ function _render(empresaData = _fullEmpresaData) {
         if (datosActualizados && datosActualizados.id) {
             console.log('🔄 Actualizando datos globales y re-renderizando...');
             _fullEmpresaData = datosActualizados;
-            _render(datosActualizados);
+            await _render(datosActualizados);
 
             // Mostrar mensaje de éxito
             const subdomain = datosActualizados.websiteSettings?.general?.subdomain ||
@@ -76,6 +74,6 @@ export function renderGeneral(empresaData) {
     </div>`;
 }
 
-export function setupGeneralEvents() {
-    _render(_fullEmpresaData);
+export async function setupGeneralEvents() {
+    await _render(_fullEmpresaData);
 }

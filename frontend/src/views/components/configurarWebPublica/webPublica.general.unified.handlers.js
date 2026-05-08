@@ -1,5 +1,6 @@
 // Eventos del formulario unificado (extraído de setupUnifiedEvents).
 
+import { getPlatformDomain, normalizeTenantSubdomain } from '../../../platformConfig.js';
 import { collectHeatmapEventosForSave } from './webPublica.general.unified.heatmapEventosRows.js';
 
 export function bindUnifiedRegen({ attach, fetchAPI, updateGeneratedContent }) {
@@ -242,25 +243,19 @@ export function bindUnifiedSave({
 
 export function bindUnifiedPreview({ attach, empresa }) {
     attach('btn-preview', () => {
-        const subdomainRaw = empresa.websiteSettings?.general?.subdomain
-            || empresa.subdominio
-            || (empresa.nombre || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-        const subdomainConfigurado = (subdomainRaw || '').toLowerCase().replace(/[^a-z0-9-]/g, '');
-
-        if (subdomainConfigurado) {
-            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            if (isLocal) {
-                const url = `http://localhost:3001/?force_host=${subdomainConfigurado}.onrender.com`;
-                console.log(`[Vista Previa] Abriendo: ${url}`);
-                window.open(url, '_blank');
-            } else {
-                const url = `https://${subdomainConfigurado}.onrender.com`;
-                console.log(`[Vista Previa] Abriendo: ${url}`);
-                window.open(url, '_blank');
-            }
-        } else {
-            alert('Primero guarda la configuración para generar el sitio.');
+        const norm = normalizeTenantSubdomain(
+            empresa.websiteSettings?.general?.subdomain || empresa.subdominio || '',
+        );
+        const hostBase = getPlatformDomain();
+        if (!norm || !hostBase) {
+            alert('Configura y guarda un subdominio válido antes de la vista previa.');
+            return;
         }
+        const targetHost = `${norm}.${hostBase}`;
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const origin = isLocal ? 'http://localhost:3001' : window.location.origin;
+        const url = `${origin}/?force_host=${encodeURIComponent(targetHost)}`;
+        window.open(url, '_blank', 'noopener');
     });
 }
 

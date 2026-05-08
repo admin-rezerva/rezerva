@@ -31,7 +31,7 @@ export async function afterRender() {
         const containerGeneral = document.getElementById('contenedor-general');
         if (containerGeneral) {
             containerGeneral.innerHTML = renderGeneral(empresaData || {});
-            setupGeneralEvents();
+            await setupGeneralEvents();
         }
 
     } catch (error) {

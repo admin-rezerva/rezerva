@@ -1,5 +1,5 @@
 // HTML del formulario unificado (extraído para límites de complejidad).
-import { getPlatformDomain, getPlatformDisplayLabel } from '../../../platformConfig.js';
+import { getPlatformDomain, getPlatformDisplayLabel, ensurePlatformConfig, normalizeTenantSubdomain } from '../../../platformConfig.js';
 
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const clean = (v) => (v === undefined || v === null || v === 'undefined') ? '' : v;
@@ -374,14 +374,17 @@ function unifyActionRow() {
 }
 
 function unifyDomainPanel(empresa) {
-    const subDisplay = empresa.websiteSettings?.general?.subdomain || empresa.subdominio
-        || (empresa.nombre || '').toLowerCase().replace(/[^a-z0-9-]/g, '');
-    const subDisplayText = subDisplay ? `${subDisplay}.${getPlatformDomain()}` : 'Ingresa un subdominio arriba';
-    const subForLink = empresa.websiteSettings?.general?.subdomain || empresa.subdominio || '';
-    const hrefSub = subForLink ? `https://${subForLink}.${getPlatformDomain()}` : '#';
-    const hasSub = !!(empresa.websiteSettings?.general?.subdomain || empresa.subdominio);
-    const customDomain = empresa.websiteSettings?.general?.domain || empresa.dominio || '';
-    const hasCustom = !!(empresa.websiteSettings?.general?.domain || empresa.dominio);
+    const hostBase = getPlatformDomain();
+    const storedSub = normalizeTenantSubdomain(
+        empresa.websiteSettings?.general?.subdomain || empresa.subdominio || '',
+    );
+    const subDisplayText = storedSub && hostBase
+        ? `${storedSub}.${hostBase}`
+        : 'Configura el subdominio en el campo de arriba';
+    const hrefSub = storedSub && hostBase ? `https://${storedSub}.${hostBase}` : '#';
+    const hasSub = !!(storedSub && hostBase);
+    const customDomain = (empresa.websiteSettings?.general?.domain || empresa.dominio || '').trim();
+    const hasCustom = !!customDomain;
 
     return `
         <div id="domain-status-panel" class="mt-4 bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
@@ -392,13 +395,13 @@ function unifyDomainPanel(empresa) {
             <div class="p-4 space-y-3">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs text-gray-500 mb-0.5">Subdominio ${esc(getPlatformDisplayLabel())} (incluido)</p>
+                        <p class="text-xs text-gray-500 mb-0.5">Subdominio en <span class="font-mono text-gray-700">${esc(hostBase || '…')}</span> (incluido)</p>
                         <p class="text-sm font-medium text-gray-800">
                             <i class="fa-solid fa-check-circle text-success-500 mr-1"></i>
                             <span id="subdomain-display">${esc(subDisplayText)}</span>
                         </p>
                     </div>
-                    <a id="subdomain-link" href="${esc(hrefSub)}" target="_blank" class="btn-outline btn-sm text-xs ${!hasSub ? 'opacity-40 pointer-events-none' : ''}">
+                    <a id="subdomain-link" href="${esc(hrefSub)}" target="_blank" rel="noopener noreferrer" class="btn-outline btn-sm text-xs ${!hasSub ? 'opacity-40 pointer-events-none' : ''}">
                         <i class="fa-solid fa-arrow-up-right-from-square"></i> Ver
                     </a>
                 </div>
@@ -434,7 +437,8 @@ function unifyDomainPanel(empresa) {
         </div>`;
 }
 
-export function buildUnifiedMarkup(empresaData) {
+export async function buildUnifiedMarkup(empresaData) {
+    await ensurePlatformConfig();
     const empresa = empresaData || {};
     const settings = empresa.websiteSettings || {};
     const general = settings.general || {};

@@ -13,6 +13,14 @@ function initialsFromLabel(label) {
     return '—';
 }
 
+export function normalizeTenantSubdomain(val) {
+    return String(val ?? '')
+        .trim()
+        .replace(/^\.+|\.+$/g, '')
+        .replace(/[^a-zA-Z0-9-]/g, '')
+        .toLowerCase();
+}
+
 export async function ensurePlatformConfig() {
     if (_fetched) return;
     try {

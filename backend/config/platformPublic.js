@@ -28,7 +28,9 @@ function hostnameFromEnvUrl(envUrl) {
 function getPlatformDomain() {
     const a = String(process.env.PLATFORM_DOMAIN || '').trim().toLowerCase();
     if (a) return a;
-    return String(process.env.PUBLIC_SITES_ROOT_DOMAIN || '').trim().toLowerCase();
+    const b = String(process.env.PUBLIC_SITES_ROOT_DOMAIN || '').trim().toLowerCase();
+    if (b) return b;
+    return String(process.env.DEFAULT_PLATFORM_DOMAIN || 'rezerva.cl').trim().toLowerCase();
 }
 
 function defaultProductLabelFromDomain(domain) {

@@ -1,7 +1,7 @@
 // frontend/src/views/components/configurarWebPublica/webPublica.general.unified.js
 // Formulario único para configuración web pública - Reemplaza wizard + vista
 import { fetchAPI } from '../../../api.js';
-import { getPlatformDomain } from '../../../platformConfig.js';
+import { getPlatformDomain, normalizeTenantSubdomain } from '../../../platformConfig.js';
 import { buildUnifiedMarkup } from './webPublica.general.unified.markup.js';
 import {
     bindUnifiedRegen,
@@ -57,7 +57,7 @@ function _updateGeneratedContent(strategy) {
 }
 
 // --- Render único ---
-export function renderUnified(empresaData) {
+export async function renderUnified(empresaData) {
     console.log('[FRONTEND DEBUG] renderUnified llamado con empresaData:', empresaData);
     const theme = (empresaData || {}).websiteSettings?.theme || {};
     const strategy = (empresaData || {}).strategy || {};
@@ -68,19 +68,24 @@ export function renderUnified(empresaData) {
     console.log('  - strategy.heroImageAlt:', strategy.heroImageAlt);
     console.log('  - strategy.heroImageTitle:', strategy.heroImageTitle);
 
-    return buildUnifiedMarkup(empresaData);
+    return await buildUnifiedMarkup(empresaData);
 }
 
 // --- Actualiza el panel de dominio tras guardar ---
 function _updateDomainPanel(domainInfo, subdomain, customDomain) {
+    const hostBase = getPlatformDomain();
+    const norm = normalizeTenantSubdomain(subdomain);
     const subEl = document.getElementById('subdomain-display');
     const subLink = document.getElementById('subdomain-link');
-    if (subEl && subdomain) {
-        subEl.textContent = `${subdomain}.${getPlatformDomain()}`;
+    if (subEl && norm && hostBase) {
+        subEl.textContent = `${norm}.${hostBase}`;
     }
-    if (subLink && subdomain) {
-        subLink.href = `https://${subdomain}.${getPlatformDomain()}`;
+    if (subLink && norm && hostBase) {
+        subLink.href = `https://${norm}.${hostBase}`;
         subLink.classList.remove('opacity-40', 'pointer-events-none');
+    } else if (subLink && (!norm || !hostBase)) {
+        subLink.href = '#';
+        subLink.classList.add('opacity-40', 'pointer-events-none');
     }
 
     const customEl = document.getElementById('custom-domain-status');
