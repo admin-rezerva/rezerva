@@ -14,7 +14,7 @@
 
     <!-- Open Graph / Social -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="SuiteManagers">
+    <meta property="og:site_name" content="<%= mp.brandLabel %>">
     <meta property="og:locale" content="<%= mp.ogLocale %>">
     <meta property="og:title" content="<%= mp.ogTitle %>">
     <meta property="og:description" content="<%= mp.ogDescription %>">
@@ -31,7 +31,7 @@
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
-      "name": "SuiteManagers",
+      "name": "<%= mp.brandLabel %>",
       "url": "https://<%= platformDomain %>",
       "description": <%- JSON.stringify(mp.jsonLdSiteDescription) %>,
       "potentialAction": {

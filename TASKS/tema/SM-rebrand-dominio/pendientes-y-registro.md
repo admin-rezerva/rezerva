@@ -70,6 +70,7 @@ Inventarios **`publicAiHttpController`** actualizados en: `venta-ia.md` §6, `so
 | 2026-05-07 | Rename **`publicAiHttpController.js`** + MCP **`rezerva-mcp-server`**; pendientes ops/Fase 4 sin cambio. |
 | 2026-05-07 | **MCP:** nota integradores reforzada en **`LEER-PRIMERO.md`**, **`mcp-server/README.md`**, **`chatgpt_integration_summary.md`**, bitácora **`coordinacion-cursor-claude-ia-venta.md`** §6. |
 | 2026-05-08 | **GitHub:** `main` subido a **`admin-rezerva/rezerva`** tras `git filter-branch` (eliminar `Usuarios Empresas/.../google_credentials.json` del historial; push protection OK). **Importante:** rotar OAuth en Google Cloud (credencial estuvo en historia antigua). `.gitignore` reforzado (`**/google_credentials.json`, `Usuarios Empresas/`, `.env.*`). |
+| 2026-05-08 | **Routing marketplace:** `rezerva.onrender.com` → SPA; **`PLATFORM_DOMAIN`** (+ `www`) → marketplace. Opt-in `PLATFORM_MARKETPLACE_INCLUDE_RENDER_HOST=1` para marketplace en hostname Render. Marca marketplace vía **`getMarketplaceBrandLabel()`** (UI + llms). |
 
 ---
 

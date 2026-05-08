@@ -69,6 +69,14 @@ function getExtraMarketplaceHostsFromEnv() {
     return raw.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
 }
 
+function getMarketplaceBrandLabel() {
+    const fromProduct = getPlatformProductName();
+    if (fromProduct) return fromProduct;
+    const fromDomain = defaultProductLabelFromDomain(getPlatformDomain());
+    if (fromDomain) return fromDomain;
+    return 'Rezerva';
+}
+
 function getMarketplaceHostnamesSet() {
     const set = new Set();
     const d = getPlatformDomain();
@@ -76,8 +84,11 @@ function getMarketplaceHostnamesSet() {
         set.add(d);
         set.add(`www.${d}`);
     }
-    const renderHost = getRenderPublicHostname();
-    if (renderHost) set.add(renderHost);
+    /** Solo si hace falta servir marketplace también en el hostname público de Render (staging). */
+    if (String(process.env.PLATFORM_MARKETPLACE_INCLUDE_RENDER_HOST || '').trim() === '1') {
+        const renderHost = getRenderPublicHostname();
+        if (renderHost) set.add(renderHost);
+    }
     getExtraMarketplaceHostsFromEnv().forEach((h) => set.add(h));
     const alias = getMarketplaceForceHostAlias();
     if (alias) set.add(alias);
@@ -91,4 +102,5 @@ module.exports = {
     getMarketplaceHostnamesSet,
     getRenderPublicHostname,
     getMarketplaceForceHostAlias,
+    getMarketplaceBrandLabel,
 };

@@ -1,9 +1,10 @@
 // backend/services/marketplace.seo.js
 // Genera robots.txt, sitemap.xml y llms.txt para el marketplace
 const pool = require('../db/postgres');
-const { PLATFORM_DOMAIN } = require('./marketplaceService');
+const { getPlatformDomain, getMarketplaceBrandLabel } = require('../config/platformPublic');
 
-const BASE_URL = `https://${PLATFORM_DOMAIN}`;
+const platformDomain = getPlatformDomain();
+const BASE_URL = `https://${platformDomain}`;
 
 const generarSitemap = async () => {
     const { rows } = await pool.query(`
@@ -19,7 +20,7 @@ const generarSitemap = async () => {
     const urls = [
         `<url><loc>${BASE_URL}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>`,
         ...rows.map(p => {
-            const loc = `https://${p.subdominio.toLowerCase()}.${PLATFORM_DOMAIN}/propiedad/${p.id}`;
+            const loc = `https://${p.subdominio.toLowerCase()}.${platformDomain}/propiedad/${p.id}`;
             const lastmod = p.updated_at
                 ? new Date(p.updated_at).toISOString().split('T')[0]
                 : '';
@@ -60,11 +61,12 @@ Sitemap: ${BASE_URL}/sitemap.xml
 `;
 
 const generarLlmsTxt = (propiedades = []) => {
+    const brand = getMarketplaceBrandLabel();
     const ejemplos = propiedades.slice(0, 3)
         .map(p => `  - ${p.titulo} (${p.empresaNombre}, hasta ${p.capacidad} personas${p.precioDesde ? `, desde $${Number(p.precioDesde).toLocaleString('es-CL')}/noche` : ''})`)
         .join('\n');
 
-    return `# SuiteManagers — Marketplace de Alojamientos en Chile
+    return `# ${brand} — Marketplace de Alojamientos en Chile
 > Plataforma de reserva directa: huéspedes reservan con anfitriones sin pasar por OTAs.
 
 ## ¿Qué puedo hacer aquí?
@@ -98,7 +100,7 @@ ${ejemplos || '  (Consulta /api/search.json para el listado actualizado)'}
 ## Notas para LLMs
 - Los precios están en CLP (pesos chilenos)
 - La disponibilidad se verifica en tiempo real contra bloqueos y reservas existentes
-- Cada propiedad tiene URL propia: https://EMPRESA.${PLATFORM_DOMAIN}/propiedad/ID
+- Cada propiedad tiene URL propia: https://EMPRESA.${platformDomain}/propiedad/ID
 `;
 };
 

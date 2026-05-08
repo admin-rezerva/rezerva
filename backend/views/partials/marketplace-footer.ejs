@@ -4,7 +4,7 @@
 <% const ghPath = '/google-hotels' + (mp.htmlLang === 'en' ? '?lang=en' : ''); %>
 <footer class="border-t border-neutral-200 mt-16 md:mt-20 py-10 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-neutral-500">
-        <p class="mp-logo mb-2 text-primary-600" style="font-size:1.1rem;">suite<span class="text-neutral-900">managers</span></p>
+        <p class="mp-logo mb-2 text-primary-600 font-semibold" style="font-size:1.1rem;"><%= mp.brandLabel %></p>
         <p>
             <%= mp.footerTagline %>
             <% if (footerMode === 'google-hotels') { %>

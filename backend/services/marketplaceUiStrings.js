@@ -1,7 +1,9 @@
 /**
- * UI del marketplace global (rezerva.cl): copys ES/EN.
+ * UI del marketplace global: copys ES/EN. Marca desde env / dominio (platformPublic).
  * Idioma: ?lang=en | ?lang=es; si no, Accept-Language (en*) → en; defecto es.
  */
+
+const { getMarketplaceBrandLabel } = require('../config/platformPublic');
 
 function resolveMarketplaceLang(req) {
     const raw = String((req.query && req.query.lang) || '').toLowerCase().trim();
@@ -12,19 +14,21 @@ function resolveMarketplaceLang(req) {
 }
 
 function getMarketplaceStrings(lang) {
+    const brand = getMarketplaceBrandLabel();
     const L = lang === 'en' ? 'en' : 'es';
     if (L === 'en') {
         return {
+            brandLabel: brand,
             htmlLang: 'en',
             ogLocale: 'en_US',
-            pageTitle: 'SuiteManagers — Stays in Chile',
+            pageTitle: `${brand} — Stays in Chile`,
             metaDescription: 'Find cabins, homes and apartments in Chile’s best destinations. Book direct with the host.',
-            ogTitle: 'SuiteManagers — Stays in Chile',
+            ogTitle: `${brand} — Stays in Chile`,
             ogDescription: 'Find unique cabins, homes and apartments. Book direct with the host.',
             twitterDescription: 'Book direct with the host. No middlemen.',
             jsonLdSiteDescription: 'Marketplace of stays in Chile. Direct booking with hosts.',
             jsonLdItemListName: 'Stays in Chile',
-            jsonLdItemListDescription: 'Cabins, homes and apartments on SuiteManagers',
+            jsonLdItemListDescription: `Cabins, homes and apartments on ${brand}`,
             labelDestino: 'Destination',
             placeholderDestino: 'Search destinations',
             labelLlegada: 'Check-in',
@@ -51,7 +55,7 @@ function getMarketplaceStrings(lang) {
             langSwitchEs: 'ES',
             langSwitchEn: 'EN',
             langSwitchTitle: 'Language',
-            ghCatalogPageTitle: 'Google Hotels — Listed properties | SuiteManagers',
+            ghCatalogPageTitle: `Google Hotels — Listed properties | ${brand}`,
             ghCatalogMetaDescription: 'Properties opted in for Google Hotels connectivity. Book directly with each host on their site.',
             ghCatalogHeading: 'Google Hotels listings',
             ghCatalogLead: 'These listings are included in the platform connectivity feed. Open the host site to choose dates and see final prices.',
@@ -75,16 +79,17 @@ function getMarketplaceStrings(lang) {
         };
     }
     return {
+        brandLabel: brand,
         htmlLang: 'es',
         ogLocale: 'es_CL',
-        pageTitle: 'SuiteManagers — Alojamientos en Chile',
+        pageTitle: `${brand} — Alojamientos en Chile`,
         metaDescription: 'Encuentra cabañas, casas y departamentos únicos en los mejores destinos de Chile. Reserva directo con el anfitrión.',
-        ogTitle: 'SuiteManagers — Alojamientos en Chile',
+        ogTitle: `${brand} — Alojamientos en Chile`,
         ogDescription: 'Encuentra cabañas, casas y departamentos únicos en los mejores destinos de Chile. Reserva directo con el anfitrión.',
         twitterDescription: 'Reserva directo con el anfitrión. Sin intermediarios.',
         jsonLdSiteDescription: 'Marketplace de alojamientos en Chile. Reserva directa con anfitriones.',
         jsonLdItemListName: 'Alojamientos en Chile',
-        jsonLdItemListDescription: 'Cabañas, casas y departamentos disponibles en SuiteManagers',
+        jsonLdItemListDescription: `Cabañas, casas y departamentos disponibles en ${brand}`,
         labelDestino: 'Destino',
         placeholderDestino: 'Buscar destinos',
         labelLlegada: 'Llegada',
@@ -111,7 +116,7 @@ function getMarketplaceStrings(lang) {
         langSwitchEs: 'ES',
         langSwitchEn: 'EN',
         langSwitchTitle: 'Idioma',
-        ghCatalogPageTitle: 'Google Hotels — Propiedades listadas | SuiteManagers',
+        ghCatalogPageTitle: `Google Hotels — Propiedades listadas | ${brand}`,
         ghCatalogMetaDescription: 'Propiedades con opt-in para conectividad Google Hotels. Reserva directo en el sitio de cada anfitrión.',
         ghCatalogHeading: 'Listados Google Hotels',
         ghCatalogLead: 'Estos alojamientos entran en el feed de conectividad de la plataforma. En el sitio del anfitrión eliges fechas y ves el precio final.',
