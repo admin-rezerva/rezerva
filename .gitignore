@@ -1,8 +1,15 @@
 # ── Credenciales y secretos ───────────────────────────────────────────────────
 backend/serviceAccountKey.json
 backend/google_credentials.json
+**/google_credentials.json
 backend/.env
 .env
+.env.*
+!.env.example
+!backend/.env.example
+
+# Datos locales de prueba (no subir credenciales OAuth sueltas)
+Usuarios Empresas/
 
 # ── Dependencias ──────────────────────────────────────────────────────────────
 backend/node_modules/
