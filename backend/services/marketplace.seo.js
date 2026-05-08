@@ -17,8 +17,23 @@ const generarSitemap = async () => {
         ORDER BY p.updated_at DESC
     `);
 
+    const tenantHomes = Array.from(
+        new Set(
+            rows
+                .map((p) => String(p.subdominio || '').trim().toLowerCase())
+                .filter(Boolean)
+        )
+    );
+
     const urls = [
         `<url><loc>${BASE_URL}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>`,
+        ...tenantHomes.map((subdominio) => [
+            '<url>',
+            `  <loc>https://${subdominio}.${platformDomain}/</loc>`,
+            '  <changefreq>daily</changefreq>',
+            '  <priority>0.9</priority>',
+            '</url>',
+        ].join('\n')),
         ...rows.map(p => {
             const loc = `https://${p.subdominio.toLowerCase()}.${platformDomain}/propiedad/${p.id}`;
             const lastmod = p.updated_at
