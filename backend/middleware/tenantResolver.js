@@ -2,11 +2,28 @@
 
 const { obtenerEmpresaPorDominio } = require('../services/empresaService');
 
+function _hostnameFromEnvUrl(envUrl) {
+    if (!envUrl || typeof envUrl !== 'string') return '';
+    try {
+        return new URL(envUrl.trim()).hostname.toLowerCase();
+    } catch {
+        return '';
+    }
+}
+
+function _extraMarketplaceHostsFromEnv() {
+    const raw = process.env.PLATFORM_MARKETPLACE_EXTRA_HOSTS || '';
+    return raw.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+}
+
 const PLATFORM_DOMAIN = process.env.PLATFORM_DOMAIN || 'rezerva.cl';
+const _renderPublicHost = _hostnameFromEnvUrl(process.env.RENDER_EXTERNAL_URL);
 const MARKETPLACE_HOSTS = new Set([
     PLATFORM_DOMAIN,
     `www.${PLATFORM_DOMAIN}`,
     'marketplace', // alias local: force_host=marketplace
+    ...(_renderPublicHost ? [_renderPublicHost] : []),
+    ..._extraMarketplaceHostsFromEnv(),
 ]);
 
 /**
