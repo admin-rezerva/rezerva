@@ -2,7 +2,7 @@
 import { fetchAPI } from './api.js';
 import { checkAuthAndRender } from './app.js';
 import { CATEGORY_HINTS, ITEM_HINTS } from './menuConfig.hints.js';
-import { ensurePlatformConfig } from './platformConfig.js';
+import { ensurePlatformConfig, applyDocumentBranding, getPlatformDisplayLabel } from './platformConfig.js';
 
 const escAttr = (s) => String(s ?? '')
     .replace(/&/g, '&amp;')
@@ -113,7 +113,7 @@ const menuConfig = [
         ]
     },
     {
-        icon: 'fa-solid fa-chart-simple', name: 'Plataforma Rezerva',
+        icon: 'fa-solid fa-chart-simple', name: 'Plataforma',
         id: 'plataforma-principal',
         superadminOnly: true,
         children: [
@@ -243,13 +243,19 @@ export function renderMenu(currentUser = null) {
     const nav = document.getElementById('main-nav');
     if (!nav) return;
 
+    const platformMenuLabel = getPlatformDisplayLabel();
+
     const visibleMenu = menuConfig
         .map((item) => {
-            if (item.children) {
-                const visibleChildren = item.children.filter((child) => canSeeMenuItem(child, currentUser));
-                return { ...item, children: visibleChildren };
+            let top = item;
+            if (item.id === 'plataforma-principal' && platformMenuLabel) {
+                top = { ...item, name: platformMenuLabel };
             }
-            return item;
+            if (top.children) {
+                const visibleChildren = top.children.filter((child) => canSeeMenuItem(child, currentUser));
+                return { ...top, children: visibleChildren };
+            }
+            return top;
         })
         .filter((item) => {
             if (!canSeeMenuItem(item, currentUser)) return false;
@@ -335,5 +341,6 @@ function initialAppPath() {
 window.addEventListener('popstate', () => loadView(initialAppPath()));
 document.addEventListener('DOMContentLoaded', async () => {
     await ensurePlatformConfig();
+    applyDocumentBranding();
     loadView(initialAppPath());
 });

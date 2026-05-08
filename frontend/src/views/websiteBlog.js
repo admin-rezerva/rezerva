@@ -1,6 +1,6 @@
 // Panel: blog del sitio público — prompt local + borrador vía IA externa (pegar JSON) o IA interna (generate-draft).
 import { fetchAPI } from '../api.js';
-import { getPlatformDomain } from '../platformConfig.js';
+import { getPlatformDomain, getPlatformDisplayLabel } from '../platformConfig.js';
 
 function esc(s) {
     return String(s ?? '')
@@ -55,7 +55,7 @@ function renderTopicCard({ cardId, label, hint, entryType, refPayload }) {
                         <li><strong>Copiar prompt</strong> y pégalo en ChatGPT, Gemini u otra IA.</li>
                         <li>Pide que responda <strong>solo con JSON válido</strong>, sin markdown ni texto alrededor (si envuelve en <code class="text-xs bg-gray-100 px-1 rounded">\`\`\`json</code> también sirve).</li>
                         <li>Pega la respuesta en el campo de abajo y pulsa <strong>Crear borrador desde pegado</strong>.</li>
-                        <li class="pt-1"><strong>O bien</strong> usa <strong>Generar borrador (IA interna)</strong>: SuiteManager llama al modelo (sujeto a límites de uso del panel).</li>
+                        <li class="pt-1"><strong>O bien</strong> usa <strong>Generar borrador (IA interna)</strong>: ${esc(getPlatformDisplayLabel())} llama al modelo (sujeto a límites de uso del panel).</li>
                     </ol>
                 </div>
 

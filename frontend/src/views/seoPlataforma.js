@@ -1,5 +1,6 @@
 import { fetchAPI } from '../api.js';
 import { handleNavigation } from '../router.js';
+import { getPlatformDisplayLabel } from '../platformConfig.js';
 
 const esc = (s) => String(s ?? '')
     .replace(/&/g, '&amp;')
@@ -135,7 +136,7 @@ export async function render() {
     return `
         <div class="container mx-auto px-4 py-8 max-w-5xl">
             <div class="mb-6">
-                <h1 class="text-2xl font-bold text-gray-900">SuiteManagers — Buscadores (plataforma)</h1>
+                <h1 class="text-2xl font-bold text-gray-900">${esc(getPlatformDisplayLabel())} — Buscadores (plataforma)</h1>
                 <p class="text-sm text-gray-500 mt-1">
                     Vista operativa exclusiva de superadministración para ${esc(platform.domain || 'rezerva.cl')}.
                 </p>

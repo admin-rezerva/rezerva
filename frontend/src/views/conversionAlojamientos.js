@@ -1,4 +1,5 @@
 import { fetchAPI } from '../api.js';
+import { getPlatformDisplayLabel } from '../platformConfig.js';
 
 let conversiones = [];
 let alojamientos = [];
@@ -109,7 +110,7 @@ export async function render() {
                 </div>
                 <form id="conversion-form">
                     <div class="mb-4">
-                        <label for="alojamiento-select" class="block text-sm font-medium text-gray-700">Alojamiento (en SuiteManager)</label>
+                        <label for="alojamiento-select" class="block text-sm font-medium text-gray-700">Alojamiento (en ${getPlatformDisplayLabel()})</label>
                         <select id="alojamiento-select" name="alojamientoId" required class="form-select mt-1"></select>
                     </div>
                     <div class="mb-4">

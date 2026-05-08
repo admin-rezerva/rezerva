@@ -79,6 +79,7 @@ const seoMonitorRoutes = require('./routes/seoMonitor');
 
 const { createAuthMiddleware } = require('./middleware/authMiddleware.js');
 const { createTenantResolver, isMarketplaceSsrHost } = require('./middleware/tenantResolver.js');
+const platformPublic = require('./config/platformPublic');
 
 // --- Carga de Credenciales y Configuración de Firebase ---
 let db;
@@ -169,7 +170,11 @@ try {
 
     // ── Config pública de plataforma (sin auth — la SPA la lee en arranque) ──
     app.get('/api/config/platform', cors(), (_req, res) => {
-        res.json({ platformDomain: process.env.PLATFORM_DOMAIN || '' });
+        res.json({
+            platformDomain: platformPublic.getPlatformDomain(),
+            platformProductName: platformPublic.getPlatformProductName(),
+            panelReleaseVersion: platformPublic.getPanelReleaseVersion(),
+        });
     });
 
     // ── Marketplace search API pública (antes del apiRouter con auth) ─────

@@ -1,5 +1,5 @@
 // HTML del formulario unificado (extraído para límites de complejidad).
-import { getPlatformDomain } from '../../../platformConfig.js';
+import { getPlatformDomain, getPlatformDisplayLabel } from '../../../platformConfig.js';
 
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const clean = (v) => (v === undefined || v === null || v === 'undefined') ? '' : v;
@@ -214,7 +214,7 @@ export function unifyIntegrationsFeedsSection(empresa, general) {
                 </div>
             </div>
             <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs space-y-2">
-                <p class="font-semibold text-gray-700">URLs de referencia (host SuiteManager)</p>
+                <p class="font-semibold text-gray-700">URLs de referencia (host ${esc(getPlatformDisplayLabel())})</p>
                 <p class="break-all font-mono text-gray-800">${esc(`${baseDefault}/feed-google-hotels-content.xml`)}</p>
                 <p class="break-all font-mono text-gray-800">${esc(`${baseDefault}/feed-ari.xml`)}</p>
                 <p class="break-all font-mono text-gray-800">${esc(`${baseDefault}/widget-reserva-ayuda.json`)}</p>
@@ -392,7 +392,7 @@ function unifyDomainPanel(empresa) {
             <div class="p-4 space-y-3">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs text-gray-500 mb-0.5">Subdominio SuiteManager (incluido)</p>
+                        <p class="text-xs text-gray-500 mb-0.5">Subdominio ${esc(getPlatformDisplayLabel())} (incluido)</p>
                         <p class="text-sm font-medium text-gray-800">
                             <i class="fa-solid fa-check-circle text-success-500 mr-1"></i>
                             <span id="subdomain-display">${esc(subDisplayText)}</span>

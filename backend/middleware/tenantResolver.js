@@ -1,30 +1,7 @@
 // backend/middleware/tenantResolver.js
 
 const { obtenerEmpresaPorDominio } = require('../services/empresaService');
-
-function _hostnameFromEnvUrl(envUrl) {
-    if (!envUrl || typeof envUrl !== 'string') return '';
-    try {
-        return new URL(envUrl.trim()).hostname.toLowerCase();
-    } catch {
-        return '';
-    }
-}
-
-function _extraMarketplaceHostsFromEnv() {
-    const raw = process.env.PLATFORM_MARKETPLACE_EXTRA_HOSTS || '';
-    return raw.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
-}
-
-const PLATFORM_DOMAIN = process.env.PLATFORM_DOMAIN || 'rezerva.cl';
-const _renderPublicHost = _hostnameFromEnvUrl(process.env.RENDER_EXTERNAL_URL);
-const MARKETPLACE_HOSTS = new Set([
-    PLATFORM_DOMAIN,
-    `www.${PLATFORM_DOMAIN}`,
-    'marketplace', // alias local: force_host=marketplace
-    ...(_renderPublicHost ? [_renderPublicHost] : []),
-    ..._extraMarketplaceHostsFromEnv(),
-]);
+const { getMarketplaceHostnamesSet } = require('../config/platformPublic');
 
 /**
  * Misma lógica de host efectivo que el resolver (query force_host → cookie → req.hostname).
@@ -46,19 +23,16 @@ function getEffectiveHostnameForSsr(req) {
 }
 
 function isMarketplaceSsrHost(req) {
-    return MARKETPLACE_HOSTS.has(getEffectiveHostnameForSsr(req));
+    return getMarketplaceHostnamesSet().has(getEffectiveHostnameForSsr(req));
 }
 
 const createTenantResolver = (db) => async (req, res, next) => {
-    // Ignorar explícitamente cualquier ruta que pertenezca a la API o a los assets.
     if (req.path.startsWith('/api/') || req.path.startsWith('/src/') || req.path.startsWith('/public/')) {
         return next();
     }
 
-    // Lógica para persistir force_host en cookie (para pruebas locales)
     let forceHost = req.query.force_host;
 
-    // Si no viene en query, buscar en cookie
     if (!forceHost && req.headers.cookie) {
         const cookies = req.headers.cookie.split(';').reduce((acc, cookie) => {
             const parts = cookie.trim().split('=');
@@ -70,18 +44,15 @@ const createTenantResolver = (db) => async (req, res, next) => {
         forceHost = cookies.force_host;
     }
 
-    // Si viene en query, establecer cookie
     if (req.query.force_host) {
         console.log(`[TenantResolver] Setting cookie force_host=${req.query.force_host}`);
-        // Establecer cookie simple, sin HttpOnly para facilitar debug si es necesario, pero Path=/ es clave
         res.setHeader('Set-Cookie', `force_host=${req.query.force_host}; Path=/; Max-Age=3600`);
     }
 
     const hostname = (forceHost || req.hostname).toLowerCase().trim();
     console.log(`[TenantResolver] Path: ${req.path}, Hostname: ${hostname}, ForceHost: ${forceHost}`);
 
-    // Dominio raíz de la plataforma → marketplace (no buscar empresa)
-    if (MARKETPLACE_HOSTS.has(hostname)) {
+    if (getMarketplaceHostnamesSet().has(hostname)) {
         console.log(`[TenantResolver] Marketplace detectado: ${hostname}`);
         req.isMarketplace = true;
         return next();

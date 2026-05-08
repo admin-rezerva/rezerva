@@ -1,5 +1,6 @@
 import { fetchAPI } from '../api.js';
 import { handleNavigation } from '../router.js';
+import { getPlatformDisplayLabel } from '../platformConfig.js';
 
 const esc = (s) => String(s ?? '')
     .replace(/&/g, '&amp;')
@@ -159,7 +160,7 @@ export async function render() {
                 ${empresa.alternatePublicHost ? `
                 <p class="text-xs text-gray-500 mt-2">
                     También tienes configurado el host <span class="font-mono text-gray-700">${esc(empresa.alternatePublicHost)}</span>.
-                    Las comprobaciones HTTP usan el host principal de SuiteManagers; en Search Console puede que la propiedad sea el otro dominio.
+                    Las comprobaciones HTTP usan el host principal de ${esc(getPlatformDisplayLabel())}; en Search Console puede que la propiedad sea el otro dominio.
                 </p>` : ''}
             </div>
 

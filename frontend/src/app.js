@@ -1,11 +1,21 @@
 import { renderMenu, handleNavigation } from './router.js';
 import { fetchAPI, logout, fetchDailyDollar } from './api.js';
+import {
+    ensurePlatformConfig,
+    getPanelReleaseVersion,
+    getPlatformDisplayLabel,
+    applyDocumentBranding,
+} from './platformConfig.js';
 
 let currentUser = null;
 
 export async function renderAppLayout(dollarInfo) {
+    await ensurePlatformConfig();
+    applyDocumentBranding();
     const appRoot = document.getElementById('app-root');
-    const initials = (currentUser?.nombreEmpresa || 'SM').slice(0, 2).toUpperCase();
+    const brandTitle = getPlatformDisplayLabel() || '\u00A0';
+    const brandVersion = getPanelReleaseVersion() || '0';
+    const initials = (currentUser?.nombreEmpresa || getPlatformDisplayLabel() || '?').slice(0, 2).toUpperCase();
     appRoot.innerHTML = `
         <div id="sidebar-overlay" class="sidebar-overlay"></div>
         <aside id="sidebar" class="sidebar">
@@ -15,8 +25,8 @@ export async function renderAppLayout(dollarInfo) {
                         <i class="fa-solid fa-house-chimney"></i>
                     </div>
                     <div class="link-text">
-                        <h1 id="sidebar-title" class="sidebar-title">SuiteManager</h1>
-                        <span class="sidebar-version">v1.0.0</span>
+                        <h1 id="sidebar-title" class="sidebar-title">${brandTitle}</h1>
+                        <span class="sidebar-version">v${brandVersion}</span>
                     </div>
                 </div>
                 <button id="sidebar-toggle-desktop" class="sidebar-toggle-btn hidden md:flex">
@@ -105,7 +115,7 @@ export async function checkAuthAndRender() {
                 ${dolarHtml}
             `;
         } else {
-            renderAppLayout(dollarInfo);
+            await renderAppLayout(dollarInfo);
         }
 
         return true;

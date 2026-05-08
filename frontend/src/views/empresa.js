@@ -2,7 +2,7 @@
 import { fetchAPI } from '../api.js';
 import { handleNavigation } from '../router.js';
 import { renderUbicacionWidget, setupUbicacionWidget, getUbicacionData } from './components/ubicacionWidget.js';
-import { getPlatformDomain } from '../platformConfig.js';
+import { getPlatformDomain, getPlatformDisplayLabel } from '../platformConfig.js';
 
 let empresaInfo = {};
 
@@ -51,7 +51,7 @@ function renderSitioPublicoResumen() {
                 Tras guardar aquí o en la web, el servidor refresca la caché del sitio público.
             </p>
             <ul class="text-sm text-gray-800 space-y-1 mb-4 list-disc list-inside">
-                ${sub ? `<li>Subdominio SuiteManagers: <code class="bg-white px-1 rounded border">${hostSuite}</code></li>` : '<li>Subdominio: (no configurado aún)</li>'}
+                ${sub ? `<li>Subdominio (${getPlatformDisplayLabel()}): <code class="bg-white px-1 rounded border">${hostSuite}</code></li>` : '<li>Subdominio: (no configurado aún)</li>'}
                 ${domCustom ? `<li>Dominio personalizado declarado: <code class="bg-white px-1 rounded border">${domCustom}</code></li>` : ''}
             </ul>
             <button type="button" id="btn-ir-website-url" class="btn-outline text-sm">

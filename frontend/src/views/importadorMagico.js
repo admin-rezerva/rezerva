@@ -1,7 +1,7 @@
 /**
  * importadorMagico.js
  *
- * Wizard multi-paso para crear una empresa completa en SuiteManager
+ * Wizard multi-paso para crear una empresa completa en el panel
  * a partir de la URL del sitio web del cliente.
  *
  * Pasos:
@@ -11,6 +11,8 @@
  *  4. Configurar cuenta (email, password, moneda, canales OTA)
  *  5. Crear empresa → resultado
  */
+
+import { getPlatformDisplayLabel } from '../platformConfig.js';
 
 const API_BASE = '/api/importer';
 
@@ -83,7 +85,7 @@ export async function render() {
     <div class="max-w-4xl mx-auto py-8 px-4">
         <div class="mb-8 text-center">
             <h1 class="text-3xl font-bold text-gray-900">✨ Importador Mágico</h1>
-            <p class="text-gray-500 mt-2">Crea una empresa completa en SuiteManager a partir de cualquier sitio web de alojamiento.</p>
+            <p class="text-gray-500 mt-2">Crea una empresa completa en ${getPlatformDisplayLabel()} a partir de cualquier sitio web de alojamiento.</p>
         </div>
         <div id="wizard-steps-bar" class="flex items-center justify-center gap-2 mb-8 text-sm"></div>
         <div id="wizard-content" class="bg-white rounded-xl shadow-lg p-8"></div>
@@ -433,10 +435,10 @@ function renderStep4(container) {
 
         <div class="space-y-5">
             <div class="bg-primary-50 border border-primary-200 rounded-lg p-4 text-sm text-primary-700">
-                <strong>Modo inteligente:</strong> Si el email ya está registrado en SuiteManager, el wizard <strong>actualizará</strong> la empresa existente sin crear una nueva. La contraseña solo es necesaria para registros nuevos.
+                <strong>Modo inteligente:</strong> Si el email ya está registrado en ${getPlatformDisplayLabel()}, el wizard <strong>actualizará</strong> la empresa existente sin crear una nueva. La contraseña solo es necesaria para registros nuevos.
             </div>
 
-            <h3 class="font-semibold text-gray-700 border-b pb-1">Acceso a SuiteManager</h3>
+            <h3 class="font-semibold text-gray-700 border-b pb-1">Acceso a ${getPlatformDisplayLabel()}</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Email de acceso *</label>

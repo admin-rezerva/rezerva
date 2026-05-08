@@ -1,7 +1,8 @@
 // frontend/src/views/importadorHistorico.js
-// Importador de reservas históricas desde Gestor de Reservas → SuiteManager
+// Importador de reservas históricas desde Gestor de Reservas → panel de la plataforma
 
 import { fetchAPI } from '../api.js';
+import { getPlatformDisplayLabel } from '../platformConfig.js';
 
 // ── Estado de módulo ────────────────────────────────────────────────────────
 let importData    = null;
@@ -38,7 +39,7 @@ export function render() {
     <!-- Paso 2 -->
     <div id="paso-2" class="hidden bg-white rounded-xl border border-gray-200 p-6 mb-4">
         <h2 class="font-semibold text-gray-800 mb-1">Paso 2 — Verificar mapeos</h2>
-        <p class="text-xs text-gray-500 mb-4">Confirma que cada cabaña y canal se asocia al correcto en SuiteManager.</p>
+        <p class="text-xs text-gray-500 mb-4">Confirma que cada cabaña y canal se asocia al correcto en ${getPlatformDisplayLabel()}.</p>
         <div class="mb-5">
             <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Alojamientos</h3>
             <div id="mapeo-cabanas" class="space-y-2"></div>

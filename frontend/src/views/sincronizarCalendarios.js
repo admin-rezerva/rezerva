@@ -1,5 +1,6 @@
 // frontend/src/views/sincronizarCalendarios.js
 import { fetchAPI } from '../api.js';
+import { getPlatformDisplayLabel } from '../platformConfig.js';
 
 let propiedades = [];
 let canales = [];
@@ -51,7 +52,7 @@ export async function render() {
             <div class="bg-white p-8 rounded-lg shadow">
                 <h2 class="text-2xl font-semibold text-gray-900 mb-2">Exportar Calendarios (iCal)</h2>
                 <p class="text-gray-600 mb-6">
-                    Usa estas URLs para sincronizar la disponibilidad desde SuiteManager hacia otros canales como Booking, Airbnb o tu propio sitio web.
+                    Usa estas URLs para sincronizar la disponibilidad desde ${getPlatformDisplayLabel()} hacia otros canales como Booking, Airbnb o tu propio sitio web.
                 </p>
                 <div id="export-loading" class="text-center p-8">
                     <p class="text-gray-500">Cargando listado de propiedades...</p>
