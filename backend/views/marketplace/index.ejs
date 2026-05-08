@@ -96,29 +96,62 @@
             <%= mp.navGoogleHotels %>
         </a>
 
-        <!-- Search (GET) -->
-        <form id="mp-search-form" method="GET" action="/" class="flex-1 max-w-3xl min-w-[200px] order-last sm:order-none w-full sm:w-auto">
-            <div class="search-pill">
+        <!-- Search (GET) — desktop: barra completa; móvil: CTA compacta que expande filtros -->
+        <% 
+        const _mpQ = (typeof busqueda === 'string' ? busqueda : '').trim();
+        const mpExpandSearchMobile = !!(hayBusqueda || _mpQ || fechaIn || fechaOut || (personas > 0));
+        const _mpSubParts = [];
+        if (_mpQ) _mpSubParts.push(_mpQ.length > 32 ? _mpQ.slice(0, 32) + '…' : _mpQ);
+        if (fechaIn && fechaOut) _mpSubParts.push(fechaIn + ' — ' + fechaOut);
+        else if (fechaIn) _mpSubParts.push(fechaIn);
+        if (personas > 0) _mpSubParts.push(String(personas) + ' ' + (personas !== 1 ? mp.people : mp.person));
+        const _mpMobileSubActive = _mpSubParts.join(' · ');
+        %>
+        <form id="mp-search-form" method="GET" action="/" class="flex-1 max-w-3xl min-w-[200px] order-last sm:order-none w-full sm:w-auto"
+              data-search-sub-default="<%= mp.htmlLang === 'en' ? 'Where, dates, guests' : 'Destino, fechas y huéspedes' %>"
+              data-people-word="<%= mp.people %>"
+              data-person-word="<%= mp.person %>">
+            <button type="button"
+                    id="mp-search-mobile-toggle"
+                    class="search-mobile-collapsed <%= mpExpandSearchMobile ? 'search-mobile-collapsed--hidden' : '' %>"
+                    aria-expanded="<%= mpExpandSearchMobile ? 'true' : 'false' %>"
+                    aria-controls="mp-search-mobile-panel">
+                <span class="search-mobile-collapsed__icon" aria-hidden="true"><i class="fas fa-search"></i></span>
+                <span class="search-mobile-collapsed__text">
+                    <span class="search-mobile-collapsed__title"><%= mp.htmlLang === 'en' ? 'Start your search' : 'Comienza a explorar' %></span>
+                    <span id="mp-search-mobile-sub" class="search-mobile-collapsed__sub"><%= _mpMobileSubActive || (mp.htmlLang === 'en' ? 'Where, dates, guests' : 'Destino, fechas y huéspedes') %></span>
+                </span>
+                <span class="search-mobile-collapsed__chev" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+            </button>
+
+            <div id="mp-search-mobile-panel" class="search-mobile-panel <%= mpExpandSearchMobile ? 'is-open' : '' %>">
+                <div class="search-mobile-panel-header">
+                    <span class="search-mobile-panel-title"><%= mp.htmlLang === 'en' ? 'Search' : 'Buscar' %></span>
+                    <button type="button" id="mp-search-mobile-close" class="search-mobile-panel-close" aria-label="<%= mp.htmlLang === 'en' ? 'Close search' : 'Cerrar búsqueda' %>">
+                        <i class="fas fa-chevron-up"></i>
+                    </button>
+                </div>
+                <div class="search-pill">
                 <% if (mp.htmlLang === 'en') { %>
                 <input type="hidden" name="lang" value="en">
                 <% } %>
-                <div class="search-segment">
+                <div class="search-segment search-segment-destino">
                     <label for="s-destino"><%= mp.labelDestino %></label>
                     <input id="s-destino" name="q" type="text"
                            placeholder="<%= mp.placeholderDestino %>"
                            value="<%= busqueda %>">
                 </div>
-                <div class="search-segment" style="max-width: 140px;">
+                <div class="search-segment search-segment-llegada" style="max-width: 140px;">
                     <label for="s-fecha-in"><%= mp.labelLlegada %></label>
                     <input id="s-fecha-in" name="fecha_in" type="date"
                            value="<%= fechaIn %>" style="color-scheme:light;">
                 </div>
-                <div class="search-segment" style="max-width: 140px;">
+                <div class="search-segment search-segment-salida" style="max-width: 140px;">
                     <label for="s-fecha-out"><%= mp.labelSalida %></label>
                     <input id="s-fecha-out" name="fecha_out" type="date"
                            value="<%= fechaOut %>" style="color-scheme:light;">
                 </div>
-                <div class="search-segment" style="max-width: 120px;">
+                <div class="search-segment search-segment-huespedes" style="max-width: 120px;">
                     <label for="s-personas"><%= mp.labelHuespedes %></label>
                     <input id="s-personas" name="personas" type="number"
                            placeholder="<%= mp.placeholderHuespedes %>" min="1" max="20"
@@ -127,6 +160,7 @@
                 <button type="submit" class="search-btn bg-primary-600 text-white hover:bg-primary-700" aria-label="<%= mp.ariaBuscar %>">
                     <i class="fas fa-search"></i>
                 </button>
+                </div>
             </div>
         </form>
 
@@ -285,6 +319,78 @@
 </main>
 
 <%- include('../partials/marketplace-footer', { mp, mpHomeUrl, footerMode: 'home' }) %>
+
+<script>
+(function () {
+    var form = document.getElementById('mp-search-form');
+    var toggle = document.getElementById('mp-search-mobile-toggle');
+    var panel = document.getElementById('mp-search-mobile-panel');
+    var closeBtn = document.getElementById('mp-search-mobile-close');
+    if (!form || !toggle || !panel) return;
+
+    function defaultSub() {
+        return form.getAttribute('data-search-sub-default') || '';
+    }
+
+    function updateMobileSearchSub() {
+        var subEl = document.getElementById('mp-search-mobile-sub');
+        if (!subEl) return;
+        var qEl = document.getElementById('s-destino');
+        var fiEl = document.getElementById('s-fecha-in');
+        var foEl = document.getElementById('s-fecha-out');
+        var pEl = document.getElementById('s-personas');
+        var q = (qEl && qEl.value) ? String(qEl.value).trim() : '';
+        var fi = (fiEl && fiEl.value) ? String(fiEl.value) : '';
+        var fo = (foEl && foEl.value) ? String(foEl.value) : '';
+        var pe = (pEl && pEl.value) ? String(pEl.value).trim() : '';
+        var parts = [];
+        if (q) parts.push(q.length > 32 ? q.slice(0, 32) + '\u2026' : q);
+        if (fi && fo) parts.push(fi + ' \u2014 ' + fo);
+        else if (fi) parts.push(fi);
+        if (pe && Number(pe) > 0) {
+            var n = Number(pe);
+            var pw = form.getAttribute('data-people-word') || '';
+            var ps = form.getAttribute('data-person-word') || '';
+            parts.push(n + ' ' + (n !== 1 ? pw : ps));
+        }
+        subEl.textContent = parts.length ? parts.join(' \u00B7 ') : defaultSub();
+    }
+
+    function isWide() {
+        return window.matchMedia('(min-width: 768px)').matches;
+    }
+
+    function openPanel() {
+        if (isWide()) return;
+        panel.classList.add('is-open');
+        toggle.classList.add('search-mobile-collapsed--hidden');
+        toggle.setAttribute('aria-expanded', 'true');
+        var dest = document.getElementById('s-destino');
+        if (dest) window.setTimeout(function () { dest.focus(); }, 200);
+    }
+
+    function closePanel() {
+        if (isWide()) return;
+        updateMobileSearchSub();
+        panel.classList.remove('is-open');
+        toggle.classList.remove('search-mobile-collapsed--hidden');
+        toggle.setAttribute('aria-expanded', 'false');
+    }
+
+    toggle.addEventListener('click', function () {
+        if (panel.classList.contains('is-open')) closePanel();
+        else openPanel();
+    });
+    if (closeBtn) closeBtn.addEventListener('click', closePanel);
+
+    ['s-destino', 's-fecha-in', 's-fecha-out', 's-personas'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('change', updateMobileSearchSub);
+        if (id === 's-destino' || id === 's-personas') el.addEventListener('input', updateMobileSearchSub);
+    });
+})();
+</script>
 
 </body>
 </html>
