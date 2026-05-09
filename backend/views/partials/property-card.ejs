@@ -7,11 +7,10 @@
     if (_fullImg && (!_thumbImg || _thumbImg === _fullImg) && /\.webp(\?|$)/i.test(_fullImg) && !_fullImg.includes('_thumb.webp')) {
         _thumbImg = _fullImg.replace(/\.webp(\?|$)/i, '_thumb.webp$1');
     }
-    // Thumbnail móvil (_sm.webp, 400px) — URL derivada; el archivo lo genera el pipeline de subida y repair.
+    // Thumbnail móvil (_sm.webp, 400px) — URL derivada desde full, no desde thumb.
     let _smImg = '';
-    const _smBase = (_thumbImg || _fullImg || '').trim();
-    if (_smBase && /\.webp(\?|$)/i.test(_smBase) && !_smBase.includes('_thumb.webp') && !_smBase.includes('_sm.webp')) {
-        _smImg = _smBase.replace(/\.webp(\?|$)/i, '_sm.webp$1');
+    if (_fullImg && /\.webp(\?|$)/i.test(_fullImg) && !_fullImg.includes('_thumb.webp') && !_fullImg.includes('_sm.webp')) {
+        _smImg = _fullImg.replace(/\.webp(\?|$)/i, '_sm.webp$1');
     }
     // Listado home: srcset con 400w (móvil) y 560w (resto).
     const _img        = (_thumbImg || _fullImg || '').trim()
