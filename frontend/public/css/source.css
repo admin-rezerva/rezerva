@@ -4,13 +4,19 @@
 @tailwind utilities;
 
 @layer base {
-    html, body, #app-root {
+    html, body {
         height: 100%;
         overflow: hidden;
     }
     body {
         font-family: 'Inter', sans-serif;
         background-color: #f9fafb;
+    }
+    /* #app-root: altura acotada al viewport (dvh evita desajuste barra móvil) para que flex-1 + overflow en #view-content funcione */
+    #app-root {
+        height: 100%;
+        max-height: 100dvh;
+        overflow: hidden;
     }
 }
 
@@ -22,13 +28,15 @@
     @apply relative flex min-h-0 flex-col md:flex-row;
 }
 .main-content {
-    @apply flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-hidden;
+    @apply flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-hidden;
 }
 .main-content > header {
     @apply flex-shrink-0;
 }
+/* flex-1 + min-h-0: área de scroll del SPA; touch para iOS; min-w-0 evita desbordes horizontales que rompen el layout */
 #view-content {
-    @apply min-h-0 flex-1 overflow-x-hidden overflow-y-auto;
+    @apply min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* --- Componentes de Formulario --- */
