@@ -4,7 +4,7 @@ import { handleNavigation } from '../router.js';
 
 export function renderLogin(container) {
     container.innerHTML = `
-        <div class="w-full flex items-center justify-center min-h-screen bg-gray-100">
+        <div class="flex w-full flex-1 min-h-0 flex-col items-center justify-center overflow-y-auto bg-gray-100 py-8 px-4">
             <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
                 <div>
                     <h2 id="form-title" class="text-2xl font-bold text-center text-gray-900">Iniciar Sesión</h2>
