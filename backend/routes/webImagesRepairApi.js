@@ -109,24 +109,22 @@ function createRouter() {
             propiedadId = String(req.body.propiedadId).trim();
         }
 
-        try {
-            const result = await runWebImagesRepair({
-                empresaId,
-                apply: true,
-                force,
-                recompressHeroFull,
-                propiedadId: propiedadId || undefined,
-                log: (line) => console.log(`[repair-web-images-api ${empresaId.slice(0, 8)}…] ${line}`),
-            });
-            lastRunByEmpresa.set(empresaId, Date.now());
-            return res.json({ ok: true, ...result });
-        } catch (err) {
-            console.error('[maintenance/regenerate-web-images]', err);
-            const code = err.code === 'PG_REQUIRED' ? 503 : 500;
-            return res.status(code).json({
-                error: err.message || 'No se pudieron regenerar las miniaturas.',
-            });
-        }
+        lastRunByEmpresa.set(empresaId, Date.now());
+
+        // Responde de inmediato — la operación puede tomar minutos y Render
+        // cierra conexiones HTTP largas antes de que termine.
+        res.json({ ok: true, async: true, message: 'Proceso iniciado. Las imágenes se regenerarán en los próximos minutos.' });
+
+        runWebImagesRepair({
+            empresaId,
+            apply: true,
+            force,
+            recompressHeroFull,
+            propiedadId: propiedadId || undefined,
+            log: (line) => console.log(`[repair-web-images-api ${empresaId.slice(0, 8)}…] ${line}`),
+        }).catch((err) => {
+            console.error('[maintenance/regenerate-web-images] async error:', err.message);
+        });
     });
 
     return router;

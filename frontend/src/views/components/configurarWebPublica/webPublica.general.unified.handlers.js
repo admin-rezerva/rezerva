@@ -480,18 +480,15 @@ export function bindRepairWebImages({ attach, fetchAPI }) {
         if (result) result.classList.add('hidden');
 
         try {
-            const data = await fetchAPI('/website/maintenance/regenerate-web-images', {
+            await fetchAPI('/website/maintenance/regenerate-web-images', {
                 method: 'POST',
                 body: { force: true },
             });
-            const g = data.gallery || {};
-            const c = data.cardImage || {};
             if (result) {
                 result.classList.remove('hidden');
                 result.innerHTML = `
-                    <p class="font-semibold mb-1">Proceso completado</p>
-                    <p>Galería: ${g.repaired || 0} reparadas, ${g.skipped || 0} ya estaban OK, ${g.deleted || 0} eliminadas.</p>
-                    <p>Tarjetas: ${c.thumbsNew || 0} miniaturas generadas.</p>
+                    <p class="font-semibold mb-1">Proceso iniciado correctamente</p>
+                    <p>Las imágenes se están regenerando en el servidor. Puede tomar 1–3 minutos dependiendo de la cantidad de fotos. No es necesario esperar en esta pantalla.</p>
                 `;
             }
             if (status) status.textContent = '';
