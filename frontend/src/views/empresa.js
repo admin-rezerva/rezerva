@@ -76,6 +76,7 @@ function renderInfoGeneral() {
                 <div>
                     <label for="contactoEmail" class="block text-sm font-medium text-gray-700">Email de Contacto</label>
                     <input type="email" id="contactoEmail" name="contactoEmail" value="${empresaInfo.contactoEmail || ''}" class="mt-1 form-input">
+                    <p class="text-xs text-gray-500 mt-1">Se usa en presupuestos, plantillas y datos que ves tú y el huésped en el cuerpo del mensaje. La cabecera <strong>Reply-To</strong> de los correos transaccionales la define la plataforma (buzón de soporte Rezerva), no este campo.</p>
                 </div>
                 <div>
                     <label for="contactoTelefono" class="block text-sm font-medium text-gray-700">Teléfono de Contacto</label>

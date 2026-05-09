@@ -68,7 +68,7 @@ function _buildNoAvailabilityCreatedHtml({ nombreCliente, nombreEmpresa, checkin
 <table width="620" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden">
   <tr><td style="background:#111827;color:#fff;padding:20px 24px">
     <h2 style="margin:0;font-size:22px">Te avisaremos si se libera disponibilidad</h2>
-    <p style="margin:6px 0 0 0;font-size:14px;opacity:.9">${nombreEmpresa || 'SuiteManager'}</p>
+    <p style="margin:6px 0 0 0;font-size:14px;opacity:.9">${nombreEmpresa || 'Rezerva'}</p>
   </td></tr>
   <tr><td style="padding:22px 24px">
     <p>Hola <strong>${nombreCliente || 'viajero/a'}</strong>, registramos tu solicitud para:</p>
@@ -89,7 +89,7 @@ function _buildMatchEmailHtml({ nombreCliente, nombreEmpresa, checkin, checkout,
 <table width="620" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden">
   <tr><td style="background:#065f46;color:#fff;padding:20px 24px">
     <h2 style="margin:0;font-size:22px">¡Se liberó disponibilidad para tu solicitud!</h2>
-    <p style="margin:6px 0 0 0;font-size:14px;opacity:.9">${nombreEmpresa || 'SuiteManager'}</p>
+    <p style="margin:6px 0 0 0;font-size:14px;opacity:.9">${nombreEmpresa || 'Rezerva'}</p>
   </td></tr>
   <tr><td style="padding:22px 24px">
     <p>Hola <strong>${nombreCliente || 'viajero/a'}</strong>, detectamos disponibilidad para:</p>
@@ -228,7 +228,7 @@ async function _resolveEmpresaPublicBaseUrl(empresaId) {
     } else if (subdomain) {
         baseUrl = `https://${subdomain}.${process.env.PLATFORM_DOMAIN || 'rezerva.cl'}`;
     }
-    return { nombreEmpresa: empresa.nombre || 'SuiteManager', baseUrl };
+    return { nombreEmpresa: empresa.nombre || 'Rezerva', baseUrl };
 }
 
 async function crearEsperaDisponibilidad(db, empresaId, payload) {

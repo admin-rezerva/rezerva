@@ -43,14 +43,14 @@ const BY_DISPARADOR = {
  */
 function fallbackSubjectForDisparador(disparadorKey, lang) {
     const k = String(disparadorKey || '').trim();
-    const row = BY_DISPARADOR[k] || { es: 'Mensaje de StayManager', en: 'Message from StayManager' };
+    const row = BY_DISPARADOR[k] || { es: 'Mensaje de Rezerva', en: 'Message from Rezerva' };
     return lang === 'en' ? (row.en || row.es) : (row.es || row.en);
 }
 
 /** Fallback envío legado (sin plantilla PG) — huésped. */
 function fallbackSubjectConfirmacionReservaHuesped(reservaId, empresaNombre, lang) {
     const en = lang === 'en';
-    const name = empresaNombre || (en ? 'StayManager' : 'SuiteManager');
+    const name = empresaNombre || 'Rezerva';
     return en
         ? `Reservation confirmed #${reservaId} — ${name}`
         : `✅ Reserva confirmada #${reservaId} — ${name}`;

@@ -319,7 +319,7 @@ async function runDigestOperacion(opts = {}) {
             const html = `<div style="font-family:Arial,sans-serif;padding:16px;line-height:1.5"><pre style="white-space:pre-wrap;font-family:inherit">${cuerpo.replace(/</g, '&lt;')}</pre></div>`;
             await emailService.enviarCorreo(null, {
                 to,
-                subject: `[SuiteManager] Resumen diario — ${e.nombre || 'Operación'}`,
+                subject: `[Rezerva] Resumen diario — ${e.nombre || 'Operación'}`,
                 html,
                 empresaId: e.id,
             }).catch((err) => console.warn('[job digest]', err.message));
@@ -330,7 +330,7 @@ async function runDigestOperacion(opts = {}) {
             + (nLlegMananaSinHora > 0 ? `, llegadas mañana sin hora ${nLlegMananaSinHora}` : '')
             + (nIcalErr7d > 0 ? `, iCal err 7d ${nIcalErr7d}` : '');
         await sendDigestPushToEmpresa(null, e.id, {
-            title: `Resumen operación — ${e.nombre || 'SuiteManager'}`,
+            title: `Resumen operación — ${e.nombre || 'Rezerva'}`,
             body: pushBody,
             url: '/',
         }).catch((err) => console.warn('[job digest push]', err.message));

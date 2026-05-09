@@ -47,7 +47,7 @@ const enviarEmailPropuesta = async (db, empresaId, datos) => {
         linkPago: linkPago || ''
     });
 
-    const resultado = await emailService.enviarCorreo(db, { to: cliente.email, subject: asunto, html: contenido, empresaId, replyTo: empresaData?.contactoEmail });
+    const resultado = await emailService.enviarCorreo(db, { to: cliente.email, subject: asunto, html: contenido, empresaId });
     if (!resultado.success) throw new Error(resultado.error || 'Error al enviar correo');
 
     if (cliente.id) {
@@ -104,8 +104,8 @@ ${empresaData?.website || ''}`.trim();
 
     const resultado = await emailService.enviarCorreo(db, {
         to: cliente.email,
-        subject: `✅ Reserva Confirmada #${reservaId} - ${empresaData?.nombre || 'SuiteManager'}`,
-        html: textoAHtml(contenidoTexto), empresaId, replyTo: empresaData?.contactoEmail
+        subject: `✅ Reserva Confirmada #${reservaId} - ${empresaData?.nombre || 'Rezerva'}`,
+        html: textoAHtml(contenidoTexto), empresaId
     });
     if (!resultado.success) throw new Error(resultado.error || 'Error al enviar correo');
 

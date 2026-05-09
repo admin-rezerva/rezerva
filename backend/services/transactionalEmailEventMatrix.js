@@ -32,7 +32,7 @@ const MATRIZ_EVENTOS_CORREO = Object.freeze([
             'Misma plantilla PG que otras confirmaciones (`reserva_confirmada`). Seña 10% sugerida vía `extras` del motor. '
             + 'Variables checkout post-reserva (URLs desde `websiteSettings.booking`, hora, llegada ligera, comentarios, identidad check-in, consentimiento): `[LINK_CHECKIN_ONLINE]`, `[LINK_MANUAL_HUESPED]`, `[LINK_MANUAL_HUESPED_PDF]`, `[HORA_LLEGADA_ESTIMADA]`, `[MEDIO_LLEGADA]`, `[MEDIO_LLEGADA_TEXTO]`, `[REFERENCIA_TRANSPORTE]`, `[DOC_REF_VIAJERO]`, `[NOTAS_HUESPED_CHECKOUT]`, `[DOC_*]`, `[CONSENTIMIENTO_IDENTIDAD_LINEA]` en `construirVariablesDesdeReserva`. '
             + '`[LINK_RESEÑA]` / `[LINK_RESENA]`: outbound vía `resolverLinkResenaOutbound` (misma URL externa o token `/r/…` que post-estancia; `?ref=confirmacion`). '
-            + 'Si `manualHuespedPdfUrl` es HTTPS público y hay Resend, se intenta adjuntar el PDF (límite 5 MB); si falla, mismo correo con bloque HTML de enlace; si Resend no está, último recurso Gmail SMTP sin adjuntos. '
+            + 'Si `manualHuespedPdfUrl` es HTTPS público, se intenta adjuntar el PDF vía Nodemailer (límite razonable ~5 MB); si falla, mismo correo con bloque HTML de enlace. '
             + 'SSR `/confirmacion?reservaId=` (`confirmacion.ejs`): enlaces huésped a `manualHuespedUrl`, `manualHuespedPdfUrl` y `checkinOnlineUrl` si están configurados (misma validación http(s) que `normalizeBookingUrlForSsr`). '
             + 'El `precioFinal` en query debe coincidir con la reconciliación del servidor: el widget (`booking.js`) y el CTA de grupo en `home.ejs` llaman `POST /preview-precio-reserva-checkout` antes de navegar a `/reservar` (menores/camas 0 salvo que el flujo ya los envíe explícitamente).',
     },

@@ -267,9 +267,6 @@ async function enviarPorDisparador(_db, empresaId, disparadorKey, {
     if (!subjectLine) {
         subjectLine = fallbackSubjectForDisparador(disparadorKey, htmlLangMotor);
     }
-    const replyPreferido = (em.replyToOverride && String(em.replyToOverride).trim())
-        || (ctx.contactoEmail && String(ctx.contactoEmail).trim())
-        || undefined;
 
     let htmlCuerpo = contenido;
     const px = openPixelUrl && !skipRegistro ? String(openPixelUrl).replace(/[\s"<>]/g, '') : '';
@@ -282,7 +279,6 @@ async function enviarPorDisparador(_db, empresaId, disparadorKey, {
         subject: subjectLine,
         html: htmlCuerpo,
         empresaId,
-        replyTo: replyPreferido,
         attachments: Array.isArray(attachments) && attachments.length ? attachments : undefined,
         appendHtmlWhenNoPdf: String(appendHtmlWhenNoPdf || '').trim(),
     });

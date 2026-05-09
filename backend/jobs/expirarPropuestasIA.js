@@ -113,7 +113,7 @@ const cancelarPropuestasIAVencidas = async () => {
                 if (row.admin_email) {
                     emailService.enviarCorreo(dbFs, {
                         to: row.admin_email,
-                        subject: `[SuiteManager] Reserva anulada por no pago — ${row.alojamiento_nombre}`,
+                        subject: `[Rezerva] Reserva anulada por no pago — ${row.alojamiento_nombre}`,
                         html: _buildCancelAdminEmail({
                             nombreCliente: row.cliente_nombre || 'Huésped desconocido',
                             emailCliente: row.cliente_email || 'sin email',

@@ -10,7 +10,7 @@ Este archivo es para **quien tenga acceso** a Supabase (o Postgres de producció
 |------|--------|-------|
 | 1 | SQL migración en **producción** | [ ] |
 | 2 | **Deploy** backend (y front si aplica) en Render | [ ] |
-| 3 | Variables Render (mínimo: `DATABASE_URL`, `RESEND_API_KEY`, `EMAIL_FROM`, secret Firebase) | [ ] |
+| 3 | Variables Render (mínimo: `DATABASE_URL`, `EMAIL_USER`, `EMAIL_PASS`, `EMAIL_FROM`, secret Firebase) | [ ] |
 | 4 | GPT **SuiteManager Marketplace IA**: **reimportar** OpenAPI **1.4.8** (requiere **ChatGPT Plus** u plan que permita Actions) | [ ] |
 | 5 | Prueba A–E (abajo) + **chat nuevo** en ChatGPT tras reimport | [ ] |
 | 6 | Marcar tema **Listo** en `TASKS/tablero.md` cuando Plus + prueba conversacional OK | [ ] |
@@ -100,7 +100,7 @@ Entrar al panel → **Lista de espera** (`/gestion-diaria/espera-disponibilidad`
 
 **E — Correo**
 
-Revisar bandeja (y Resend dashboard) por el mail de confirmación de alta en lista de espera si el caso B registró nuevo registro.
+Revisar bandeja por el mail de confirmación de alta en lista de espera si el caso B registró nuevo registro.
 
 ---
 

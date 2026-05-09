@@ -20,6 +20,30 @@ function normalizeCompanyName(rawValue) {
     return String(rawValue || '').trim().replace(/\s+/g, ' ');
 }
 
+/** Cabeceras From/Reply-To las define el servidor (EMAIL_*); no se usan en envío. */
+const _DEPRECATED_WS_EMAIL_KEYS = ['replyToOverride', 'nombreRemitenteOverride'];
+
+function _sanitizeWebsiteSettingsEmailObj(email) {
+    if (!email || typeof email !== 'object' || Array.isArray(email)) return email;
+    const out = { ...email };
+    for (const k of _DEPRECATED_WS_EMAIL_KEYS) {
+        if (Object.prototype.hasOwnProperty.call(out, k)) delete out[k];
+    }
+    return out;
+}
+
+/** Quita overrides de remitente/reply obsoletos en `configuracion.websiteSettings.email`. */
+function sanitizeConfiguracionDeprecatedEmailHeaders(cfg) {
+    if (!cfg || typeof cfg !== 'object' || !cfg.websiteSettings?.email) return cfg;
+    return {
+        ...cfg,
+        websiteSettings: {
+            ...cfg.websiteSettings,
+            email: _sanitizeWebsiteSettingsEmailObj(cfg.websiteSettings.email),
+        },
+    };
+}
+
 async function ensureEmpresaIdentityUniqueness(empresaId, nombreValue, subdominioValue) {
     if (nombreValue) {
         const { rows } = await pool.query(
@@ -69,7 +93,7 @@ function mapPgConflict(error) {
 
 function mapearEmpresa(row) {
     if (!row) return null;
-    return {
+    return sanitizeConfiguracionDeprecatedEmailHeaders({
         id: row.id,
         nombre: row.nombre,
         email: row.email,
@@ -79,8 +103,8 @@ function mapearEmpresa(row) {
         google_maps_url: row.google_maps_url || null,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
-        ...(row.configuracion || {})
-    };
+        ...(row.configuracion || {}),
+    });
 }
 
 const obtenerDetallesEmpresa = async (_db, empresaId) => {
@@ -184,6 +208,8 @@ const actualizarDetallesEmpresa = async (_db, empresaId, datos) => {
         console.log(`[SQL UPDATE empresas] Preservando websiteSettings existente (no se envió nuevo)`);
         configuracionFinal.websiteSettings = configuracionActual.websiteSettings;
     }
+
+    configuracionFinal = sanitizeConfiguracionDeprecatedEmailHeaders(configuracionFinal);
 
     const sql = `
         UPDATE empresas SET

@@ -95,7 +95,8 @@ module.exports = (db) => {
                 nombre: detalles?.nombre,
                 hasWebsiteSettings: !!detalles?.websiteSettings,
                 websiteSettingsKeys: detalles?.websiteSettings ? Object.keys(detalles.websiteSettings) : [],
-                configuracion: detalles?.configuracion ? 'PRESENTE' : 'AUSENTE'
+                // `mapearEmpresa` aplana `configuracion` en la raíz; no existe `detalles.configuracion` en la respuesta.
+                notaConfig: 'websiteSettings y demás vienen de configuracion en BD',
             });
 
             if (detalles?.websiteSettings?.theme) {
