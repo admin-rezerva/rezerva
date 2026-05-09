@@ -28,7 +28,9 @@ info:
     **v1.4.8:** Lista de espera unificada con el panel — **`lista_espera`** en **409**/**422** de `POST /api/reservas` y espejo `POST /api/public/reservas`; **400** `WAITLIST_EMAIL_REQUIRED` en `POST /api/public/reservar/intent` si hay bloqueo sin email en `huesped`.
 
 servers:
-  - url: https://suite-manager.onrender.com
+  # Base canónica donde el backend expone OpenAPI y /api/public/* (custom domain en prod).
+  # Si importás este YAML en Gemini/ChatGPT sin override manual, debe coincidir con el host que responde 200.
+  - url: https://rezerva.cl
 
 paths:
 

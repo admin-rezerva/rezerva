@@ -11,7 +11,7 @@ async function test() {
     if (apiKey) console.log(`[Env] Key length: ${apiKey.length}`);
 
     // 2. Initialize Provider
-    const config = { apiKey: apiKey, model: "gemini-2.0-flash" };
+    const config = { apiKey: apiKey, model: 'gemini-2.5-flash' };
     console.log("[Init] Creating GeminiProvider...");
     const provider = new GeminiProvider(config);
 

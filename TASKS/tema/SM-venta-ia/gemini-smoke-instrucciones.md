@@ -5,7 +5,7 @@
 ### Aclaraciones (evitar falsos positivos)
 
 1. **Push a GitHub:** no hace falta **para probar** si `https://rezerva.cl` ya apunta al backend en Render: los GET son al código **ya desplegado**. Hace falta **push + deploy** solo para **cambiar** el comportamiento del servidor (nuevo código). Los smoke HTTP los puede ejecutar Gemini / `curl` / navegador contra la URL pública mientras responda 200.
-2. **`GET /api/public/version`:** el campo `version` del JSON es la **versión de contrato API pública** (p. ej. alineada a `info.version` del OpenAPI, por defecto **1.4.7** vía `PUBLIC_API_CONTRACT_VERSION` o constante en código), **no** el número de build de la app. Tras un deploy reciente, debe ser coherente con el YAML.
+2. **`GET /api/public/version`:** el campo `version` del JSON es la **versión de contrato API pública** (p. ej. alineada a `info.version` del OpenAPI, hoy **1.4.8** vía `PUBLIC_API_CONTRACT_VERSION` o constante en código), **no** el número de build de la app. Tras un deploy reciente, debe ser coherente con el YAML.
 3. **`/ai/buscar-empresa` y `ready_for_sales`:** indica si la empresa está **lista para venta por canal/tarifas** en nuestro modelo; no es un campo oficial “apto Google Hotel Center” — el feed global partner tiene reglas adicionales (listado, geo, etc. en `TASKS/tema/SM-venta-ia/venta-ia.md` §7).
 4. **Rutas distintas:** detalle rico para agentes: **`GET /api/alojamientos/detalle`** (prefijo `/api/`, no `/api/public/`) con `alojamiento_id` y opcionalmente `checkin` / `checkout`. Los paths bajo **`/api/public/*`** son el router `publicRoutes.js` (otro prefijo).
 5. **JSON (API) vs XML (Google):** feeds partner en **`feeds.<domino>/feeds/google/*.xml`** con `?auth=` — no son el mismo formato que el JSON; validación distinta.
@@ -16,8 +16,8 @@
 
 ## 1. Contrato OpenAPI
 
-- Archivo en el repo: **`backend/openapi/openapi-gemini.yaml`** (versión en `info.version`, ej. **1.4.7**).
-- El campo **`servers.url`** del YAML puede estar desactualizado respecto a producción; **sustituir** siempre por la base real.
+- Archivo en el repo: **`backend/openapi/openapi-gemini.yaml`** (versión en `info.version`, ej. **1.4.8**).
+- El campo **`servers.url`** del YAML debe ser la base que responde **200** en `/api/public/version` (en prod: **`https://rezerva.cl`**). Si tu entorno usa otro host (staging `*.onrender.com`, etc.), **sustituir** la base al importar o en la config del conector.
 
 ---
 

@@ -16,12 +16,12 @@ function envApiKey(name) {
 }
 
 /**
- * Id corto para getGenerativeModel (p. ej. gemini-2.0-flash).
+ * Id corto para getGenerativeModel (p. ej. gemini-2.5-flash).
  * NO anteponer `models/` aquí: @google/generative-ai añade `models/` si el string no contiene `/`.
  */
 function normalizeGeminiModelId(raw) {
     const s = raw == null ? '' : String(raw).trim().replace(/^\uFEFF/, '');
-    let id = s || 'gemini-2.0-flash';
+    let id = s || 'gemini-2.5-flash';
     if (id.startsWith('models/')) id = id.slice('models/'.length).trim();
     return id;
 }
@@ -53,7 +53,7 @@ const aiConfig = {
 
     gemini: {
         apiKey: envApiKey('GEMINI_API_KEY'),
-        // GEMINI_MODEL: id corto (gemini-2.0-flash); si pegas models/xxx se quita el prefijo.
+        // GEMINI_MODEL: id corto (gemini-2.5-flash); si pegas models/xxx se quita el prefijo.
         model: normalizeGeminiModelId(process.env.GEMINI_MODEL),
         /**
          * Misma convención que @google/generative-ai (DEFAULT_API_VERSION = v1beta).

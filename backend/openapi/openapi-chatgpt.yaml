@@ -30,7 +30,8 @@ info:
     **v1.4.8:** Lista de espera unificada con el panel: en **falta de disponibilidad**, `POST /api/reservas` (y espejo `POST /api/public/reservas`) puede incluir **`lista_espera`** en **409** / **422**. `POST /api/public/reservar/intent` puede devolver **400** `WAITLIST_EMAIL_REQUIRED` si hay bloqueo y falta email válido en `huesped`.
 
 servers:
-  - url: https://suite-manager.onrender.com
+  # Base canónica donde el backend expone OpenAPI y /api/public/* (custom domain en prod).
+  - url: https://rezerva.cl
 
 paths:
 

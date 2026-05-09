@@ -26,7 +26,7 @@ function stripLeadingModelsPrefix(id) {
 }
 
 function buildModelCandidates(preferredShort) {
-    const first = stripLeadingModelsPrefix(preferredShort) || 'gemini-2.0-flash';
+    const first = stripLeadingModelsPrefix(preferredShort) || 'gemini-2.5-flash';
     const out = [];
     const seen = new Set();
     for (const id of [first, ...FALLBACK_SHORT_MODEL_IDS]) {
@@ -87,7 +87,7 @@ class GeminiProvider {
                 config.requestOptions && typeof config.requestOptions === 'object'
                     ? config.requestOptions
                     : { apiVersion: 'v1beta' };
-            const preferred = stripLeadingModelsPrefix(config.model) || 'gemini-2.0-flash';
+            const preferred = stripLeadingModelsPrefix(config.model) || 'gemini-2.5-flash';
             this._candidateShortIds = buildModelCandidates(preferred);
             this._activeCandidateIndex = 0;
             this._diagnosticsDone = false;
