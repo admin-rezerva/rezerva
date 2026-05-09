@@ -1,17 +1,29 @@
 {
-  "generatedAt": "2026-05-08T23:58:56.077Z",
+  "generatedAt": "2026-05-09T00:31:43.255Z",
   "assets": {
     "logo-bg-white": {
       "png": "logo-bg-white.png",
       "webp": "logo-bg-white.webp",
-      "width": 360,
-      "height": 196
+      "avif": "logo-bg-white.avif",
+      "width": 400,
+      "height": 218,
+      "bytes": {
+        "png": 37933,
+        "webp": 5020,
+        "avif": 3587
+      }
     },
     "logo-transparent": {
       "png": "logo-transparent.png",
       "webp": "logo-transparent.webp",
-      "width": 360,
-      "height": 196
+      "avif": "logo-transparent.avif",
+      "width": 400,
+      "height": 218,
+      "bytes": {
+        "png": 78055,
+        "webp": 4944,
+        "avif": 3703
+      }
     },
     "favicon-bg-white-32": {
       "png": "favicon-bg-white-32.png",
@@ -40,6 +52,7 @@
     "og-default": {
       "png": "og-default.png",
       "webp": "og-default.webp",
+      "avif": "og-default.avif",
       "width": 1200,
       "height": 630
     }

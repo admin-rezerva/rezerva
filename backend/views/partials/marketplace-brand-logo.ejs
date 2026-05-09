@@ -1,29 +1,33 @@
 <%#
   Locals: mp, mpHomeUrl, logoVariant: 'header' | 'footer'
-  Header (#fff): logo con fondo blanco (sin halo gris). Footer (#F7F7F7): transparente (sin rectángulo blanco).
+  Header (#fff): logo-bg-white (AVIF/WebP/PNG — ver scripts/tooling/optimize-marketplace-branding.js).
+  Footer (#F7F7F7): logo-transparent.
+  Intrínseco actual: 400×218 (build-manifest.json).
 %>
 <% const variant = logoVariant === 'footer' ? 'footer' : 'header'; %>
 <a href="<%= mpHomeUrl %>"
    class="mp-brand-logo mp-brand-logo--<%= variant %> inline-flex items-center flex-shrink-0 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#222222] <%= variant === 'footer' ? 'justify-center' : '' %>">
     <% if (variant === 'header') { %>
     <picture>
+        <source type="image/avif" srcset="/public/branding/logo-bg-white.avif">
         <source type="image/webp" srcset="/public/branding/logo-bg-white.webp">
         <img src="/public/branding/logo-bg-white.png"
              alt="<%= mp.brandLabel %>"
              class="mp-brand-logo__img"
-             width="360"
-             height="196"
+             width="400"
+             height="218"
              decoding="async"
              fetchpriority="high" />
     </picture>
     <% } else { %>
     <picture>
+        <source type="image/avif" srcset="/public/branding/logo-transparent.avif">
         <source type="image/webp" srcset="/public/branding/logo-transparent.webp">
         <img src="/public/branding/logo-transparent.png"
              alt="<%= mp.brandLabel %>"
              class="mp-brand-logo__img"
-             width="360"
-             height="196"
+             width="400"
+             height="218"
              decoding="async" />
     </picture>
     <% } %>
