@@ -3,12 +3,14 @@
 // El modo activo se controla desde backend/config/dbConfig.js.
 
 const { IS_POSTGRES } = require('../config/dbConfig');
-const { Pool } = require('pg');
-const dns = require('dns');
 
 if (!IS_POSTGRES) {
+    // No cargar `pg` en modo Firestore: CI y scripts ligeros no instalan backend/node_modules.
     module.exports = null;
 } else {
+    const { Pool } = require('pg');
+    const dns = require('dns');
+
     // Forzar IPv4 — Render resuelve hostnames de Supabase a IPv6 pero sin conectividad IPv6.
     dns.setDefaultResultOrder('ipv4first');
 
