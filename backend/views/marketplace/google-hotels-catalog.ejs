@@ -81,16 +81,16 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap items-center gap-3 lg:gap-5">
         <%- include('../partials/marketplace-brand-logo', { mp, mpHomeUrl, logoVariant: 'header' }) %>
 
-        <a href="<%= mpHomeUrl %>" class="hidden sm:inline-flex text-sm font-semibold text-neutral-600 hover:text-primary-600 px-2 py-1 rounded-md whitespace-nowrap">
+        <a href="<%= mpHomeUrl %>" class="hidden sm:inline-flex text-sm font-semibold text-neutral-700 hover:text-neutral-950 px-2 py-1 rounded-md whitespace-nowrap transition-colors">
             <%= mp.ghCatalogBackHome %>
         </a>
 
         <nav class="flex flex-1 flex-wrap items-center justify-end gap-2 sm:gap-3 text-sm font-semibold">
-            <a href="<%= mpHomeUrl %>" class="sm:hidden text-primary-600"><%= mp.ghCatalogBackHome %></a>
+            <a href="<%= mpHomeUrl %>" class="sm:hidden text-neutral-700 hover:text-neutral-950"><%= mp.ghCatalogBackHome %></a>
             <span class="hidden sm:inline text-neutral-300">|</span>
-            <a href="<%= hreflangEsUrl %>" class="px-2 py-1 rounded-md <%= mp.htmlLang === 'es' ? 'bg-neutral-100 text-neutral-900' : 'text-primary-600 hover:underline' %>"><%= mp.langSwitchEs %></a>
+            <a href="<%= hreflangEsUrl %>" class="px-2 py-1 rounded-md <%= mp.htmlLang === 'es' ? 'bg-neutral-100 text-neutral-900' : 'text-neutral-600 hover:text-neutral-950 hover:underline' %>"><%= mp.langSwitchEs %></a>
             <span class="text-neutral-300">|</span>
-            <a href="<%= hreflangEnUrl %>" class="px-2 py-1 rounded-md <%= mp.htmlLang === 'en' ? 'bg-neutral-100 text-neutral-900' : 'text-primary-600 hover:underline' %>"><%= mp.langSwitchEn %></a>
+            <a href="<%= hreflangEnUrl %>" class="px-2 py-1 rounded-md <%= mp.htmlLang === 'en' ? 'bg-neutral-100 text-neutral-900' : 'text-neutral-600 hover:text-neutral-950 hover:underline' %>"><%= mp.langSwitchEn %></a>
         </nav>
     </div>
 </header>
@@ -114,7 +114,7 @@
     <div class="text-center py-16 mp-alert-soft max-w-lg mx-auto">
         <i class="fas fa-hotel text-4xl text-neutral-200 mb-4 block"></i>
         <p class="text-neutral-600 mb-4"><%= mp.ghCatalogEmpty %></p>
-        <a href="<%= mpHomeUrl %>" class="inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:underline">
+        <a href="<%= mpHomeUrl %>" class="inline-flex items-center gap-2 text-sm font-semibold text-neutral-800 hover:text-neutral-950 hover:underline">
             <i class="fas fa-arrow-left" style="font-size:12px;"></i> <%= mp.ghCatalogBackHome %>
         </a>
     </div>

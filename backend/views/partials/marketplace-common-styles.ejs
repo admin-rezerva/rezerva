@@ -3,18 +3,37 @@
     body { font-family: 'Inter', sans-serif; }
     .mp-header { background: rgba(255,255,255,0.92); border-bottom: 1px solid rgb(229 231 235); position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px); }
     .mp-brand-logo { line-height: 0; text-decoration: none; color: inherit; }
+    /* Wordmark: ancho generoso (antes height:36px dejaba el logo ilegible) */
     .mp-brand-logo__img {
-        height: 36px;
-        width: auto;
-        max-width: min(200px, 46vw);
-        object-fit: contain;
         display: block;
+        width: min(280px, 82vw);
+        height: auto;
+        object-fit: contain;
+        object-position: left center;
+    }
+    @media (min-width: 640px) {
+        .mp-brand-logo__img { width: min(300px, 44vw); }
+    }
+    @media (min-width: 1024px) {
+        .mp-brand-logo__img { width: min(320px, 30vw); }
     }
     .mp-brand-logo--footer .mp-brand-logo__img {
-        height: 28px;
-        max-width: 180px;
+        width: min(260px, 78vw);
         margin-left: auto;
         margin-right: auto;
+    }
+    @media (min-width: 768px) {
+        .mp-brand-logo--footer .mp-brand-logo__img { width: min(300px, 100%); }
+    }
+    .mp-footer__link {
+        text-decoration: none;
+        border-bottom: 1px solid transparent;
+        padding-bottom: 1px;
+        transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .mp-footer__link:hover {
+        text-decoration: none;
+        border-bottom-color: rgb(63 63 70);
     }
     .mp-hero {
         background: linear-gradient(180deg, rgb(250 250 250) 0%, rgb(255 255 255) 55%, rgb(255 255 255) 100%);
@@ -67,8 +86,8 @@
         transition: color 0.15s ease, background 0.15s ease;
     }
     .search-mobile-panel-close:hover {
-        color: rgb(79 70 229);
-        background: rgb(238 242 255);
+        color: rgb(24 24 27);
+        background: rgb(244 244 245);
     }
     @media (max-width: 767px) {
         .mp-header .max-w-7xl {
@@ -97,8 +116,8 @@
         }
         .search-mobile-collapsed__icon {
             flex-shrink: 0;
-            color: rgb(79 70 229);
-            font-size: 15px;
+        color: rgb(24 24 27);
+        font-size: 15px;
         }
         .search-mobile-collapsed__text {
             flex: 1;
@@ -232,5 +251,5 @@
     .section-title { font-size: 1.35rem; font-weight: 700; color: rgb(17 24 39); margin-bottom: 20px; }
     .mp-alert-soft { background: #fff; border: 1px solid rgb(229 231 235); border-radius: 12px; padding: 1rem 1.25rem; color: rgb(55 65 81); font-size: 0.95rem; }
     .mp-gh-cta-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.25rem; }
-    .mp-gh-cta-text { font-size: 0.875rem; font-weight: 600; color: rgb(37 99 235); display: inline-flex; align-items: center; gap: 0.35rem; }
+    .mp-gh-cta-text { font-size: 0.875rem; font-weight: 600; color: rgb(24 24 27); display: inline-flex; align-items: center; gap: 0.35rem; }
 </style>

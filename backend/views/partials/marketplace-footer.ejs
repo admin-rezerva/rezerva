@@ -2,20 +2,26 @@
   Locals: mp, mpHomeUrl, footerMode: 'home' | 'google-hotels'
 %>
 <% const ghPath = '/google-hotels' + (mp.htmlLang === 'en' ? '?lang=en' : ''); %>
-<footer class="border-t border-neutral-200 mt-16 md:mt-20 py-10 bg-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-neutral-500">
-        <div class="mb-3 flex justify-center">
-            <%- include('marketplace-brand-logo', { mp, mpHomeUrl, logoVariant: 'footer' }) %>
+<footer class="mp-footer mt-16 md:mt-24 border-t border-neutral-200 bg-neutral-100/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-14">
+        <div class="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between lg:gap-16">
+            <div class="flex flex-col items-center lg:items-start gap-5 lg:max-w-lg">
+                <div class="mp-footer-logo flex justify-center lg:justify-start w-full">
+                    <%- include('marketplace-brand-logo', { mp, mpHomeUrl, logoVariant: 'footer' }) %>
+                </div>
+                <p class="text-sm text-neutral-600 text-center lg:text-left leading-relaxed">
+                    <%= mp.footerTagline %>
+                </p>
+            </div>
+            <nav class="mp-footer-nav flex flex-wrap items-center justify-center lg:justify-end gap-x-8 gap-y-3 text-sm font-medium text-neutral-700" aria-label="<%= mp.htmlLang === 'en' ? 'Legal and links' : 'Legal y enlaces' %>">
+                <% if (footerMode === 'google-hotels') { %>
+                <a href="<%= mpHomeUrl %>" class="mp-footer__link hover:text-neutral-950"><%= mp.ghCatalogBackHome %></a>
+                <% } else { %>
+                <a href="<%= ghPath %>" class="mp-footer__link hover:text-neutral-950"><%= mp.ghFooterCatalog %></a>
+                <% } %>
+                <a href="/legal/terms" class="mp-footer__link hover:text-neutral-950"><%= mp.footerTerms %></a>
+                <a href="/legal/privacy" class="mp-footer__link hover:text-neutral-950"><%= mp.footerPrivacy %></a>
+            </nav>
         </div>
-        <p>
-            <%= mp.footerTagline %>
-            <% if (footerMode === 'google-hotels') { %>
-            · <a href="<%= mpHomeUrl %>" class="hover:underline text-primary-600"><%= mp.ghCatalogBackHome %></a>
-            <% } else { %>
-            · <a href="<%= ghPath %>" class="hover:underline text-primary-600"><%= mp.ghFooterCatalog %></a>
-            <% } %>
-            · <a href="/legal/terms" class="hover:underline text-primary-600"><%= mp.footerTerms %></a>
-            · <a href="/legal/privacy" class="hover:underline text-primary-600"><%= mp.footerPrivacy %></a>
-        </p>
     </div>
 </footer>
