@@ -17,12 +17,12 @@ function envApiKey(name) {
 
 /**
  * El SDK arma la URL como `{base}/{apiVersion}/{model}:generateContent`.
- * Debe incluir el prefijo `models/` (p. ej. `models/gemini-1.5-flash`), si no la ruta queda
- * `/v1/gemini-1.5-flash:generateContent` y la API responde 404.
+ * Hay que pasar el recurso completo `models/<nombre>`; si no, la ruta queda mal y hay 404.
+ * Por defecto `gemini-2.0-flash`: `gemini-1.5-flash` suele dar 404 en cuentas/API actuales (modelo retirado de la lista).
  */
 function normalizeGeminiModelId(raw) {
     const s = raw == null ? '' : String(raw).trim().replace(/^\uFEFF/, '');
-    const id = s || 'gemini-1.5-flash';
+    const id = s || 'gemini-2.0-flash';
     if (id.startsWith('models/')) return id;
     return `models/${id}`;
 }
@@ -54,16 +54,15 @@ const aiConfig = {
 
     gemini: {
         apiKey: envApiKey('GEMINI_API_KEY'),
-        // GEMINI_MODEL puede ser `gemini-1.5-flash` o `models/gemini-1.5-flash` (se normaliza).
+        // GEMINI_MODEL ej. gemini-2.0-flash o models/gemini-2.0-flash (se normaliza).
         model: normalizeGeminiModelId(process.env.GEMINI_MODEL),
         /**
-         * El SDK usa v1beta por defecto (DEFAULT_API_VERSION en @google/generative-ai).
-         * Para gemini-1.5-flash + generateContent la API estable es v1; en v1beta devuelve 404 "model not found".
-         * Override solo si Google documenta otro valor: GEMINI_API_VERSION=v1beta
+         * Misma convención que @google/generative-ai (DEFAULT_API_VERSION = v1beta).
+         * Override: GEMINI_API_VERSION=v1 si tu proyecto solo expone v1 (raro).
          */
         requestOptions: (() => {
-            const v = String(process.env.GEMINI_API_VERSION || 'v1').trim().replace(/^\uFEFF/, '');
-            return { apiVersion: v || 'v1' };
+            const v = String(process.env.GEMINI_API_VERSION || 'v1beta').trim().replace(/^\uFEFF/, '');
+            return { apiVersion: v || 'v1beta' };
         })(),
     },
     openai: {

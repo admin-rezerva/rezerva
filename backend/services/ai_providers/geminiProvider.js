@@ -14,11 +14,11 @@ class GeminiProvider {
         try {
             const apiKey = String(config.apiKey).trim();
             this.genAI = new GoogleGenerativeAI(apiKey);
-            this.modelName = String(config.model || 'models/gemini-1.5-flash').trim();
+            this.modelName = String(config.model || 'models/gemini-2.0-flash').trim();
             const requestOptions =
                 config.requestOptions && typeof config.requestOptions === 'object'
                     ? config.requestOptions
-                    : { apiVersion: 'v1' };
+                    : { apiVersion: 'v1beta' };
             this.model = this.genAI.getGenerativeModel({ model: this.modelName }, requestOptions);
             console.log(
                 `✅ [GeminiProvider] Initialized model=${this.modelName} apiVersion=${requestOptions.apiVersion}`,
@@ -119,8 +119,8 @@ class GeminiProvider {
             const msg = String(error.message || '');
             if (msg.includes('404') && msg.includes('not found')) {
                 console.error(
-                    '[GeminiProvider] 404 modelo: la URL REST debe usar el segmento `models/` (p. ej. models/gemini-1.5-flash). '
-                    + 'aiConfig normaliza GEMINI_MODEL; revisa GEMINI_MODEL y apiVersion en logs.',
+                    '[GeminiProvider] 404: el id de modelo no existe para esta API key / versión. '
+                    + 'Prueba GEMINI_MODEL=gemini-2.0-flash (recomendado). gemini-1.5-flash suele estar ya no listado en Generative Language API.',
                 );
             }
             if (msg.includes('403') && (msg.includes('denied access') || msg.includes('Forbidden'))) {
@@ -133,9 +133,9 @@ class GeminiProvider {
 
             // ERROR HANDLING FOR QUOTA (429)
             if (error.message.includes('429') || error.message.includes('Quota exceeded')) {
-                if (error.message.includes('gemini-2.0') || this.modelName.includes('2.0')) {
+                if (this.modelName.includes('2.0') || this.modelName.includes('2.5')) {
                     console.warn(
-                        '[GeminiProvider] Cuota free agotada o límite 0 en este modelo. Prueba GEMINI_MODEL=gemini-1.5-flash en Render (Environment → Add) y redeploy.',
+                        '[GeminiProvider] Cuota free agotada en este modelo; espera el retry o revisa https://ai.dev/rate-limit',
                     );
                 }
                 // Try to extract time
