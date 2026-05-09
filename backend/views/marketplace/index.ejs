@@ -215,6 +215,15 @@
     </div>
 </header>
 
+<% if (typeof marketplaceLoadFailed !== 'undefined' && marketplaceLoadFailed) { %>
+<div class="mp-container mp-main-body pt-3 pb-0" role="status" aria-live="polite">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-950">
+        <span><%= mp.bannerLoadFailed %></span>
+        <a href="<%= canonicalUrl %>" class="shrink-0 font-medium text-amber-900 underline decoration-amber-600/80 underline-offset-2 hover:text-amber-950"><%= mp.bannerLoadFailedReload %></a>
+    </div>
+</div>
+<% } %>
+
 <% if (!hayBusqueda) { %>
 <section class="mp-hero" aria-labelledby="mp-hero-heading">
     <div class="mp-container mp-hero__inner mp-main-body">

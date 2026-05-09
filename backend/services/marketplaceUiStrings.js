@@ -94,6 +94,8 @@ function getMarketplaceStrings(lang, opts = {}) {
             jsonLdBreadcrumbHome: 'Home',
             jsonLdBreadcrumbGoogleHotels: 'Google Hotels listings',
             ariaExternalHost: 'Opens the host booking site',
+            bannerLoadFailed: "We couldn't load listings right now. Try refreshing the page.",
+            bannerLoadFailedReload: 'Reload',
         };
     }
     return {
@@ -164,6 +166,8 @@ function getMarketplaceStrings(lang, opts = {}) {
         jsonLdBreadcrumbHome: 'Inicio',
         jsonLdBreadcrumbGoogleHotels: 'Listados Google Hotels',
         ariaExternalHost: 'Abre el sitio de reservas del anfitrión',
+        bannerLoadFailed: 'No pudimos cargar el listado ahora. Intenta recargar la página.',
+        bannerLoadFailedReload: 'Recargar',
     };
 }
 

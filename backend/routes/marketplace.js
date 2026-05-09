@@ -97,14 +97,79 @@ const createMarketplaceRouter = (_db) => {
     });
 
     // ── Homepage ───────────────────────────────────────────────────────────
-    router.get('/', async (req, res) => {
-        try {
-            const { q = '', personas = '', fecha_in = '', fecha_out = '', sort = '' } = req.query;
-            const personasNum = parseInt(personas) || 0;
-            const fechaIn = fecha_in.match(/^\d{4}-\d{2}-\d{2}$/) ? fecha_in : null;
-            const fechaOut = fecha_out.match(/^\d{4}-\d{2}-\d{2}$/) ? fecha_out : null;
-            const hayBusqueda = q.trim().length > 0 || personasNum > 0 || (fechaIn && fechaOut);
+    function renderMarketplaceHome(req, res, ctx) {
+        const {
+            propiedades,
+            destacados,
+            busqueda,
+            personasNum,
+            fechaIn,
+            fechaOut,
+            sort,
+            hayBusqueda,
+            marketplaceLoadFailed,
+        } = ctx;
 
+        const mpLang = resolveMarketplaceLang(req);
+        const mp = getMarketplaceStrings(mpLang, { heroRegionLabel: getMarketplaceHeroRegionLabel() });
+        const qBase = buildMarketplaceQueryBase({
+            busqueda,
+            personas: personasNum,
+            fechaIn,
+            fechaOut,
+            sort: sort || null,
+        });
+        const pathEs = qBase.toString() ? `/?${qBase.toString()}` : '/';
+        const qEn = new URLSearchParams(qBase);
+        qEn.set('lang', 'en');
+        const pathEn = qEn.toString() ? `/?${qEn.toString()}` : '/?lang=en';
+        const seo = buildMarketplaceSeoUrls(req, {
+            busqueda,
+            personas: personasNum,
+            fechaIn,
+            fechaOut,
+            sort: sort || null,
+            htmlLang: mp.htmlLang,
+        });
+        const mpHomeUrl = mp.htmlLang === 'en' ? '/?lang=en' : '/';
+        const protocol = req.protocol || 'https';
+        const reqHost = req.get('host') || '';
+        const marketplaceBrandImageUrl = reqHost ? `${protocol}://${reqHost}/public/branding/og-default.png` : '';
+        const ogImageUsesBrandAsset = !(propiedades.length > 0 && propiedades[0].fotoUrl);
+
+        res.render('marketplace/index', {
+            propiedades,
+            destacados,
+            busqueda,
+            personas: personasNum,
+            fechaIn: fechaIn || '',
+            fechaOut: fechaOut || '',
+            sort: sort || '',
+            hayBusqueda,
+            platformDomain: PLATFORM_DOMAIN,
+            totalResultados: propiedades.length,
+            mp,
+            mpLinkEs: pathEs,
+            mpLinkEn: pathEn,
+            canonicalUrl: seo.canonicalUrl,
+            hreflangEsUrl: seo.hreflangEsUrl,
+            hreflangEnUrl: seo.hreflangEnUrl,
+            mpHomeUrl,
+            marketplaceBrandImageUrl,
+            ogImageUsesBrandAsset,
+            precioDesdeToSchemaPriceRange,
+            marketplaceLoadFailed: marketplaceLoadFailed === true,
+        });
+    }
+
+    router.get('/', async (req, res) => {
+        const { q = '', personas = '', fecha_in = '', fecha_out = '', sort = '' } = req.query;
+        const personasNum = parseInt(personas) || 0;
+        const fechaIn = fecha_in.match(/^\d{4}-\d{2}-\d{2}$/) ? fecha_in : null;
+        const fechaOut = fecha_out.match(/^\d{4}-\d{2}-\d{2}$/) ? fecha_out : null;
+        const hayBusqueda = q.trim().length > 0 || personasNum > 0 || (fechaIn && fechaOut);
+
+        try {
             const [propiedades, destacadosRaw] = await Promise.all([
                 obtenerPropiedadesParaMarketplace({ busqueda: q.trim(), personas: personasNum, fechaIn, fechaOut, sort: sort || null }),
                 hayBusqueda ? Promise.resolve([]) : obtenerDestacados(5),
@@ -123,58 +188,34 @@ const createMarketplaceRouter = (_db) => {
                 }
             }
 
-            const mpLang = resolveMarketplaceLang(req);
-            const mp = getMarketplaceStrings(mpLang, { heroRegionLabel: getMarketplaceHeroRegionLabel() });
-            const qBase = buildMarketplaceQueryBase({
-                busqueda: q.trim(),
-                personas: personasNum,
-                fechaIn,
-                fechaOut,
-                sort: sort || null,
-            });
-            const pathEs = qBase.toString() ? `/?${qBase.toString()}` : '/';
-            const qEn = new URLSearchParams(qBase);
-            qEn.set('lang', 'en');
-            const pathEn = qEn.toString() ? `/?${qEn.toString()}` : '/?lang=en';
-            const seo = buildMarketplaceSeoUrls(req, {
-                busqueda: q.trim(),
-                personas: personasNum,
-                fechaIn,
-                fechaOut,
-                sort: sort || null,
-                htmlLang: mp.htmlLang,
-            });
-            const mpHomeUrl = mp.htmlLang === 'en' ? '/?lang=en' : '/';
-            const protocol = req.protocol || 'https';
-            const reqHost = req.get('host') || '';
-            const marketplaceBrandImageUrl = reqHost ? `${protocol}://${reqHost}/public/branding/og-default.png` : '';
-            const ogImageUsesBrandAsset = !(propiedades.length > 0 && propiedades[0].fotoUrl);
-
-            res.render('marketplace/index', {
+            renderMarketplaceHome(req, res, {
                 propiedades,
                 destacados,
                 busqueda: q.trim(),
-                personas: personasNum,
-                fechaIn: fechaIn || '',
-                fechaOut: fechaOut || '',
-                sort: sort || '',
+                personasNum,
+                fechaIn,
+                fechaOut,
+                sort,
                 hayBusqueda,
-                platformDomain: PLATFORM_DOMAIN,
-                totalResultados: propiedades.length,
-                mp,
-                mpLinkEs: pathEs,
-                mpLinkEn: pathEn,
-                canonicalUrl: seo.canonicalUrl,
-                hreflangEsUrl: seo.hreflangEsUrl,
-                hreflangEnUrl: seo.hreflangEnUrl,
-                mpHomeUrl,
-                marketplaceBrandImageUrl,
-                ogImageUsesBrandAsset,
-                precioDesdeToSchemaPriceRange,
             });
         } catch (err) {
             console.error('[Marketplace] Error en homepage:', err);
-            res.status(500).send('Error cargando el marketplace');
+            try {
+                renderMarketplaceHome(req, res, {
+                    propiedades: [],
+                    destacados: [],
+                    busqueda: q.trim(),
+                    personasNum,
+                    fechaIn,
+                    fechaOut,
+                    sort,
+                    hayBusqueda,
+                    marketplaceLoadFailed: true,
+                });
+            } catch (fallbackErr) {
+                console.error('[Marketplace] Fallback homepage render:', fallbackErr);
+                res.status(500).send('Error cargando el marketplace');
+            }
         }
     });
 

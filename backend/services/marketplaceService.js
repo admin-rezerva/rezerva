@@ -60,14 +60,14 @@ const QUERY_BASE = `
             COALESCE(
                 NULLIF(BTRIM(COALESCE(p.metadata->'buildContext'->'empresa'->'ubicacion'->>'ciudad', '')), ''),
                 NULLIF(BTRIM(COALESCE(p.metadata->'websiteData'->'marketJsonLd'->'address'->>'addressLocality', '')), ''),
-                NULLIF(BTRIM(COALESCE(e.configuracion->'ubicacion'->>'ciudad', '')), ''),
+                NULLIF(BTRIM(COALESCE((COALESCE(e.configuracion, '{}'::jsonb))->'ubicacion'->>'ciudad', '')), ''),
                 ''
             )
         ) AS ciudad_publica,
-        MAX(NULLIF(BTRIM(COALESCE(e.configuracion->'marketplace'->>'sectionLead', '')), '')) AS empresa_lead_es,
-        MAX(NULLIF(BTRIM(COALESCE(e.configuracion->'marketplace'->>'sectionLeadEn', '')), '')) AS empresa_lead_en,
-        MAX(NULLIF(BTRIM(COALESCE(e.configuracion->'marketplace'->>'sectionTitlePrefix', '')), '')) AS empresa_prefix_es,
-        MAX(NULLIF(BTRIM(COALESCE(e.configuracion->'marketplace'->>'sectionTitlePrefixEn', '')), '')) AS empresa_prefix_en
+        MAX(NULLIF(BTRIM(COALESCE((COALESCE(e.configuracion, '{}'::jsonb))->'marketplace'->>'sectionLead', '')), '')) AS empresa_lead_es,
+        MAX(NULLIF(BTRIM(COALESCE((COALESCE(e.configuracion, '{}'::jsonb))->'marketplace'->>'sectionLeadEn', '')), '')) AS empresa_lead_en,
+        MAX(NULLIF(BTRIM(COALESCE((COALESCE(e.configuracion, '{}'::jsonb))->'marketplace'->>'sectionTitlePrefix', '')), '')) AS empresa_prefix_es,
+        MAX(NULLIF(BTRIM(COALESCE((COALESCE(e.configuracion, '{}'::jsonb))->'marketplace'->>'sectionTitlePrefixEn', '')), '')) AS empresa_prefix_en
     FROM propiedades p
     JOIN empresas e ON p.empresa_id = e.id
     LEFT JOIN resenas r ON r.propiedad_id = p.id AND r.estado = 'publicada'
