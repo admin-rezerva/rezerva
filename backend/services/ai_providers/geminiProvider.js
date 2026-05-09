@@ -8,9 +8,12 @@ try {
     /* noop */
 }
 
-/** Orden de fallback si el modelo configurado devuelve 404 (nombre corto; el SDK añade `models/`). */
+/** Fallback manual si ListModels falla o está vacío (ids cortos). */
 const FALLBACK_SHORT_MODEL_IDS = [
+    'gemini-2.5-flash',
+    'gemini-2.5-flash-lite',
     'gemini-2.0-flash',
+    'gemini-2.0-flash-lite',
     'gemini-1.5-flash-latest',
     'gemini-pro',
     'gemini-1.5-flash',
@@ -35,7 +38,6 @@ function buildModelCandidates(preferredShort) {
     return out;
 }
 
-/** Ruta que usa internamente GenerativeModel tras el constructor del SDK. */
 function sdkEffectiveModelPath(shortId) {
     if (shortId.includes('/')) return shortId;
     return `models/${shortId}`;
@@ -52,24 +54,24 @@ function is404ModelNotFound(err) {
     return m.includes('404') && (m.includes('not found') || m.includes('Not Found'));
 }
 
-/**
- * ListModels REST (el paquete @google/generative-ai no expone genAI.listModels()).
- */
 async function fetchGenerativeLanguageModelsList(apiKey, apiVersion) {
     const ver = apiVersion || 'v1beta';
     const url = `https://generativelanguage.googleapis.com/${ver}/models?pageSize=100&key=${encodeURIComponent(apiKey)}`;
     const res = await fetch(url);
     const data = await res.json();
     if (!res.ok) {
-        const msg = (data && data.error && data.error.message) || JSON.stringify(data).slice(0, 200);
+        const msg = (data && data.error && data.error.message) || JSON.stringify(data).slice(0, 400);
         throw new Error(`ListModels ${res.status}: ${msg}`);
     }
     return data;
 }
 
-/**
- * Gemini Provider — pasar solo id corto (p. ej. gemini-2.0-flash). El SDK antepone `models/` si no hay `/` en el nombre.
- */
+function resolveApiVersionsToTry() {
+    const pinned = process.env.GEMINI_API_VERSION && String(process.env.GEMINI_API_VERSION).trim();
+    if (pinned) return [pinned];
+    return ['v1beta', 'v1'];
+}
+
 class GeminiProvider {
     constructor(config) {
         if (!config.apiKey) {
@@ -91,7 +93,7 @@ class GeminiProvider {
             this._diagnosticsDone = false;
             this._installModelForIndex(0);
             console.log(
-                `[GeminiProvider] init @google/generative-ai@${GENERATIVE_AI_PKG_VERSION} candidates=[${this._candidateShortIds.join(', ')}] apiVersion=${this._requestOptions.apiVersion}`,
+                `[GeminiProvider] init @google/generative-ai@${GENERATIVE_AI_PKG_VERSION} candidates=[${this._candidateShortIds.join(', ')}] apiVersion=${this._requestOptions.apiVersion} · GEMINI_API_VERSION ${process.env.GEMINI_API_VERSION ? `fijada=${process.env.GEMINI_API_VERSION}` : 'libre → se probarán v1beta y v1'}`,
             );
         } catch (error) {
             console.error('❌ [GeminiProvider] Init Error:', error);
@@ -122,94 +124,117 @@ class GeminiProvider {
             return;
         }
 
-        try {
-            const ver = this._requestOptions.apiVersion || 'v1beta';
-            const data = await fetchGenerativeLanguageModelsList(this._apiKey, ver);
-            const models = data.models || [];
-            console.log(`[GeminiProvider] ListModels (${ver}) primera página: ${models.length} modelos`);
-            for (const m of models) {
-                const name = m.name || '';
-                const methods = Array.isArray(m.supportedGenerationMethods)
-                    ? m.supportedGenerationMethods.join(', ')
-                    : '';
-                const okGen = methods.includes('generateContent');
-                console.log(`  · ${name}  generateContent=${okGen ? 'sí' : 'no'}  [${methods || '—'}]`);
+        const discoveredShort = [];
+
+        for (const ver of ['v1beta', 'v1']) {
+            try {
+                const data = await fetchGenerativeLanguageModelsList(this._apiKey, ver);
+                const models = data.models || [];
+                console.log(`[GeminiProvider] ListModels (${ver}): ${models.length} modelos (página 1)`);
+                for (const m of models) {
+                    const name = m.name || '';
+                    const methods = Array.isArray(m.supportedGenerationMethods)
+                        ? m.supportedGenerationMethods
+                        : [];
+                    const okGen = methods.includes('generateContent');
+                    console.log(
+                        `  · ${name}  generateContent=${okGen ? 'sí' : 'no'}  [${methods.join(', ') || '—'}]`,
+                    );
+                    if (!okGen) continue;
+                    const short = stripLeadingModelsPrefix(name);
+                    if (short && !discoveredShort.includes(short)) discoveredShort.push(short);
+                }
+            } catch (e) {
+                console.warn(`[GeminiProvider] ListModels (${ver}) falló:`, e && e.message ? e.message : e);
             }
-        } catch (e) {
-            console.warn('[GeminiProvider] ListModels falló:', e && e.message ? e.message : e);
+        }
+
+        if (discoveredShort.length > 0) {
+            const merged = [
+                ...discoveredShort,
+                ...this._candidateShortIds.filter((id) => !discoveredShort.includes(id)),
+            ];
+            this._candidateShortIds = merged;
+            console.log(
+                `[GeminiProvider] Orden de candidatos (API primero): ${merged.join(', ')}`,
+            );
+            this._installModelForIndex(0);
+        } else {
+            console.warn(
+                '[GeminiProvider] ListModels no devolvió modelos con generateContent en v1beta ni v1. Comprueba API key (AI Studio), Generative Language API habilitada en GCP y facturación.',
+            );
         }
     }
 
-    /**
-     * @param {string} promptText
-     * @param {string[]} imageUrls
-     * @returns {Promise<object|null>}
-     */
     async generateVisionJSON(promptText, imageUrls = []) {
         if (!this.model) return null;
 
         await this._runDiagnosticsOnce();
 
-        let lastVisionErr;
-        for (let attempt = 0; attempt < this._candidateShortIds.length; attempt++) {
-            if (attempt > 0) {
-                console.warn(
-                    `[GeminiProvider] Vision: reintento ${attempt + 1}/${this._candidateShortIds.length} → ${this._candidateShortIds[attempt]}`,
-                );
-                this._installModelForIndex(attempt);
-            }
-            try {
-                const imageParts = await Promise.all(
-                    imageUrls.map(async (url) => {
-                        const res = await fetch(url);
-                        if (!res.ok) throw new Error(`Cannot fetch image: ${url}`);
-                        const buffer = await res.arrayBuffer();
-                        const base64 = Buffer.from(buffer).toString('base64');
-                        const mimeType = res.headers.get('content-type') || 'image/jpeg';
-                        return { inlineData: { data: base64, mimeType } };
-                    }),
-                );
+        const versionsToTry = resolveApiVersionsToTry();
 
-                const parts = [...imageParts, { text: promptText }];
-                const result = await this.model.generateContent({ contents: [{ role: 'user', parts }] });
-                const text = result.response.text();
+        visionOuter: for (const ver of versionsToTry) {
+            this._requestOptions = Object.assign({}, this._requestOptions, { apiVersion: ver });
+            console.warn(`[GeminiProvider] Vision === apiVersion REST ${ver} (${this._candidateShortIds.length} modelos) ===`);
+            this._installModelForIndex(0);
 
-                let jsonString = text.replace(/```json/g, '').replace(/```/g, '').trim();
-                const firstBrace = jsonString.indexOf('{');
-                const lastBrace = jsonString.lastIndexOf('}');
-                if (firstBrace !== -1 && lastBrace !== -1) {
-                    jsonString = jsonString.substring(firstBrace, lastBrace + 1);
-                }
-                return JSON.parse(jsonString);
-            } catch (error) {
-                lastVisionErr = error;
-                const msg = String(error.message || '');
-                if (msg.includes('429') || msg.includes('Quota exceeded')) {
-                    const quotaError = new Error('⏳ Cuota de IA excedida.');
-                    quotaError.code = 'AI_QUOTA_EXCEEDED';
-                    throw quotaError;
-                }
-                if (msg.includes('403') && (msg.includes('denied access') || msg.includes('Forbidden'))) {
-                    console.error(
-                        '[GeminiProvider] 403 denied (vision): proyecto Gemini denegado; nueva key en AI Studio.',
+            for (let attempt = 0; attempt < this._candidateShortIds.length; attempt++) {
+                if (attempt > 0) {
+                    console.warn(
+                        `[GeminiProvider] Vision 404 → modelo ${attempt + 1}/${this._candidateShortIds.length}: ${this._candidateShortIds[attempt]}`,
                     );
+                    this._installModelForIndex(attempt);
+                }
+                try {
+                    const imageParts = await Promise.all(
+                        imageUrls.map(async (url) => {
+                            const res = await fetch(url);
+                            if (!res.ok) throw new Error(`Cannot fetch image: ${url}`);
+                            const buffer = await res.arrayBuffer();
+                            const base64 = Buffer.from(buffer).toString('base64');
+                            const mimeType = res.headers.get('content-type') || 'image/jpeg';
+                            return { inlineData: { data: base64, mimeType } };
+                        }),
+                    );
+
+                    const parts = [...imageParts, { text: promptText }];
+                    const result = await this.model.generateContent({ contents: [{ role: 'user', parts }] });
+                    const text = result.response.text();
+
+                    let jsonString = text.replace(/```json/g, '').replace(/```/g, '').trim();
+                    const firstBrace = jsonString.indexOf('{');
+                    const lastBrace = jsonString.lastIndexOf('}');
+                    if (firstBrace !== -1 && lastBrace !== -1) {
+                        jsonString = jsonString.substring(firstBrace, lastBrace + 1);
+                    }
+                    return JSON.parse(jsonString);
+                } catch (error) {
+                    const msg = String(error.message || '');
+                    if (msg.includes('429') || msg.includes('Quota exceeded')) {
+                        const quotaError = new Error('⏳ Cuota de IA excedida.');
+                        quotaError.code = 'AI_QUOTA_EXCEEDED';
+                        throw quotaError;
+                    }
+                    if (msg.includes('403') && (msg.includes('denied access') || msg.includes('Forbidden'))) {
+                        console.error(
+                            '[GeminiProvider] 403 denied (vision): proyecto Gemini denegado; nueva key en AI Studio.',
+                        );
+                        return null;
+                    }
+                    if (is404ModelNotFound(error)) {
+                        if (attempt < this._candidateShortIds.length - 1) continue;
+                        console.warn(`[GeminiProvider] Vision: agotados modelos para apiVersion=${ver}`);
+                        continue visionOuter;
+                    }
+                    console.error(`❌ [GeminiProvider] Vision Error:`, msg);
                     return null;
                 }
-                if (is404ModelNotFound(error) && attempt < this._candidateShortIds.length - 1) {
-                    continue;
-                }
-                console.error(`❌ [GeminiProvider] Vision Error:`, msg);
-                return null;
             }
         }
-        if (lastVisionErr) console.error(`❌ [GeminiProvider] Vision agotó candidatos:`, lastVisionErr.message);
+        console.error('[GeminiProvider] Vision: sin respuesta en todas las combinaciones api×modelo.');
         return null;
     }
 
-    /**
-     * @param {string} promptText
-     * @returns {Promise<object|null>}
-     */
     async generateJSON(promptText) {
         if (!this.model) {
             console.error('❌ [GeminiProvider] Model not initialized.');
@@ -218,66 +243,81 @@ class GeminiProvider {
 
         await this._runDiagnosticsOnce();
 
+        const versionsToTry = resolveApiVersionsToTry();
         let textResult = null;
-        let lastErr;
 
-        for (let attempt = 0; attempt < this._candidateShortIds.length; attempt++) {
-            if (attempt > 0) {
-                console.warn(
-                    `[GeminiProvider] 404 / fallback → modelo alternativo (${attempt + 1}/${this._candidateShortIds.length}): ${this._candidateShortIds[attempt]}`,
-                );
-                this._installModelForIndex(attempt);
-            }
+        versionOuter: for (const ver of versionsToTry) {
+            this._requestOptions = Object.assign({}, this._requestOptions, { apiVersion: ver });
+            console.warn(
+                `[GeminiProvider] === apiVersion REST ${ver} · ${this._candidateShortIds.length} modelos ===`,
+            );
+            this._installModelForIndex(0);
 
-            try {
-                console.log(`[GeminiProvider] 🚀 Generating content (modelo=${this.currentShortModelId})...`);
-                const result = await this.model.generateContent(promptText);
-                const response = await result.response;
-                textResult = response.text();
-                console.log(`[GeminiProvider] ✅ Response received (${textResult.length} chars).`);
-                break;
-            } catch (error) {
-                lastErr = error;
-                const msg = String(error.message || '');
-
-                if (msg.includes('429') || msg.includes('Quota exceeded')) {
-                    const timeMatch = msg.match(/retry in ([\d\.]+)s/);
-                    const waitSeconds = timeMatch ? parseFloat(timeMatch[1]) : 60;
-                    const quotaError = new Error(
-                        `⏳ Cuota de IA excedida. Por favor espera ${Math.ceil(waitSeconds)} segundos.`,
+            for (let attempt = 0; attempt < this._candidateShortIds.length; attempt++) {
+                if (attempt > 0) {
+                    console.warn(
+                        `[GeminiProvider] 404 → modelo alternativo (${attempt + 1}/${this._candidateShortIds.length}): ${this._candidateShortIds[attempt]}`,
                     );
-                    quotaError.code = 'AI_QUOTA_EXCEEDED';
-                    quotaError.retryAfter = Math.ceil(waitSeconds);
-                    throw quotaError;
+                    this._installModelForIndex(attempt);
                 }
 
-                if (msg.includes('403') && (msg.includes('denied access') || msg.includes('Forbidden'))) {
-                    console.error(
-                        '[GeminiProvider] 403: proyecto denegado para Gemini. Crear key nueva en https://aistudio.google.com/apikey',
+                try {
+                    console.log(
+                        `[GeminiProvider] 🚀 Generating content (modelo=${this.currentShortModelId} api=${ver})...`,
                     );
+                    const result = await this.model.generateContent(promptText);
+                    const response = await result.response;
+                    textResult = response.text();
+                    console.log(`[GeminiProvider] ✅ Response received (${textResult.length} chars).`);
+                    break versionOuter;
+                } catch (error) {
+                    const msg = String(error.message || '');
+
+                    if (msg.includes('429') || msg.includes('Quota exceeded')) {
+                        const timeMatch = msg.match(/retry in ([\d\.]+)s/);
+                        const waitSeconds = timeMatch ? parseFloat(timeMatch[1]) : 60;
+                        const quotaError = new Error(
+                            `⏳ Cuota de IA excedida. Por favor espera ${Math.ceil(waitSeconds)} segundos.`,
+                        );
+                        quotaError.code = 'AI_QUOTA_EXCEEDED';
+                        quotaError.retryAfter = Math.ceil(waitSeconds);
+                        throw quotaError;
+                    }
+
+                    if (msg.includes('403') && (msg.includes('denied access') || msg.includes('Forbidden'))) {
+                        console.error(
+                            '[GeminiProvider] 403: proyecto denegado para Gemini. Crear key nueva en https://aistudio.google.com/apikey',
+                        );
+                        const fs = require('fs');
+                        fs.writeFileSync('debug_error_provider.txt', `Error: ${msg}\n`);
+                        return null;
+                    }
+
+                    if (is404ModelNotFound(error)) {
+                        if (attempt < this._candidateShortIds.length - 1) {
+                            console.warn('[GeminiProvider] 404 modelo — probando siguiente candidato.');
+                            continue;
+                        }
+                        console.warn(`[GeminiProvider] 404: agotados todos los modelos para apiVersion=${ver}`);
+                        continue versionOuter;
+                    }
+
+                    console.error('❌ [GeminiProvider] Generate Error:', msg);
                     const fs = require('fs');
-                    fs.writeFileSync('debug_error_provider.txt', `Error: ${msg}\n`);
+                    fs.writeFileSync('debug_error_provider.txt', `Error: ${msg}\nStack: ${error.stack}`);
                     return null;
                 }
-
-                if (is404ModelNotFound(error) && attempt < this._candidateShortIds.length - 1) {
-                    console.warn('[GeminiProvider] 404 modelo — probando siguiente candidato.');
-                    continue;
-                }
-
-                console.error('❌ [GeminiProvider] Generate Error:', msg);
-                if (msg.includes('404') && msg.includes('not found')) {
-                    console.error(
-                        '[GeminiProvider] Ningún candidato coincidió con ListModels para esta key. Revisa logs ListModels arriba.',
-                    );
-                }
-                const fs = require('fs');
-                fs.writeFileSync('debug_error_provider.txt', `Error: ${msg}\nStack: ${error.stack}`);
-                return null;
             }
         }
 
-        if (textResult == null) return null;
+        if (textResult == null) {
+            console.error(
+                '[GeminiProvider] Sin éxito: probadas todas las combinaciones apiVersion × modelo. '
+                    + 'Si GEMINI_API_VERSION está definida en Render, quítala para intentar v1beta y v1. '
+                    + 'Verifica que la key sea de https://aistudio.google.com/apikey y que en GCP esté habilitada “Generative Language API”.',
+            );
+            return null;
+        }
 
         let jsonString = textResult.replace(/```json/g, '').replace(/```/g, '').trim();
         const firstBrace = jsonString.indexOf('{');
