@@ -111,15 +111,15 @@
     <%- include('../partials/ssr-fontawesome-deferred') %>
     <%- include('../partials/marketplace-common-styles') %>
 </head>
-<body class="bg-neutral-50 text-neutral-900 antialiased min-h-screen">
+<body class="mp-marketplace min-h-screen antialiased">
 <%- include('../partials/marketplace-skip-main') %>
 
 <!-- ═══ HEADER ═══ -->
 <header class="mp-header">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap items-center gap-3 lg:gap-5">
+    <div class="mp-header__row max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 flex flex-wrap items-center gap-3 lg:gap-6">
         <%- include('../partials/marketplace-brand-logo', { mp, mpHomeUrl, logoVariant: 'header' }) %>
 
-        <a href="/google-hotels<%= mp.htmlLang === 'en' ? '?lang=en' : '' %>" class="hidden sm:inline-flex flex-shrink-0 text-sm font-semibold text-neutral-700 hover:text-neutral-950 px-2 py-1 rounded-md whitespace-nowrap transition-colors">
+        <a href="/google-hotels<%= mp.htmlLang === 'en' ? '?lang=en' : '' %>" class="mp-header__link hidden sm:inline-flex flex-shrink-0 text-sm font-semibold px-1 py-0.5 rounded-md whitespace-nowrap">
             <%= mp.navGoogleHotels %>
         </a>
 
@@ -184,30 +184,30 @@
                            placeholder="<%= mp.placeholderHuespedes %>" min="1" max="20"
                            value="<%= personas > 0 ? personas : '' %>">
                 </div>
-                <button type="submit" class="search-btn bg-neutral-900 text-white hover:bg-neutral-800 focus:ring-2 focus:ring-neutral-500 focus:ring-offset-1" aria-label="<%= mp.ariaBuscar %>">
+                <button type="submit" class="search-btn" aria-label="<%= mp.ariaBuscar %>">
                     <i class="fas fa-search"></i>
                 </button>
                 </div>
             </div>
         </form>
 
-        <nav class="flex-shrink-0 flex items-center gap-1 text-sm font-semibold sm:ml-auto" aria-label="<%= mp.langSwitchTitle %>">
-            <a href="<%= mpLinkEs %>" class="px-2 py-1 rounded-md <%= mp.htmlLang === 'es' ? 'bg-neutral-100 text-neutral-900' : 'text-neutral-600 hover:text-neutral-950 hover:underline' %>"><%= mp.langSwitchEs %></a>
-            <span class="text-neutral-300">|</span>
-            <a href="<%= mpLinkEn %>" class="px-2 py-1 rounded-md <%= mp.htmlLang === 'en' ? 'bg-neutral-100 text-neutral-900' : 'text-neutral-600 hover:text-neutral-950 hover:underline' %>"><%= mp.langSwitchEn %></a>
+        <nav class="flex-shrink-0 flex items-center gap-2 text-sm font-semibold sm:ml-auto" aria-label="<%= mp.langSwitchTitle %>">
+            <a href="<%= mpLinkEs %>" class="mp-header__lang px-2 py-1 rounded-full <%= mp.htmlLang === 'es' ? 'mp-header__lang--active' : '' %>"><%= mp.langSwitchEs %></a>
+            <span class="mp-header__sep" aria-hidden="true">|</span>
+            <a href="<%= mpLinkEn %>" class="mp-header__lang px-2 py-1 rounded-full <%= mp.htmlLang === 'en' ? 'mp-header__lang--active' : '' %>"><%= mp.langSwitchEn %></a>
         </nav>
 
-        <a href="/google-hotels<%= mp.htmlLang === 'en' ? '?lang=en' : '' %>" class="sm:hidden w-full text-center text-sm font-semibold text-neutral-700 hover:text-neutral-950 py-1">
+        <a href="/google-hotels<%= mp.htmlLang === 'en' ? '?lang=en' : '' %>" class="mp-header__link sm:hidden w-full text-center text-sm font-semibold py-1">
             <%= mp.navGoogleHotels %>
         </a>
     </div>
 
     <!-- Ordenación (misma query que el buscador) -->
-    <div class="border-t border-neutral-100 bg-white/80">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center justify-end gap-2">
-            <label for="mp-sort" class="text-sm font-medium text-neutral-600"><%= mp.labelSort %></label>
+    <div class="mp-sort-strip">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-2.5 flex flex-wrap items-center justify-end gap-2">
+            <label for="mp-sort" class="text-sm font-medium" style="color:#717171;"><%= mp.labelSort %></label>
             <select id="mp-sort" name="sort" form="mp-search-form"
-                    class="text-sm border border-neutral-200 rounded-lg px-3 py-1.5 bg-white text-neutral-900 focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400 max-w-full"
+                    class="text-sm rounded-lg px-3 py-1.5 max-w-full border border-[#DDDDDD] bg-white text-[#222222] focus:outline-none focus:ring-2 focus:ring-[#222222] focus:ring-offset-1"
                     onchange="var f=document.getElementById('mp-search-form'); if(f) f.submit();">
                 <option value="" <%= !sort ? 'selected' : '' %>><%= mp.sortRecommended %></option>
                 <option value="rating" <%= sort === 'rating' ? 'selected' : '' %>><%= mp.sortRating %></option>
@@ -221,10 +221,10 @@
 <% if (!hayBusqueda) { %>
 <section class="mp-hero" aria-labelledby="mp-hero-heading">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-10 md:pt-12 md:pb-14 text-center">
-        <h1 id="mp-hero-heading" class="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-neutral-900 max-w-3xl mx-auto leading-tight">
+        <h1 id="mp-hero-heading" class="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-[#222222] max-w-3xl mx-auto leading-tight">
             <%= mp.heroTitle %>
         </h1>
-        <p class="mt-4 text-base sm:text-lg text-neutral-600 max-w-2xl mx-auto leading-relaxed">
+        <p class="mt-4 text-base sm:text-lg text-[#717171] max-w-2xl mx-auto leading-relaxed">
             <%= mp.heroSubtitle %>
         </p>
     </div>
@@ -292,23 +292,23 @@
                 <% } else { %>
                     <%= mp.sectionAlojamientosPara %> <%= personas %> <%= personas !== 1 ? mp.people : mp.person %>
                 <% } %>
-                <span class="text-base font-normal text-neutral-400 ml-2">· <%= totalResultados %> <%= mp.lodgings %></span>
-                <a href="<%= mpHomeUrl %>" class="text-sm font-normal text-neutral-700 hover:text-neutral-950 hover:underline ml-4">
+                <span class="text-base font-normal text-[#717171] ml-2">· <%= totalResultados %> <%= mp.lodgings %></span>
+                <a href="<%= mpHomeUrl %>" class="text-sm font-normal text-[#222222] underline underline-offset-2 hover:opacity-80 ml-4">
                     <i class="fas fa-times-circle mr-1"></i><%= mp.clearFilters %>
                 </a>
         </h1>
         <% } else { %>
         <h2 id="mp-lista-heading" class="section-title">
                 <%= mp.sectionTodos %>
-                <span class="text-base font-normal text-neutral-400 ml-2">· <%= totalResultados %></span>
+                <span class="text-base font-normal text-[#717171] ml-2">· <%= totalResultados %></span>
         </h2>
         <% } %>
 
         <% if (propiedades.length === 0) { %>
         <div class="text-center py-20">
-            <i class="fas fa-search text-4xl text-neutral-200 mb-4"></i>
-            <p class="text-neutral-500 text-lg"><%= mp.noResults %></p>
-            <a href="<%= mpHomeUrl %>" class="inline-block mt-4 text-neutral-800 hover:text-neutral-950 hover:underline font-medium"><%= mp.verTodos %></a>
+            <i class="fas fa-search text-4xl mb-4" style="color:#DDDDDD;"></i>
+            <p class="text-lg text-[#717171]"><%= mp.noResults %></p>
+            <a href="<%= mpHomeUrl %>" class="inline-block mt-4 font-semibold text-[#222222] underline underline-offset-2 hover:opacity-80"><%= mp.verTodos %></a>
         </div>
         <% } else { %>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

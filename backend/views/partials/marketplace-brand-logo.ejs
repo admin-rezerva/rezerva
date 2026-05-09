@@ -1,10 +1,22 @@
 <%#
-  Locals: mp, mpHomeUrl, logoVariant opcional: 'header' | 'footer'
-  Solo marca transparente (WebP + PNG). Tamaño visual controlado por CSS (.mp-brand-logo__img).
+  Locals: mp, mpHomeUrl, logoVariant: 'header' | 'footer'
+  Header (#fff): logo con fondo blanco (sin halo gris). Footer (#F7F7F7): transparente (sin rectángulo blanco).
 %>
 <% const variant = logoVariant === 'footer' ? 'footer' : 'header'; %>
 <a href="<%= mpHomeUrl %>"
-   class="mp-brand-logo mp-brand-logo--<%= variant %> inline-flex items-center flex-shrink-0 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 <%= variant === 'footer' ? 'justify-center' : '' %>">
+   class="mp-brand-logo mp-brand-logo--<%= variant %> inline-flex items-center flex-shrink-0 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#222222] <%= variant === 'footer' ? 'justify-center' : '' %>">
+    <% if (variant === 'header') { %>
+    <picture>
+        <source type="image/webp" srcset="/public/branding/logo-bg-white.webp">
+        <img src="/public/branding/logo-bg-white.png"
+             alt="<%= mp.brandLabel %>"
+             class="mp-brand-logo__img"
+             width="360"
+             height="196"
+             decoding="async"
+             fetchpriority="high" />
+    </picture>
+    <% } else { %>
     <picture>
         <source type="image/webp" srcset="/public/branding/logo-transparent.webp">
         <img src="/public/branding/logo-transparent.png"
@@ -12,7 +24,7 @@
              class="mp-brand-logo__img"
              width="360"
              height="196"
-             decoding="async"
-             <% if (variant === 'header') { %>fetchpriority="high"<% } %> />
+             decoding="async" />
     </picture>
+    <% } %>
 </a>
