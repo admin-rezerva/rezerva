@@ -19,23 +19,35 @@
         _pageDesc = String(_pageDesc || '').replace(/\s+/g, ' ').trim();
         if (!_pageDesc) {
             const _nom = String(empresa?.nombre || '').trim();
-            const _tipo = empresa.strategy?.tipoAlojamientoPrincipal || '';
+            const _tn = (empresa.tipoNegocio || '').toLowerCase();
+            const _ta = empresa.strategy?.tipoAlojamientoPrincipal || '';
+            // Label parametrizado según tipoNegocio configurado por el cliente
+            const _labelEs = _tn === 'hotel' ? (_ta || 'Hotel / Hostal')
+                           : _tn === 'cartera' ? (_ta || 'Departamentos')
+                           : (_ta || 'Alojamientos');
+            const _labelEn = _tn === 'hotel' ? (_ta || 'Hotel')
+                           : _tn === 'cartera' ? (_ta || 'Apartments')
+                           : (_ta || 'Accommodation');
             _pageDesc = _nom
                 ? (_hl === 'en'
-                    ? `Book ${_tipo ? _tipo.toLowerCase() + ' at ' : 'directly at '}${_nom} — availability and online reservation.`
-                    : `Arriendo de ${_tipo ? _tipo.toLowerCase() + ' en ' : 'alojamientos en '}${_nom} — reserva directa en línea.`)
+                    ? `${_labelEn} at ${_nom} — availability and online booking.`
+                    : `${_labelEs} en ${_nom} — disponibilidad y reserva directa en línea.`)
                 : (_hl === 'en'
-                    ? 'Vacation cabin rentals — book direct online.'
-                    : 'Arriendo de cabañas vacacionales — reserva directa en línea.');
+                    ? 'Vacation accommodation — book direct online.'
+                    : 'Alojamiento vacacional — reserva directa en línea.');
         }
         const _pageUrl      = baseUrl || '';
         const _heroImage    = empresa.websiteSettings?.theme?.heroImageUrl || '';
         const _heroThumb    = empresa.websiteSettings?.theme?.heroImageThumbUrl || '';
         const _logoUrl      = locals.brandIdentity?.logoUrl || empresa.websiteSettings?.theme?.logoUrl || '';
+        const _tn           = (empresa.tipoNegocio || '').toLowerCase();
         const _tipoAloj     = empresa.strategy?.tipoAlojamientoPrincipal || '';
+        // Keyword de tipo según tipoNegocio, sin hardcode
+        const _tipoKeyword  = _tn === 'hotel'   ? (_tipoAloj || (_hl === 'en' ? 'hotel hostel' : 'hotel hostal'))
+                            : _tn === 'cartera' ? (_tipoAloj || (_hl === 'en' ? 'apartment rental' : 'arriendo departamentos'))
+                            : (_tipoAloj || (_hl === 'en' ? 'vacation rental' : 'arriendo alojamiento'));
         const _keywords     = [
-            _tipoAloj || (_hl === 'en' ? 'vacation rental' : 'arriendo cabañas'),
-            _hl === 'en' ? 'accommodation' : 'alojamiento vacacional',
+            _tipoKeyword,
             empresaContext?.ubicacion?.ciudad,
             empresaContext?.ubicacion?.region,
             empresa.nombre,

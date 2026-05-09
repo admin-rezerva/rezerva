@@ -132,24 +132,31 @@ async function loadHomeSeoAndContent({
         const telefono = ctx?.contacto?.telefonoPrincipal || empresaCompleta.contactoTelefono || '';
         const email = ctx?.contacto?.emailContacto || '';
 
+        const tipoNegocio = (empresaCompleta.tipoNegocio || '').toLowerCase();
         const tipoAloj = empresaCompleta.strategy?.tipoAlojamientoPrincipal || '';
-        const descFallback = tipoAloj
-            ? `Arriendo de ${tipoAloj.toLowerCase()} en ${empresaCompleta.nombre} — reserva directa en línea.`
-            : `Alojamiento vacacional en ${empresaCompleta.nombre} — reserva directa en línea.`;
+
+        // Mapeo paramétrico: tipoNegocio → schema.org type + itemType
+        const _schemaMap = {
+            hotel:   { schemaType: 'Hotel',          itemType: 'HotelRoom',    categoryLabel: tipoAloj || 'Hotel / Hostal' },
+            cartera: { schemaType: 'LodgingBusiness', itemType: 'Apartment',   categoryLabel: tipoAloj || 'Departamentos' },
+            complejo:{ schemaType: 'LodgingBusiness', itemType: 'Accommodation', categoryLabel: tipoAloj || 'Complejo Turístico' },
+        };
+        const _sm = _schemaMap[tipoNegocio] || _schemaMap.complejo;
+
         const schemaDesc = empresaCompleta.websiteSettings?.seo?.homeDescription
             || empresaCompleta.slogan
-            || descFallback;
+            || `${_sm.categoryLabel} en ${empresaCompleta.nombre} — reserva directa en línea.`;
 
         schemaData = {
             '@context': 'https://schema.org',
-            '@type': 'LodgingBusiness',
-            name: empresaCompleta.nombre || 'Alojamiento Turístico',
+            '@type': _sm.schemaType,
+            name: empresaCompleta.nombre || 'Alojamiento',
             description: schemaDesc,
             url: req.baseUrl || '#',
             tourBookingPage: req.baseUrl || '#',
             checkinTime: '15:00',
             checkoutTime: '11:00',
-            ...(tipoAloj && { category: tipoAloj }),
+            ...(_sm.categoryLabel && { category: _sm.categoryLabel }),
             ...(priceRange && { priceRange }),
             ...(telefono && { telephone: telefono }),
             ...(amenityFeatures.length > 0 && { amenityFeature: amenityFeatures }),
@@ -157,10 +164,10 @@ async function loadHomeSeoAndContent({
                 makesOffer: offers.map((prop) => ({
                     '@type': 'Offer',
                     itemOffered: {
-                        '@type': 'Accommodation',
+                        '@type': _sm.itemType,
                         name: prop.nombre,
                         url: `${req.baseUrl}/propiedad/${prop.id}`,
-                        ...(tipoAloj && { accommodationType: tipoAloj }),
+                        ...(_sm.itemType === 'Accommodation' && tipoAloj && { accommodationType: tipoAloj }),
                         ...(prop.capacidad > 0 && { occupancy: { '@type': 'QuantitativeValue', maxValue: prop.capacidad } }),
                     },
                     ...(prop.pricing?.totalPriceCLP > 0 && { priceSpecification: { '@type': 'PriceSpecification', price: String(prop.pricing.totalPriceCLP.toFixed(2)), priceCurrency: 'CLP' } })
