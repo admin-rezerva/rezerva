@@ -16,15 +16,14 @@ function envApiKey(name) {
 }
 
 /**
- * El SDK arma la URL como `{base}/{apiVersion}/{model}:generateContent`.
- * Hay que pasar el recurso completo `models/<nombre>`; si no, la ruta queda mal y hay 404.
- * Por defecto `gemini-2.0-flash`: `gemini-1.5-flash` suele dar 404 en cuentas/API actuales (modelo retirado de la lista).
+ * Id corto para getGenerativeModel (p. ej. gemini-2.0-flash).
+ * NO anteponer `models/` aquí: @google/generative-ai añade `models/` si el string no contiene `/`.
  */
 function normalizeGeminiModelId(raw) {
     const s = raw == null ? '' : String(raw).trim().replace(/^\uFEFF/, '');
-    const id = s || 'gemini-2.0-flash';
-    if (id.startsWith('models/')) return id;
-    return `models/${id}`;
+    let id = s || 'gemini-2.0-flash';
+    if (id.startsWith('models/')) id = id.slice('models/'.length).trim();
+    return id;
 }
 
 const aiConfig = {
@@ -54,7 +53,7 @@ const aiConfig = {
 
     gemini: {
         apiKey: envApiKey('GEMINI_API_KEY'),
-        // GEMINI_MODEL ej. gemini-2.0-flash o models/gemini-2.0-flash (se normaliza).
+        // GEMINI_MODEL: id corto (gemini-2.0-flash); si pegas models/xxx se quita el prefijo.
         model: normalizeGeminiModelId(process.env.GEMINI_MODEL),
         /**
          * Misma convención que @google/generative-ai (DEFAULT_API_VERSION = v1beta).
