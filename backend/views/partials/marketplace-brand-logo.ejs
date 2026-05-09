@@ -1,17 +1,17 @@
 <%#
   Locals: mp, mpHomeUrl, logoVariant: 'header' | 'footer'
-  Header (#fff): logo-bg-white (AVIF/WebP/PNG — ver scripts/tooling/optimize-marketplace-branding.js).
-  Footer (#F7F7F7): logo-transparent.
-  Intrínseco actual: 400×218 (build-manifest.json).
+  Query ?v= desde res.locals.mpAssetV (marketplace router).
 %>
 <% const variant = logoVariant === 'footer' ? 'footer' : 'header'; %>
+<% const _mpv = typeof mpAssetV !== 'undefined' ? mpAssetV : ''; %>
+<% const _q = _mpv ? ('?v=' + encodeURIComponent(_mpv)) : ''; %>
 <a href="<%= mpHomeUrl %>"
    class="mp-brand-logo mp-brand-logo--<%= variant %> inline-flex items-center flex-shrink-0 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#222222] <%= variant === 'footer' ? 'justify-center' : '' %>">
     <% if (variant === 'header') { %>
     <picture>
-        <source type="image/avif" srcset="/public/branding/logo-bg-white.avif">
-        <source type="image/webp" srcset="/public/branding/logo-bg-white.webp">
-        <img src="/public/branding/logo-bg-white.png"
+        <source type="image/avif" srcset="/public/branding/logo-bg-white.avif<%= _q %>">
+        <source type="image/webp" srcset="/public/branding/logo-bg-white.webp<%= _q %>">
+        <img src="/public/branding/logo-bg-white.png<%= _q %>"
              alt="<%= mp.brandLabel %>"
              class="mp-brand-logo__img"
              width="400"
@@ -21,9 +21,9 @@
     </picture>
     <% } else { %>
     <picture>
-        <source type="image/avif" srcset="/public/branding/logo-transparent.avif">
-        <source type="image/webp" srcset="/public/branding/logo-transparent.webp">
-        <img src="/public/branding/logo-transparent.png"
+        <source type="image/avif" srcset="/public/branding/logo-transparent.avif<%= _q %>">
+        <source type="image/webp" srcset="/public/branding/logo-transparent.webp<%= _q %>">
+        <img src="/public/branding/logo-transparent.png<%= _q %>"
              alt="<%= mp.brandLabel %>"
              class="mp-brand-logo__img"
              width="400"

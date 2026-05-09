@@ -166,20 +166,27 @@ try {
 
     // **PRIORIDAD 0: Archivos Estáticos Públicos (CRÍTICO: Antes de Auth)**
     const backendPublicPath = path.join(__dirname, 'public');
-    app.use('/public', cors({ origin: '*' }), express.static(backendPublicPath));
+    app.use('/public', cors({ origin: '*' }), express.static(backendPublicPath, {
+        setHeaders: (res, filePath) => {
+            const norm = String(filePath).replace(/\\/g, '/');
+            if (norm.includes('/public/branding/')) {
+                res.setHeader('Cache-Control', 'public, max-age=600, must-revalidate');
+            }
+        },
+    }));
 
     // Iconos en raíz — los navegadores piden /favicon.ico y /apple-touch-icon.png sin mirar <link>
     const brandingPath = (...segments) => path.join(backendPublicPath, 'branding', ...segments);
     app.get('/favicon.ico', (req, res) => {
         res.type('image/png');
-        res.set('Cache-Control', 'public, max-age=604800, immutable');
+        res.set('Cache-Control', 'public, max-age=600, must-revalidate');
         res.sendFile(brandingPath('favicon-transparent-48.png'), (err) => {
             if (err && !res.headersSent) res.sendStatus(404);
         });
     });
     app.get('/apple-touch-icon.png', (req, res) => {
         res.type('image/png');
-        res.set('Cache-Control', 'public, max-age=604800, immutable');
+        res.set('Cache-Control', 'public, max-age=3600, must-revalidate');
         res.sendFile(brandingPath('apple-touch-icon-bg-white.png'), (err) => {
             if (err && !res.headersSent) res.sendStatus(404);
         });

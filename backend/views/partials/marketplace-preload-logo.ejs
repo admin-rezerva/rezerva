@@ -1,2 +1,3 @@
-<%# Preload formato más ligero del logo header (AVIF); navegadores sin AVIF usan WebP/PNG del <picture> %>
-<link rel="preload" as="image" href="/public/branding/logo-bg-white.avif" type="image/avif">
+<% const _mpv = typeof mpAssetV !== 'undefined' ? mpAssetV : ''; %>
+<% const _q = _mpv ? ('?v=' + encodeURIComponent(_mpv)) : ''; %>
+<link rel="preload" as="image" href="/public/branding/logo-bg-white.avif<%= _q %>" type="image/avif">

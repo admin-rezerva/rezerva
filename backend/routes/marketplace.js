@@ -23,6 +23,16 @@ const IS_PROD = !!process.env.RENDER;
 const createMarketplaceRouter = (_db) => {
     const router = express.Router();
 
+    // HTML marketplace: sin caché agresivo (Cloudflare/navegador suelen retener EJS viejo).
+    // mpAssetV busting en logos/favicon cuando hay RENDER_GIT_COMMIT en Render.
+    router.use((req, res, next) => {
+        const v = String(process.env.RENDER_GIT_COMMIT || '').trim().slice(0, 12);
+        res.locals.mpAssetV = v || `t${Math.floor(Date.now() / 3_600_000)}`;
+        res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        next();
+    });
+
     // ── API JSON pública (para IA y terceros) ──────────────────────────────
     router.get('/api/search.json', cors(), sendMarketplaceSearchJson);
 

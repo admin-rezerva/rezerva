@@ -1,11 +1,12 @@
 <%#
-  Favicon marketplace — raíz /favicon.ico (servido en index.js) + variantes en /public/branding.
-  Regenerar assets: node scripts/tooling/optimize-marketplace-branding.js
+  Favicon marketplace — query ?v= alinea con RENDER_GIT_COMMIT (bust caché CDN/navegador).
 %>
-<link rel="icon" href="/favicon.ico" sizes="48x48" type="image/png">
-<link rel="icon" type="image/png" sizes="48x48" href="/public/branding/favicon-transparent-48.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/public/branding/favicon-transparent-32.png">
-<link rel="icon" type="image/png" sizes="48x48" href="/public/branding/favicon-bg-white-48.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/public/branding/favicon-bg-white-32.png">
-<link rel="apple-touch-icon" href="/public/branding/apple-touch-icon-bg-white.png" sizes="180x180">
-<link rel="apple-touch-icon" href="/public/branding/apple-touch-icon-transparent.png" sizes="180x180">
+<% const _mpv = typeof mpAssetV !== 'undefined' ? mpAssetV : ''; %>
+<% const _q = _mpv ? ('?v=' + encodeURIComponent(_mpv)) : ''; %>
+<link rel="icon" href="/favicon.ico<%= _q %>" sizes="48x48" type="image/png">
+<link rel="icon" type="image/png" sizes="48x48" href="/public/branding/favicon-transparent-48.png<%= _q %>">
+<link rel="icon" type="image/png" sizes="32x32" href="/public/branding/favicon-transparent-32.png<%= _q %>">
+<link rel="icon" type="image/png" sizes="48x48" href="/public/branding/favicon-bg-white-48.png<%= _q %>">
+<link rel="icon" type="image/png" sizes="32x32" href="/public/branding/favicon-bg-white-32.png<%= _q %>">
+<link rel="apple-touch-icon" href="/public/branding/apple-touch-icon-bg-white.png<%= _q %>" sizes="180x180">
+<link rel="apple-touch-icon" href="/public/branding/apple-touch-icon-transparent.png<%= _q %>" sizes="180x180">
