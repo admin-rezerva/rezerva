@@ -20,10 +20,6 @@ const { getPartnerCatalogItems } = require('../services/googleHotelsPartner/goog
 
 const IS_PROD = !!process.env.RENDER;
 
-function readMpLogoTune(req) {
-    return String(req.query.mpLogoTune || '').trim() === '1';
-}
-
 const createMarketplaceRouter = (_db) => {
     const router = express.Router();
 
@@ -92,7 +88,6 @@ const createMarketplaceRouter = (_db) => {
                 marketplaceBrandImageUrl,
                 ogImageUsesBrandAsset,
                 ogImage,
-                mpLogoTune: readMpLogoTune(req),
             });
         } catch (err) {
             console.error('[Marketplace] /google-hotels:', err);
@@ -162,7 +157,6 @@ const createMarketplaceRouter = (_db) => {
                 marketplaceBrandImageUrl,
                 ogImageUsesBrandAsset,
                 precioDesdeToSchemaPriceRange,
-                mpLogoTune: readMpLogoTune(req),
             });
         } catch (err) {
             console.error('[Marketplace] Error en homepage:', err);

@@ -10,11 +10,11 @@
         z-index: 50;
     }
     .mp-header__row {
-        padding-top: 0.875rem;
-        padding-bottom: 0.875rem;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
     }
     @media (min-width: 768px) {
-        .mp-header__row { padding-top: 1rem; padding-bottom: 1rem; }
+        .mp-header__row { padding-top: 1.125rem; padding-bottom: 1.125rem; }
     }
     .mp-header__link {
         color: #222222;
@@ -38,29 +38,25 @@
         border-top: 1px solid #EBEBEB;
     }
     .mp-brand-logo { line-height: 0; text-decoration: none; color: inherit; }
-    /*
-     * Logo header: valores por defecto. Con ?mpLogoTune=1 el partial marketplace-logo-tune
-     * escribe --mp-logo-h* / --mp-logo-maxw* en :root; al cerrar el ajuste, fija px aquí y borra el partial.
-     */
     .mp-brand-logo--header .mp-brand-logo__img {
         display: block;
-        height: var(--mp-logo-h, 60px);
+        height: 96px;
         width: auto;
-        max-height: var(--mp-logo-h, 60px);
-        max-width: min(var(--mp-logo-maxw, 340px), 86vw);
+        max-height: 96px;
+        max-width: min(544px, 86vw);
         object-fit: contain;
         object-position: left center;
     }
     @media (min-width: 768px) {
         .mp-brand-logo--header .mp-brand-logo__img {
-            height: var(--mp-logo-h-md, 72px);
-            max-height: var(--mp-logo-h-md, 72px);
-            max-width: min(var(--mp-logo-maxw-md, 400px), 42vw);
+            height: 115px;
+            max-height: 115px;
+            max-width: min(639px, 42vw);
         }
     }
     @media (min-width: 1280px) {
         .mp-brand-logo--header .mp-brand-logo__img {
-            max-width: min(var(--mp-logo-maxw-lg, 420px), 36vw);
+            max-width: min(670px, 36vw);
         }
     }
     /* Pie: mismo asset fondo blanco sobre tarjeta #FFF (encima del gris #F7F7F7) */
