@@ -59,16 +59,6 @@ function _updateGeneratedContent(strategy) {
 
 // --- Render único ---
 export async function renderUnified(empresaData) {
-    console.log('[FRONTEND DEBUG] renderUnified llamado con empresaData:', empresaData);
-    const theme = (empresaData || {}).websiteSettings?.theme || {};
-    const strategy = (empresaData || {}).strategy || {};
-
-    console.log('[FRONTEND DEBUG] Datos para render:');
-    console.log('  - theme.heroImageAlt:', theme.heroImageAlt);
-    console.log('  - theme.heroImageTitle:', theme.heroImageTitle);
-    console.log('  - strategy.heroImageAlt:', strategy.heroImageAlt);
-    console.log('  - strategy.heroImageTitle:', strategy.heroImageTitle);
-
     return await buildUnifiedMarkup(empresaData);
 }
 
@@ -154,6 +144,4 @@ export function setupUnifiedEvents(empresaData, onComplete = null) {
 }
 
 // --- Reset (para reconfigurar) ---
-export function resetUnified() {
-    console.log('Formulario unificado listo para usar');
-}
+export function resetUnified() {}

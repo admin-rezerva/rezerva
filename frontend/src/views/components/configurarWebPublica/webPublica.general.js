@@ -16,22 +16,14 @@ async function _render(empresaData = _fullEmpresaData) {
     // El callback onComplete se pasa a setupUnifiedEvents
     // Recibe los datos actualizados directamente del backend
     setupUnifiedEvents(datosParaRender, async (responseHomeSettings, responseEmpresa) => {
-        console.log('📥 Callback onComplete ejecutado con respuestas:', {
-            homeSettings: responseHomeSettings,
-            empresa: responseEmpresa
-        });
-
         // Usar los datos actualizados que YA devolvió el backend
         let datosActualizados = null;
 
         if (responseHomeSettings?.empresa) {
-            console.log('✅ Usando datos de responseHomeSettings.empresa');
             datosActualizados = responseHomeSettings.empresa;
         } else if (responseEmpresa?.empresa) {
-            console.log('✅ Usando datos de responseEmpresa.empresa');
             datosActualizados = responseEmpresa.empresa;
         } else if (responseHomeSettings?.websiteSettings) {
-            console.log('⚠️ Solo websiteSettings disponible, combinando con datos existentes');
             datosActualizados = { ...datosParaRender, websiteSettings: responseHomeSettings.websiteSettings };
         } else {
             console.warn('⚠️ No hay datos actualizados en las respuestas, haciendo fetch...');
@@ -43,7 +35,6 @@ async function _render(empresaData = _fullEmpresaData) {
         }
 
         if (datosActualizados && datosActualizados.id) {
-            console.log('🔄 Actualizando datos globales y re-renderizando...');
             _fullEmpresaData = datosActualizados;
             await _render(datosActualizados);
 

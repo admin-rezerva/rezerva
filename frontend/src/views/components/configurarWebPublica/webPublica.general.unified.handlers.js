@@ -361,13 +361,10 @@ export function bindUnifiedHeroUpload({ fetchAPI, setStatus }) {
         if (titleText) fd.append('titleText', titleText);
 
         try {
-            console.log('[FRONTEND DEBUG] Enviando imagen hero...');
             const r = await fetchAPI('/website/upload-hero-image', {
                 method: 'POST',
                 body: fd,
             });
-
-            console.log('[FRONTEND DEBUG] Respuesta recibida:', r);
 
             const preview = document.getElementById('hero-preview');
             const hidden = document.getElementById('hero-url');
