@@ -39,7 +39,7 @@ function getBlogInternalProvider() {
         const aiConfig = require('../config/aiConfig');
         const inst = new GeminiProvider({
             apiKey,
-            model: process.env.BLOG_INTERNAL_GEMINI_MODEL || 'gemini-1.5-flash',
+            model: aiConfig.normalizeGeminiModelId(process.env.BLOG_INTERNAL_GEMINI_MODEL),
             requestOptions: aiConfig.gemini.requestOptions,
         });
         if (!inst.model) {

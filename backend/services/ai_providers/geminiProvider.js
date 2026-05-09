@@ -14,7 +14,7 @@ class GeminiProvider {
         try {
             const apiKey = String(config.apiKey).trim();
             this.genAI = new GoogleGenerativeAI(apiKey);
-            this.modelName = String(config.model || 'gemini-1.5-flash').trim();
+            this.modelName = String(config.model || 'models/gemini-1.5-flash').trim();
             const requestOptions =
                 config.requestOptions && typeof config.requestOptions === 'object'
                     ? config.requestOptions
@@ -117,9 +117,10 @@ class GeminiProvider {
         } catch (error) {
             console.error("❌ [GeminiProvider] Generate Error:", error.message);
             const msg = String(error.message || '');
-            if (msg.includes('404') && msg.includes('v1beta') && msg.includes('not found')) {
+            if (msg.includes('404') && msg.includes('not found')) {
                 console.error(
-                    '[GeminiProvider] 404 en v1beta: el SDK por defecto usa v1beta; gemini-1.5-flash requiere apiVersion v1 en getGenerativeModel (ya configurado en aiConfig.requestOptions).',
+                    '[GeminiProvider] 404 modelo: la URL REST debe usar el segmento `models/` (p. ej. models/gemini-1.5-flash). '
+                    + 'aiConfig normaliza GEMINI_MODEL; revisa GEMINI_MODEL y apiVersion en logs.',
                 );
             }
             if (msg.includes('403') && (msg.includes('denied access') || msg.includes('Forbidden'))) {

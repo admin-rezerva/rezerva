@@ -15,6 +15,18 @@ function envApiKey(name) {
     return s || undefined;
 }
 
+/**
+ * El SDK arma la URL como `{base}/{apiVersion}/{model}:generateContent`.
+ * Debe incluir el prefijo `models/` (p. ej. `models/gemini-1.5-flash`), si no la ruta queda
+ * `/v1/gemini-1.5-flash:generateContent` y la API responde 404.
+ */
+function normalizeGeminiModelId(raw) {
+    const s = raw == null ? '' : String(raw).trim().replace(/^\uFEFF/, '');
+    const id = s || 'gemini-1.5-flash';
+    if (id.startsWith('models/')) return id;
+    return `models/${id}`;
+}
+
 const aiConfig = {
     // Proveedor principal. Cambia con AI_PROVIDER en .env
     // Valores: 'gemini' | 'openai' | 'claude' | 'deepseek' | 'siliconflow' | 'moonshot'
@@ -42,12 +54,8 @@ const aiConfig = {
 
     gemini: {
         apiKey: envApiKey('GEMINI_API_KEY'),
-        // 1.5-flash suele tener cuota free distinta a 2.0; override con GEMINI_MODEL en Render.
-        model: (() => {
-            const raw = process.env.GEMINI_MODEL;
-            if (raw == null || String(raw).trim() === '') return 'gemini-1.5-flash';
-            return String(raw).trim().replace(/^\uFEFF/, '');
-        })(),
+        // GEMINI_MODEL puede ser `gemini-1.5-flash` o `models/gemini-1.5-flash` (se normaliza).
+        model: normalizeGeminiModelId(process.env.GEMINI_MODEL),
         /**
          * El SDK usa v1beta por defecto (DEFAULT_API_VERSION en @google/generative-ai).
          * Para gemini-1.5-flash + generateContent la API estable es v1; en v1beta devuelve 404 "model not found".
@@ -135,3 +143,4 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 module.exports = aiConfig;
+module.exports.normalizeGeminiModelId = normalizeGeminiModelId;
