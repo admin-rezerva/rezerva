@@ -79,25 +79,28 @@
 <%- include('../partials/marketplace-skip-main') %>
 
 <header class="mp-header">
-    <div class="mp-header__row max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 flex flex-wrap items-center gap-3 lg:gap-6">
+    <div class="mp-header__row mp-container flex flex-wrap items-center gap-3 lg:gap-6">
         <%- include('../partials/marketplace-brand-logo', { mp, mpHomeUrl, logoVariant: 'header' }) %>
 
-        <a href="<%= mpHomeUrl %>" class="mp-header__link hidden sm:inline-flex text-sm font-semibold px-1 py-0.5 rounded-md whitespace-nowrap">
-            <%= mp.ghCatalogBackHome %>
-        </a>
-
-        <nav class="flex flex-1 flex-wrap items-center justify-end gap-2 sm:gap-3 text-sm font-semibold">
-            <a href="<%= mpHomeUrl %>" class="mp-header__link sm:hidden"><%= mp.ghCatalogBackHome %></a>
-            <span class="hidden sm:inline mp-header__sep" aria-hidden="true">|</span>
-            <a href="<%= hreflangEsUrl %>" class="mp-header__lang px-2 py-1 rounded-full <%= mp.htmlLang === 'es' ? 'mp-header__lang--active' : '' %>"><%= mp.langSwitchEs %></a>
-            <span class="mp-header__sep" aria-hidden="true">|</span>
-            <a href="<%= hreflangEnUrl %>" class="mp-header__lang px-2 py-1 rounded-full <%= mp.htmlLang === 'en' ? 'mp-header__lang--active' : '' %>"><%= mp.langSwitchEn %></a>
-        </nav>
+        <div class="flex flex-1 min-w-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
+            <a href="<%= mpHomeUrl %>" class="mp-header__link text-sm font-semibold px-1 py-0.5 rounded-md whitespace-nowrap">
+                <%= mp.ghCatalogBackHome %>
+            </a>
+            <details class="mp-lang-menu">
+                <summary class="mp-lang-menu__btn" aria-label="<%= mp.langSwitchTitle %>">
+                    <i class="fas fa-globe" aria-hidden="true"></i>
+                </summary>
+                <div class="mp-lang-menu__panel" role="menu">
+                    <a href="<%= hreflangEsUrl %>" class="mp-lang-menu__opt <%= mp.htmlLang === 'es' ? 'mp-lang-menu__opt--active' : '' %>" role="menuitem"><%= mp.langSwitchEs %></a>
+                    <a href="<%= hreflangEnUrl %>" class="mp-lang-menu__opt <%= mp.htmlLang === 'en' ? 'mp-lang-menu__opt--active' : '' %>" role="menuitem"><%= mp.langSwitchEn %></a>
+                </div>
+            </details>
+        </div>
     </div>
 </header>
 
 <section class="mp-hero" aria-labelledby="gh-hero-heading">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-8 md:pt-10 md:pb-10">
+    <div class="mp-container pt-8 pb-8 md:pt-10 md:pb-10">
         <h1 id="gh-hero-heading" class="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-[#222222] max-w-3xl leading-tight">
             <%= mp.ghCatalogHeading %>
         </h1>
@@ -107,7 +110,7 @@
     </div>
 </section>
 
-<main id="main-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
+<main id="main-content" class="mp-container py-8 md:py-10">
 
     <% if (postgresRequired) { %>
     <p class="mp-alert-soft"><%= mp.ghCatalogUnavailable %></p>
@@ -120,7 +123,7 @@
         </a>
     </div>
     <% } else { %>
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
         <% items.forEach((it) => { %>
         <a href="<%= it.deepLink %>" class="prop-card" rel="noopener noreferrer" aria-label="<%= mp.ariaExternalHost %>: <%= it.title %>">
             <div class="prop-photo">

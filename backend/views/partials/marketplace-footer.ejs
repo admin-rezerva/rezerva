@@ -1,9 +1,8 @@
 <%#
   Locals: mp, mpHomeUrl, footerMode: 'home' | 'google-hotels'
 %>
-<% const ghPath = '/google-hotels' + (mp.htmlLang === 'en' ? '?lang=en' : ''); %>
 <footer class="mp-footer">
-    <div class="mp-footer__inner max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-12">
+    <div class="mp-footer__inner mp-container py-10 md:py-12">
         <div class="mp-footer__grid flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between lg:gap-16">
             <div class="flex flex-col items-center lg:items-start gap-4 lg:max-w-md">
                 <div class="mp-footer-logo mp-footer-logo-card flex justify-center lg:justify-start w-full">
@@ -16,8 +15,6 @@
             <nav class="mp-footer-nav flex flex-wrap items-center justify-center lg:justify-end gap-x-8 gap-y-3 text-sm font-semibold" aria-label="<%= mp.htmlLang === 'en' ? 'Legal and links' : 'Legal y enlaces' %>">
                 <% if (footerMode === 'google-hotels') { %>
                 <a href="<%= mpHomeUrl %>" class="mp-footer__link"><%= mp.ghCatalogBackHome %></a>
-                <% } else { %>
-                <a href="<%= ghPath %>" class="mp-footer__link"><%= mp.ghFooterCatalog %></a>
                 <% } %>
                 <a href="/legal/terms" class="mp-footer__link"><%= mp.footerTerms %></a>
                 <a href="/legal/privacy" class="mp-footer__link"><%= mp.footerPrivacy %></a>

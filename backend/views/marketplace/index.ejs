@@ -117,12 +117,10 @@
 
 <!-- ═══ HEADER ═══ -->
 <header class="mp-header">
-    <div class="mp-header__row max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 flex flex-wrap items-center gap-3 lg:gap-6">
-        <%- include('../partials/marketplace-brand-logo', { mp, mpHomeUrl, logoVariant: 'header' }) %>
-
-        <a href="/google-hotels<%= mp.htmlLang === 'en' ? '?lang=en' : '' %>" class="mp-header__link hidden sm:inline-flex flex-shrink-0 text-sm font-semibold px-1 py-0.5 rounded-md whitespace-nowrap">
-            <%= mp.navGoogleHotels %>
-        </a>
+    <div class="mp-header__bar mp-container">
+        <div class="mp-header__logo">
+            <%- include('../partials/marketplace-brand-logo', { mp, mpHomeUrl, logoVariant: 'header' }) %>
+        </div>
 
         <!-- Search (GET) — desktop: barra completa; móvil: CTA compacta que expande filtros -->
         <% 
@@ -135,7 +133,7 @@
         if (personas > 0) _mpSubParts.push(String(personas) + ' ' + (personas !== 1 ? mp.people : mp.person));
         const _mpMobileSubActive = _mpSubParts.join(' · ');
         %>
-        <form id="mp-search-form" method="GET" action="/" class="flex-1 max-w-3xl min-w-[200px] order-last sm:order-none w-full sm:w-auto"
+        <form id="mp-search-form" method="GET" action="/" class="mp-header__search flex-1 min-w-[200px] w-full sm:w-auto"
               data-search-sub-default="<%= mp.htmlLang === 'en' ? 'Where, dates, guests' : 'Destino, fechas y huéspedes' %>"
               data-people-word="<%= mp.people %>"
               data-person-word="<%= mp.person %>">
@@ -192,36 +190,34 @@
             </div>
         </form>
 
-        <nav class="flex-shrink-0 flex items-center gap-2 text-sm font-semibold sm:ml-auto" aria-label="<%= mp.langSwitchTitle %>">
-            <a href="<%= mpLinkEs %>" class="mp-header__lang px-2 py-1 rounded-full <%= mp.htmlLang === 'es' ? 'mp-header__lang--active' : '' %>"><%= mp.langSwitchEs %></a>
-            <span class="mp-header__sep" aria-hidden="true">|</span>
-            <a href="<%= mpLinkEn %>" class="mp-header__lang px-2 py-1 rounded-full <%= mp.htmlLang === 'en' ? 'mp-header__lang--active' : '' %>"><%= mp.langSwitchEn %></a>
-        </nav>
-
-        <a href="/google-hotels<%= mp.htmlLang === 'en' ? '?lang=en' : '' %>" class="mp-header__link sm:hidden w-full text-center text-sm font-semibold py-1">
-            <%= mp.navGoogleHotels %>
-        </a>
-    </div>
-
-    <!-- Ordenación (misma query que el buscador) -->
-    <div class="mp-sort-strip">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-2.5 flex flex-wrap items-center justify-end gap-2">
-            <label for="mp-sort" class="text-sm font-medium" style="color:#717171;"><%= mp.labelSort %></label>
-            <select id="mp-sort" name="sort" form="mp-search-form"
-                    class="text-sm rounded-lg px-3 py-1.5 max-w-full border border-[#DDDDDD] bg-white text-[#222222] focus:outline-none focus:ring-2 focus:ring-[#222222] focus:ring-offset-1"
-                    onchange="var f=document.getElementById('mp-search-form'); if(f) f.submit();">
-                <option value="" <%= !sort ? 'selected' : '' %>><%= mp.sortRecommended %></option>
-                <option value="rating" <%= sort === 'rating' ? 'selected' : '' %>><%= mp.sortRating %></option>
-                <option value="valor" <%= sort === 'valor' ? 'selected' : '' %>><%= mp.sortPriceLow %></option>
-                <option value="valor_desc" <%= sort === 'valor_desc' ? 'selected' : '' %>><%= mp.sortPriceHigh %></option>
-            </select>
+        <div class="mp-header__tools flex items-center justify-end gap-2 sm:gap-3 shrink-0">
+            <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <label for="mp-sort" class="mp-header__sort-label text-xs sm:text-sm font-medium whitespace-nowrap hidden sm:inline" style="color:#717171;"><%= mp.labelSort %></label>
+                <select id="mp-sort" name="sort" form="mp-search-form"
+                        class="mp-header__sort-select text-xs sm:text-sm rounded-full pl-2.5 pr-8 py-2 max-w-[min(100%,11rem)] sm:max-w-none border border-[#DDDDDD] bg-white text-[#222222] focus:outline-none focus:ring-2 focus:ring-[#222222] focus:ring-offset-1"
+                        onchange="var f=document.getElementById('mp-search-form'); if(f) f.submit();">
+                    <option value="" <%= !sort ? 'selected' : '' %>><%= mp.sortRecommended %></option>
+                    <option value="rating" <%= sort === 'rating' ? 'selected' : '' %>><%= mp.sortRating %></option>
+                    <option value="valor" <%= sort === 'valor' ? 'selected' : '' %>><%= mp.sortPriceLow %></option>
+                    <option value="valor_desc" <%= sort === 'valor_desc' ? 'selected' : '' %>><%= mp.sortPriceHigh %></option>
+                </select>
+            </div>
+            <details class="mp-lang-menu">
+                <summary class="mp-lang-menu__btn" aria-label="<%= mp.langSwitchTitle %>">
+                    <i class="fas fa-globe" aria-hidden="true"></i>
+                </summary>
+                <div class="mp-lang-menu__panel" role="menu">
+                    <a href="<%= mpLinkEs %>" class="mp-lang-menu__opt <%= mp.htmlLang === 'es' ? 'mp-lang-menu__opt--active' : '' %>" role="menuitem"><%= mp.langSwitchEs %></a>
+                    <a href="<%= mpLinkEn %>" class="mp-lang-menu__opt <%= mp.htmlLang === 'en' ? 'mp-lang-menu__opt--active' : '' %>" role="menuitem"><%= mp.langSwitchEn %></a>
+                </div>
+            </details>
         </div>
     </div>
 </header>
 
 <% if (!hayBusqueda) { %>
 <section class="mp-hero" aria-labelledby="mp-hero-heading">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-10 md:pt-12 md:pb-14 text-center">
+    <div class="mp-container pt-8 pb-10 md:pt-12 md:pb-14 text-center">
         <h1 id="mp-hero-heading" class="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-[#222222] max-w-3xl mx-auto leading-tight">
             <%= mp.heroTitle %>
         </h1>
@@ -233,7 +229,7 @@
 <% } %>
 
 <!-- ═══ MAIN ═══ -->
-<main id="main-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
+<main id="main-content" class="mp-container py-8 md:py-10">
 
     <%
     const _priceLocale = mp.htmlLang === 'en' ? 'en-US' : 'es-CL';
@@ -250,7 +246,7 @@
             <i class="fas fa-star text-warning-500 mr-2" style="font-size:1.1rem;"></i>
             <%= mp.sectionFavoritos %>
         </h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
             <% destacados.forEach(p => { %>
             <a href="/ir?s=<%= p.subdominio %>&id=<%= p.id %>" class="prop-card">
                 <div class="prop-photo">
@@ -312,7 +308,7 @@
             <a href="<%= mpHomeUrl %>" class="inline-block mt-4 font-semibold text-[#222222] underline underline-offset-2 hover:opacity-80"><%= mp.verTodos %></a>
         </div>
         <% } else { %>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
             <% propiedades.forEach(p => { %>
             <a href="/ir?s=<%= p.subdominio %>&id=<%= p.id %>" class="prop-card">
                 <div class="prop-photo">
