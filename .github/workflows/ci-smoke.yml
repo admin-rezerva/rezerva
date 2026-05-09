@@ -14,9 +14,11 @@ jobs:
         with:
           node-version: '20'
       # Raíz: dependencias de `package.json` (scripts test:ci vía `npm run`). Backend: `pg`, Express, servicios bajo `backend/`.
+      # `working-directory: backend` + `npm ci` es más fiable en ubuntu-latest que `npm ci --prefix backend` (evita fallos inmediatos por resolución de prefijo en algunas versiones de npm).
       - name: npm ci (raíz)
         run: npm ci
       - name: npm ci (backend)
-        run: npm ci --prefix backend
+        working-directory: backend
+        run: npm ci
       - name: Cadena test:ci (plan release 1.0.0 §2 + regresión)
         run: npm run test:ci
