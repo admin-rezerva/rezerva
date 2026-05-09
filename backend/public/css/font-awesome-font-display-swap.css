@@ -1,0 +1,21 @@
+/**
+ * Font Awesome 6.5.0 (cdnjs) — mismo origen WOFF2 que solid.min.css / brands.min.css,
+ * con font-display: swap para Lighthouse y texto visible mientras carga.
+ * Cargar SIEMPRE después de fontawesome + solid + brands en ssr-fontawesome-deferred.ejs.
+ * Mantener versión alineada con FA_VER en ese partial.
+ */
+@font-face {
+    font-family: "Font Awesome 6 Free";
+    font-style: normal;
+    font-weight: 900;
+    font-display: swap;
+    src: url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/webfonts/fa-solid-900.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Font Awesome 6 Brands";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/webfonts/fa-brands-400.woff2") format("woff2");
+}
