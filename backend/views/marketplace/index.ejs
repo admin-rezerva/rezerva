@@ -4,6 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <%- include('../partials/marketplace-theme-color') %>
+    <%- include('../partials/marketplace-favicon') %>
+    <%- include('../partials/marketplace-preload-logo') %>
     <%- include('../partials/ssr-preconnect-cdnjs') %>
     <title><%= mp.pageTitle %></title>
     <meta name="description" content="<%= mp.metaDescription %>">
@@ -21,28 +24,52 @@
     <meta property="og:url" content="<%= canonicalUrl %>">
     <% if (propiedades.length > 0 && propiedades[0].fotoUrl) { %>
     <meta property="og:image" content="<%= propiedades[0].fotoUrl %>">
+    <% } else if (typeof marketplaceBrandImageUrl === 'string' && marketplaceBrandImageUrl) { %>
+    <meta property="og:image" content="<%= marketplaceBrandImageUrl %>">
+    <% if (typeof ogImageUsesBrandAsset !== 'undefined' && ogImageUsesBrandAsset) { %>
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:alt" content="<%= mp.brandLabel %>">
+    <% } %>
     <% } %>
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="<%= mp.pageTitle %>">
     <meta name="twitter:description" content="<%= mp.twitterDescription %>">
+    <% if (propiedades.length > 0 && propiedades[0].fotoUrl) { %>
+    <meta name="twitter:image" content="<%= propiedades[0].fotoUrl %>">
+    <% } else if (typeof marketplaceBrandImageUrl === 'string' && marketplaceBrandImageUrl) { %>
+    <meta name="twitter:image" content="<%= marketplaceBrandImageUrl %>">
+    <% } %>
 
     <!-- Schema.org JSON-LD -->
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "<%= mp.brandLabel %>",
-      "url": "https://<%= platformDomain %>",
-      "description": <%- JSON.stringify(mp.jsonLdSiteDescription) %>,
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": {
-          "@type": "EntryPoint",
-          "urlTemplate": "https://<%= platformDomain %>/?q={search_term_string}"
+    <%- JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: mp.brandLabel,
+      url: `https://${platformDomain}`,
+      description: mp.jsonLdSiteDescription,
+      publisher: {
+        '@type': 'Organization',
+        name: mp.brandLabel,
+        url: `https://${platformDomain}`,
+        logo: {
+          '@type': 'ImageObject',
+          url: `https://${platformDomain}/public/branding/logo-bg-white.png`,
+          width: 360,
+          height: 196,
         },
-        "query-input": "required name=search_term_string"
-      }
-    }
+      },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `https://${platformDomain}/?q={search_term_string}`,
+        },
+        'query-input': 'required name=search_term_string',
+      },
+    }) %>
     </script>
     <% if (propiedades.length > 0) { %>
     <script type="application/ld+json">
@@ -90,7 +117,7 @@
 <!-- ═══ HEADER ═══ -->
 <header class="mp-header">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap items-center gap-3 lg:gap-5">
-        <a href="<%= mpHomeUrl %>" class="mp-logo flex-shrink-0 text-primary-600"><%= mp.brandLabel %></a>
+        <%- include('../partials/marketplace-brand-logo', { mp, mpHomeUrl, logoVariant: 'header' }) %>
 
         <a href="/google-hotels<%= mp.htmlLang === 'en' ? '?lang=en' : '' %>" class="hidden sm:inline-flex flex-shrink-0 text-sm font-semibold text-neutral-600 hover:text-primary-600 px-2 py-1 rounded-md whitespace-nowrap">
             <%= mp.navGoogleHotels %>

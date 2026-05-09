@@ -4,7 +4,9 @@
 <% const ghPath = '/google-hotels' + (mp.htmlLang === 'en' ? '?lang=en' : ''); %>
 <footer class="border-t border-neutral-200 mt-16 md:mt-20 py-10 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-neutral-500">
-        <p class="mp-logo mb-2 text-primary-600 font-semibold" style="font-size:1.1rem;"><%= mp.brandLabel %></p>
+        <div class="mb-3 flex justify-center">
+            <%- include('marketplace-brand-logo', { mp, mpHomeUrl, logoVariant: 'footer' }) %>
+        </div>
         <p>
             <%= mp.footerTagline %>
             <% if (footerMode === 'google-hotels') { %>

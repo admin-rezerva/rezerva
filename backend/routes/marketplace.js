@@ -61,7 +61,9 @@ const createMarketplaceRouter = (_db) => {
             const hreflangEnUrl = `${protocol}://${host}/google-hotels?lang=en`;
             const mpHomeUrl = mp.htmlLang === 'en' ? '/?lang=en' : '/';
             const marketplaceHomeAbsoluteUrl = `${protocol}://${host}${mpHomeUrl}`;
-            const ogImage = items.length > 0 && items[0].fotoUrl ? items[0].fotoUrl : null;
+            const marketplaceBrandImageUrl = `${protocol}://${host}/public/branding/og-default.png`;
+            const ogImage = items.length > 0 && items[0].fotoUrl ? items[0].fotoUrl : marketplaceBrandImageUrl;
+            const ogImageUsesBrandAsset = !(items.length > 0 && items[0].fotoUrl);
 
             res.render('marketplace/google-hotels-catalog', {
                 items,
@@ -73,6 +75,8 @@ const createMarketplaceRouter = (_db) => {
                 hreflangEnUrl,
                 mpHomeUrl,
                 marketplaceHomeAbsoluteUrl,
+                marketplaceBrandImageUrl,
+                ogImageUsesBrandAsset,
                 ogImage,
             });
         } catch (err) {
@@ -117,6 +121,10 @@ const createMarketplaceRouter = (_db) => {
                 htmlLang: mp.htmlLang,
             });
             const mpHomeUrl = mp.htmlLang === 'en' ? '/?lang=en' : '/';
+            const protocol = req.protocol || 'https';
+            const reqHost = req.get('host') || '';
+            const marketplaceBrandImageUrl = reqHost ? `${protocol}://${reqHost}/public/branding/og-default.png` : '';
+            const ogImageUsesBrandAsset = !(propiedades.length > 0 && propiedades[0].fotoUrl);
 
             res.render('marketplace/index', {
                 propiedades,
@@ -136,6 +144,8 @@ const createMarketplaceRouter = (_db) => {
                 hreflangEsUrl: seo.hreflangEsUrl,
                 hreflangEnUrl: seo.hreflangEnUrl,
                 mpHomeUrl,
+                marketplaceBrandImageUrl,
+                ogImageUsesBrandAsset,
                 precioDesdeToSchemaPriceRange,
             });
         } catch (err) {

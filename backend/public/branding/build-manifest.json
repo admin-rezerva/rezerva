@@ -1,0 +1,47 @@
+{
+  "generatedAt": "2026-05-08T23:58:56.077Z",
+  "assets": {
+    "logo-bg-white": {
+      "png": "logo-bg-white.png",
+      "webp": "logo-bg-white.webp",
+      "width": 360,
+      "height": 196
+    },
+    "logo-transparent": {
+      "png": "logo-transparent.png",
+      "webp": "logo-transparent.webp",
+      "width": 360,
+      "height": 196
+    },
+    "favicon-bg-white-32": {
+      "png": "favicon-bg-white-32.png",
+      "size": 32
+    },
+    "favicon-bg-white-48": {
+      "png": "favicon-bg-white-48.png",
+      "size": 48
+    },
+    "favicon-transparent-32": {
+      "png": "favicon-transparent-32.png",
+      "size": 32
+    },
+    "favicon-transparent-48": {
+      "png": "favicon-transparent-48.png",
+      "size": 48
+    },
+    "apple-touch-icon-bg-white": {
+      "png": "apple-touch-icon-bg-white.png",
+      "size": 180
+    },
+    "apple-touch-icon-transparent": {
+      "png": "apple-touch-icon-transparent.png",
+      "size": 180
+    },
+    "og-default": {
+      "png": "og-default.png",
+      "webp": "og-default.webp",
+      "width": 1200,
+      "height": 630
+    }
+  }
+}

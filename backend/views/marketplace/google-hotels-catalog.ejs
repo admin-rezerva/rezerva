@@ -4,6 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <%- include('../partials/marketplace-theme-color') %>
+    <%- include('../partials/marketplace-favicon') %>
+    <%- include('../partials/marketplace-preload-logo') %>
     <%- include('../partials/ssr-preconnect-cdnjs') %>
     <title><%= mp.ghCatalogPageTitle %></title>
     <meta name="description" content="<%= mp.ghCatalogMetaDescription %>">
@@ -12,15 +15,26 @@
     <link rel="alternate" hreflang="en" href="<%= hreflangEnUrl %>">
     <link rel="alternate" hreflang="x-default" href="<%= hreflangEsUrl %>">
     <meta property="og:type" content="website">
+    <meta property="og:site_name" content="<%= mp.brandLabel %>">
+    <meta property="og:locale" content="<%= mp.ogLocale %>">
     <meta property="og:title" content="<%= mp.ghCatalogPageTitle %>">
     <meta property="og:description" content="<%= mp.ghCatalogMetaDescription %>">
     <meta property="og:url" content="<%= canonicalUrl %>">
     <% if (typeof ogImage === 'string' && ogImage) { %>
     <meta property="og:image" content="<%= ogImage %>">
+    <% if (typeof ogImageUsesBrandAsset !== 'undefined' && ogImageUsesBrandAsset) { %>
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:alt" content="<%= mp.brandLabel %>">
+    <% } %>
     <% } %>
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="<%= mp.ghCatalogPageTitle %>">
     <meta name="twitter:description" content="<%= mp.ghCatalogMetaDescription %>">
+    <% if (typeof ogImage === 'string' && ogImage) { %>
+    <meta name="twitter:image" content="<%= ogImage %>">
+    <% } %>
 
     <% if (!postgresRequired && items.length > 0) { %>
     <script type="application/ld+json">
@@ -65,7 +79,7 @@
 
 <header class="mp-header">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap items-center gap-3 lg:gap-5">
-        <a href="<%= mpHomeUrl %>" class="mp-logo flex-shrink-0 text-primary-600"><%= mp.brandLabel %></a>
+        <%- include('../partials/marketplace-brand-logo', { mp, mpHomeUrl, logoVariant: 'header' }) %>
 
         <a href="<%= mpHomeUrl %>" class="hidden sm:inline-flex text-sm font-semibold text-neutral-600 hover:text-primary-600 px-2 py-1 rounded-md whitespace-nowrap">
             <%= mp.ghCatalogBackHome %>

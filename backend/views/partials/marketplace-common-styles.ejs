@@ -2,7 +2,20 @@
 <style>
     body { font-family: 'Inter', sans-serif; }
     .mp-header { background: rgba(255,255,255,0.92); border-bottom: 1px solid rgb(229 231 235); position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px); }
-    .mp-logo { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.5px; }
+    .mp-brand-logo { line-height: 0; text-decoration: none; color: inherit; }
+    .mp-brand-logo__img {
+        height: 36px;
+        width: auto;
+        max-width: min(200px, 46vw);
+        object-fit: contain;
+        display: block;
+    }
+    .mp-brand-logo--footer .mp-brand-logo__img {
+        height: 28px;
+        max-width: 180px;
+        margin-left: auto;
+        margin-right: auto;
+    }
     .mp-hero {
         background: linear-gradient(180deg, rgb(250 250 250) 0%, rgb(255 255 255) 55%, rgb(255 255 255) 100%);
         border-bottom: 1px solid rgb(229 231 235);
