@@ -133,7 +133,7 @@
         if (personas > 0) _mpSubParts.push(String(personas) + ' ' + (personas !== 1 ? mp.people : mp.person));
         const _mpMobileSubActive = _mpSubParts.join(' · ');
         %>
-        <form id="mp-search-form" method="GET" action="/" class="mp-header__search flex-1 min-w-[200px] w-full sm:w-auto"
+        <form id="mp-search-form" method="GET" action="/" class="mp-header__search min-w-0 w-full"
               data-search-sub-default="<%= mp.htmlLang === 'en' ? 'Where, dates, guests' : 'Destino, fechas y huéspedes' %>"
               data-people-word="<%= mp.people %>"
               data-person-word="<%= mp.person %>">

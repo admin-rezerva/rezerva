@@ -214,37 +214,6 @@
         box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.05);
         max-width: min(850px, 100%); width: 100%; margin: 0 auto;
     }
-    /* Cabecera desktop: píldora compacta tipo Airbnb (destino acotado, no estira toda la columna) */
-    @media (min-width: 768px) {
-        .mp-header__search .search-pill {
-            max-width: min(720px, 100%);
-            width: fit-content;
-            margin-left: auto;
-            margin-right: auto;
-            flex-wrap: nowrap;
-        }
-        .mp-header__search .search-segment {
-            flex: 0 0 auto;
-        }
-        .mp-header__search .search-segment-destino {
-            flex: 1 1 auto;
-            min-width: 0;
-            max-width: 232px;
-        }
-        .mp-header__search .search-segment-llegada,
-        .mp-header__search .search-segment-salida {
-            flex: 0 0 120px;
-            width: 120px;
-            min-width: 120px;
-            max-width: 120px;
-        }
-        .mp-header__search .search-segment-huespedes {
-            flex: 0 0 100px;
-            width: 100px;
-            min-width: 100px;
-            max-width: 100px;
-        }
-    }
     .search-btn {
         background: #FF385C !important;
         color: #FFFFFF !important;
@@ -432,21 +401,22 @@
             pointer-events: auto !important;
         }
     }
-    /* Rejilla densa: muchas tarjetas por fila (referencia Airbnb ~160px/celda) */
+    /* Rejilla densa: columnas de ancho fijo (sin 1fr → no estiran pocas tarjetas a ancho completo) */
     .mp-card-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+        grid-template-columns: repeat(auto-fill, 156px);
         gap: 0.75rem 0.625rem;
+        justify-content: start;
     }
     @media (min-width: 640px) {
         .mp-card-grid {
-            grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+            grid-template-columns: repeat(auto-fill, 164px);
             gap: 1rem 0.75rem;
         }
     }
     @media (min-width: 1280px) {
         .mp-card-grid {
-            grid-template-columns: repeat(auto-fill, minmax(164px, 1fr));
+            grid-template-columns: repeat(auto-fill, 172px);
         }
     }
     .prop-card {
@@ -476,4 +446,41 @@
     .mp-gh-cta-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.25rem; }
     .mp-gh-cta-text { font-size: 0.875rem; font-weight: 600; color: #222222; display: inline-flex; align-items: center; gap: 0.35rem; }
     .mp-header__sep { color: #DDDDDD; user-select: none; }
+
+    /*
+     * Cabecera desktop — debe ir AL FINAL para ganar a `.search-segment { flex:1 }`.
+     * Destino: ancho fijo (sin flex-grow) para que no se coma la píldora.
+     */
+    @media (min-width: 768px) {
+        .mp-header__search .search-pill {
+            box-sizing: border-box;
+            width: fit-content !important;
+            max-width: min(680px, 100%) !important;
+            margin-left: auto;
+            margin-right: auto;
+            flex-wrap: nowrap;
+        }
+        .mp-header__search .search-segment {
+            flex: 0 0 auto !important;
+        }
+        .mp-header__search .search-segment-destino {
+            flex: 0 0 200px !important;
+            width: 200px !important;
+            max-width: 200px !important;
+            min-width: 0 !important;
+        }
+        .mp-header__search .search-segment-llegada,
+        .mp-header__search .search-segment-salida {
+            flex: 0 0 118px !important;
+            width: 118px !important;
+            max-width: 118px !important;
+            min-width: 118px !important;
+        }
+        .mp-header__search .search-segment-huespedes {
+            flex: 0 0 96px !important;
+            width: 96px !important;
+            max-width: 96px !important;
+            min-width: 96px !important;
+        }
+    }
 </style>
