@@ -19,19 +19,23 @@
         _pageDesc = String(_pageDesc || '').replace(/\s+/g, ' ').trim();
         if (!_pageDesc) {
             const _nom = String(empresa?.nombre || '').trim();
+            const _tipo = empresa.strategy?.tipoAlojamientoPrincipal || '';
             _pageDesc = _nom
                 ? (_hl === 'en'
-                    ? `Book your stay directly — ${_nom}`
-                    : `Reserva en ${_nom} — alojamientos y disponibilidad en línea.`)
+                    ? `Book ${_tipo ? _tipo.toLowerCase() + ' at ' : 'directly at '}${_nom} — availability and online reservation.`
+                    : `Arriendo de ${_tipo ? _tipo.toLowerCase() + ' en ' : 'alojamientos en '}${_nom} — reserva directa en línea.`)
                 : (_hl === 'en'
-                    ? 'Vacation rentals — book direct online.'
-                    : 'Alojamientos — reserva directa en línea.');
+                    ? 'Vacation cabin rentals — book direct online.'
+                    : 'Arriendo de cabañas vacacionales — reserva directa en línea.');
         }
         const _pageUrl      = baseUrl || '';
         const _heroImage    = empresa.websiteSettings?.theme?.heroImageUrl || '';
         const _heroThumb    = empresa.websiteSettings?.theme?.heroImageThumbUrl || '';
         const _logoUrl      = locals.brandIdentity?.logoUrl || empresa.websiteSettings?.theme?.logoUrl || '';
+        const _tipoAloj     = empresa.strategy?.tipoAlojamientoPrincipal || '';
         const _keywords     = [
+            _tipoAloj || (_hl === 'en' ? 'vacation rental' : 'arriendo cabañas'),
+            _hl === 'en' ? 'accommodation' : 'alojamiento vacacional',
             empresaContext?.ubicacion?.ciudad,
             empresaContext?.ubicacion?.region,
             empresa.nombre,

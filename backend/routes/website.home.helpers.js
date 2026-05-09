@@ -132,19 +132,37 @@ async function loadHomeSeoAndContent({
         const telefono = ctx?.contacto?.telefonoPrincipal || empresaCompleta.contactoTelefono || '';
         const email = ctx?.contacto?.emailContacto || '';
 
+        const tipoAloj = empresaCompleta.strategy?.tipoAlojamientoPrincipal || '';
+        const descFallback = tipoAloj
+            ? `Arriendo de ${tipoAloj.toLowerCase()} en ${empresaCompleta.nombre} — reserva directa en línea.`
+            : `Alojamiento vacacional en ${empresaCompleta.nombre} — reserva directa en línea.`;
+        const schemaDesc = empresaCompleta.websiteSettings?.seo?.homeDescription
+            || empresaCompleta.slogan
+            || descFallback;
+
         schemaData = {
             '@context': 'https://schema.org',
             '@type': 'LodgingBusiness',
             name: empresaCompleta.nombre || 'Alojamiento Turístico',
-            description: empresaCompleta.websiteSettings?.seo?.homeDescription || empresaCompleta.slogan || `Reserva directa en ${empresaCompleta.nombre}`,
+            description: schemaDesc,
             url: req.baseUrl || '#',
+            tourBookingPage: req.baseUrl || '#',
+            checkinTime: '15:00',
+            checkoutTime: '11:00',
+            ...(tipoAloj && { category: tipoAloj }),
             ...(priceRange && { priceRange }),
             ...(telefono && { telephone: telefono }),
             ...(amenityFeatures.length > 0 && { amenityFeature: amenityFeatures }),
             ...(offers.length > 0 && {
                 makesOffer: offers.map((prop) => ({
                     '@type': 'Offer',
-                    itemOffered: { '@type': 'HotelRoom', name: prop.nombre, url: `${req.baseUrl}/propiedad/${prop.id}` },
+                    itemOffered: {
+                        '@type': 'Accommodation',
+                        name: prop.nombre,
+                        url: `${req.baseUrl}/propiedad/${prop.id}`,
+                        ...(tipoAloj && { accommodationType: tipoAloj }),
+                        ...(prop.capacidad > 0 && { occupancy: { '@type': 'QuantitativeValue', maxValue: prop.capacidad } }),
+                    },
                     ...(prop.pricing?.totalPriceCLP > 0 && { priceSpecification: { '@type': 'PriceSpecification', price: String(prop.pricing.totalPriceCLP.toFixed(2)), priceCurrency: 'CLP' } })
                 }))
             }),
