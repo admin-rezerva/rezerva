@@ -48,6 +48,15 @@ const aiConfig = {
             if (raw == null || String(raw).trim() === '') return 'gemini-1.5-flash';
             return String(raw).trim().replace(/^\uFEFF/, '');
         })(),
+        /**
+         * El SDK usa v1beta por defecto (DEFAULT_API_VERSION en @google/generative-ai).
+         * Para gemini-1.5-flash + generateContent la API estable es v1; en v1beta devuelve 404 "model not found".
+         * Override solo si Google documenta otro valor: GEMINI_API_VERSION=v1beta
+         */
+        requestOptions: (() => {
+            const v = String(process.env.GEMINI_API_VERSION || 'v1').trim().replace(/^\uFEFF/, '');
+            return { apiVersion: v || 'v1' };
+        })(),
     },
     openai: {
         apiKey: envApiKey('OPENAI_API_KEY'),
@@ -117,9 +126,10 @@ const aiConfig = {
 
 if (process.env.NODE_ENV !== 'test') {
     console.log(
-        '[aiConfig] IA: AI_PROVIDER=%s gemini.model=%s GEMINI_API_KEY=%s',
+        '[aiConfig] IA: AI_PROVIDER=%s gemini.model=%s apiVersion=%s GEMINI_API_KEY=%s',
         aiConfig.provider,
         aiConfig.gemini.model,
+        aiConfig.gemini.requestOptions.apiVersion,
         aiConfig.gemini.apiKey ? 'definida' : 'ausente',
     );
 }

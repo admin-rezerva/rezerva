@@ -36,9 +36,11 @@ function getBlogInternalProvider() {
         if (!apiKey) {
             return { error: 'Configura BLOG_INTERNAL_GEMINI_API_KEY para la IA interna del blog.' };
         }
+        const aiConfig = require('../config/aiConfig');
         const inst = new GeminiProvider({
             apiKey,
             model: process.env.BLOG_INTERNAL_GEMINI_MODEL || 'gemini-1.5-flash',
+            requestOptions: aiConfig.gemini.requestOptions,
         });
         if (!inst.model) {
             return { error: 'No se pudo inicializar Gemini para el blog interno.' };

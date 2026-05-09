@@ -15,8 +15,14 @@ class GeminiProvider {
             const apiKey = String(config.apiKey).trim();
             this.genAI = new GoogleGenerativeAI(apiKey);
             this.modelName = String(config.model || 'gemini-1.5-flash').trim();
-            this.model = this.genAI.getGenerativeModel({ model: this.modelName });
-            console.log(`✅ [GeminiProvider] Initialized with model: ${this.modelName}`);
+            const requestOptions =
+                config.requestOptions && typeof config.requestOptions === 'object'
+                    ? config.requestOptions
+                    : { apiVersion: 'v1' };
+            this.model = this.genAI.getGenerativeModel({ model: this.modelName }, requestOptions);
+            console.log(
+                `✅ [GeminiProvider] Initialized model=${this.modelName} apiVersion=${requestOptions.apiVersion}`,
+            );
         } catch (error) {
             console.error("❌ [GeminiProvider] Init Error:", error);
             this.model = null;
@@ -111,6 +117,11 @@ class GeminiProvider {
         } catch (error) {
             console.error("❌ [GeminiProvider] Generate Error:", error.message);
             const msg = String(error.message || '');
+            if (msg.includes('404') && msg.includes('v1beta') && msg.includes('not found')) {
+                console.error(
+                    '[GeminiProvider] 404 en v1beta: el SDK por defecto usa v1beta; gemini-1.5-flash requiere apiVersion v1 en getGenerativeModel (ya configurado en aiConfig.requestOptions).',
+                );
+            }
             if (msg.includes('403') && (msg.includes('denied access') || msg.includes('Forbidden'))) {
                 console.error(
                     '[GeminiProvider] 403: el proyecto de Google asociado a esta API key está denegado para la API de Gemini. '

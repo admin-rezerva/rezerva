@@ -73,7 +73,7 @@ async function llamarGeminiAPI(prompt, imageBuffer = null) {
     try {
         const genAI = new GoogleGenerativeAI(String(API_KEY).trim());
         const MODEL_NAME = aiConfig.gemini.model;
-        const model = genAI.getGenerativeModel({ model: MODEL_NAME });
+        const model = genAI.getGenerativeModel({ model: MODEL_NAME }, aiConfig.gemini.requestOptions);
 
         let result;
         if (imageBuffer) {

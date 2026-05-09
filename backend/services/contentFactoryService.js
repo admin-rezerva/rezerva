@@ -11,7 +11,9 @@ if (!process.env.RENDER) {
 const aiConfig = require('../config/aiConfig');
 
 const genAI = aiConfig.gemini.apiKey ? new GoogleGenerativeAI(String(aiConfig.gemini.apiKey).trim()) : null;
-const model = genAI ? genAI.getGenerativeModel({ model: aiConfig.gemini.model }) : null;
+const model = genAI
+    ? genAI.getGenerativeModel({ model: aiConfig.gemini.model }, aiConfig.gemini.requestOptions)
+    : null;
 
 // --- Helper: Fallback AI ---
 async function llamarIASimulada(prompt) {
