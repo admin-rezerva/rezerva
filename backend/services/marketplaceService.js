@@ -22,6 +22,7 @@ function mapearPropiedad(row) {
         url: `https://${(row.subdominio || '').toLowerCase()}.${PLATFORM_DOMAIN}/propiedad/${row.id}`,
         tienePromoTarifa: false,
         promoTarifaPctMax: 0,
+        ciudadPublica: row.ciudad_publica ? String(row.ciudad_publica).trim() : '',
     };
 }
 
@@ -50,7 +51,15 @@ const QUERY_BASE = `
         ) AS foto_portada,
         ROUND(AVG(r.punt_general)::numeric, 1) AS rating,
         COUNT(r.id) AS num_resenas,
-        MIN(t.precio_base) AS precio_desde
+        MIN(t.precio_base) AS precio_desde,
+        MAX(
+            COALESCE(
+                NULLIF(BTRIM(COALESCE(p.metadata->'buildContext'->'empresa'->'ubicacion'->>'ciudad', '')), ''),
+                NULLIF(BTRIM(COALESCE(p.metadata->'websiteData'->'marketJsonLd'->'address'->>'addressLocality', '')), ''),
+                NULLIF(BTRIM(COALESCE(e.configuracion->'ubicacion'->>'ciudad', '')), ''),
+                ''
+            )
+        ) AS ciudad_publica
     FROM propiedades p
     JOIN empresas e ON p.empresa_id = e.id
     LEFT JOIN resenas r ON r.propiedad_id = p.id AND r.estado = 'publicada'

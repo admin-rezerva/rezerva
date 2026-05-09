@@ -217,7 +217,7 @@
 
 <% if (!hayBusqueda) { %>
 <section class="mp-hero" aria-labelledby="mp-hero-heading">
-    <div class="mp-container mp-hero__inner">
+    <div class="mp-container mp-hero__inner mp-main-body">
         <h1 id="mp-hero-heading" class="mp-hero__title"><%= mp.heroTitle %></h1>
         <p class="mp-hero__subtitle"><%= mp.heroSubtitle %></p>
     </div>
@@ -225,7 +225,7 @@
 <% } %>
 
 <!-- ═══ MAIN ═══ -->
-<main id="main-content" class="mp-container py-8 md:py-10">
+<main id="main-content" class="mp-container mp-main-body py-8 md:py-10">
 
     <%
     const _priceLocale = mp.htmlLang === 'en' ? 'en-US' : 'es-CL';
@@ -233,15 +233,30 @@
         if (!n) return null;
         return '$' + Number(n).toLocaleString(_priceLocale);
     };
+    const gruposHome = (!hayBusqueda && propiedades.length > 0)
+        ? (function () {
+            const m = new Map();
+            for (const pr of propiedades) {
+                const city = (pr.ciudadPublica || '').trim();
+                const key = `${pr.empresaId}|${city}`;
+                if (!m.has(key)) {
+                    m.set(key, { empresaNombre: pr.empresaNombre, ciudadPublica: city, items: [] });
+                }
+                m.get(key).items.push(pr);
+            }
+            return Array.from(m.values());
+        })()
+        : [];
     %>
 
     <!-- Destacados (solo si no hay búsqueda activa) -->
     <% if (!hayBusqueda && destacados.length > 0) { %>
     <section class="mb-14 mp-section-favoritos" aria-labelledby="mp-destacados-heading">
-        <h2 id="mp-destacados-heading" class="section-title section-title--center">
+        <h2 id="mp-destacados-heading" class="section-title">
             <i class="fas fa-star text-warning-500 mr-2" style="font-size:1rem;"></i>
             <%= mp.sectionFavoritos %>
         </h2>
+        <div class="mp-favoritos-wrap">
         <div class="mp-card-grid mp-card-grid--favoritos">
             <% destacados.forEach(p => { %>
             <a href="/ir?s=<%= p.subdominio %>&id=<%= p.id %>" class="prop-card">
@@ -273,12 +288,13 @@
             </a>
             <% }); %>
         </div>
+        </div>
     </section>
     <% } %>
 
-    <!-- Resultados / Todos los alojamientos -->
+    <% if (hayBusqueda) { %>
+    <!-- Resultados de búsqueda -->
     <section aria-labelledby="mp-lista-heading">
-        <% if (hayBusqueda) { %>
         <h1 id="mp-lista-heading" class="section-title">
                 <% if (busqueda) { %>
                     <%= mp.sectionResultadosConQuery %> "<strong><%= busqueda %></strong>"
@@ -290,12 +306,6 @@
                     <i class="fas fa-times-circle mr-1"></i><%= mp.clearFilters %>
                 </a>
         </h1>
-        <% } else { %>
-        <h2 id="mp-lista-heading" class="section-title">
-                <%= mp.sectionTodos %>
-                <span class="text-base font-normal text-[#717171] ml-2">· <%= totalResultados %></span>
-        </h2>
-        <% } %>
 
         <% if (propiedades.length === 0) { %>
         <div class="text-center py-20">
@@ -304,7 +314,7 @@
             <a href="<%= mpHomeUrl %>" class="inline-block mt-4 font-semibold text-[#222222] underline underline-offset-2 hover:opacity-80"><%= mp.verTodos %></a>
         </div>
         <% } else { %>
-        <div class="mp-card-grid">
+        <div class="mp-card-grid mp-card-grid--listing">
             <% propiedades.forEach(p => { %>
             <a href="/ir?s=<%= p.subdominio %>&id=<%= p.id %>" class="prop-card">
                 <div class="prop-photo">
@@ -336,6 +346,47 @@
         </div>
         <% } %>
     </section>
+    <% } else if (gruposHome.length > 0) { %>
+    <% gruposHome.forEach((grupo, gi) => { %>
+    <section class="mb-14 mp-section-group" aria-labelledby="mp-grupo-<%= gi %>-head">
+        <h2 id="mp-grupo-<%= gi %>-head" class="mp-group-headline">
+            <%= mp.sectionGroupedBrand %> <%= grupo.empresaNombre %><% if (grupo.ciudadPublica) { %> <%= grupo.ciudadPublica %><% } %>
+        </h2>
+        <p class="mp-group-lead"><%= mp.sectionGroupedLead %></p>
+        <h3 class="section-title section-title--sub" id="mp-grupo-<%= gi %>-lista"><%= mp.sectionTodos %> · <%= grupo.items.length %></h3>
+        <div class="mp-card-grid mp-card-grid--listing">
+            <% grupo.items.forEach(p => { %>
+            <a href="/ir?s=<%= p.subdominio %>&id=<%= p.id %>" class="prop-card">
+                <div class="prop-photo">
+                    <% if (p.fotoUrl) { %>
+                        <img src="<%= p.fotoUrl %>" alt="<%= p.titulo %>" loading="lazy">
+                    <% } else { %>
+                        <div class="prop-photo-placeholder"><i class="fas fa-home"></i></div>
+                    <% } %>
+                    <% if (p.tienePromoTarifa && p.promoTarifaPctMax > 0) { %>
+                    <span class="mp-badge-promo"><i class="fas fa-tag mr-1"></i>-<%= p.promoTarifaPctMax %>%</span>
+                    <% } %>
+                </div>
+                <div class="prop-body">
+                    <p class="prop-title"><%= p.titulo %></p>
+                    <p class="prop-sub"><%= p.empresaNombre %> · <%= p.capacidad %> <%= p.capacidad !== 1 ? mp.people : mp.person %></p>
+                    <% if (p.rating) { %>
+                    <div class="prop-rating">
+                        <i class="fas fa-star text-warning-500" style="font-size:11px;"></i>
+                        <%= p.rating %>
+                        <% if (p.numResenas > 0) { %><span>(<%= p.numResenas %> <%= mp.reviews %>)</span><% } %>
+                    </div>
+                    <% } %>
+                    <% if (p.precioDesde) { %>
+                    <p class="prop-price"><strong><%= formatPrecio(p.precioDesde) %></strong> <em><%= mp.pricePerNight %></em></p>
+                    <% } %>
+                </div>
+            </a>
+            <% }); %>
+        </div>
+    </section>
+    <% }); %>
+    <% } %>
 </main>
 
 <%- include('../partials/marketplace-footer', { mp, mpHomeUrl, footerMode: 'home' }) %>

@@ -104,10 +104,23 @@ const createMarketplaceRouter = (_db) => {
             const fechaOut = fecha_out.match(/^\d{4}-\d{2}-\d{2}$/) ? fecha_out : null;
             const hayBusqueda = q.trim().length > 0 || personasNum > 0 || (fechaIn && fechaOut);
 
-            const [propiedades, destacados] = await Promise.all([
+            const [propiedades, destacadosRaw] = await Promise.all([
                 obtenerPropiedadesParaMarketplace({ busqueda: q.trim(), personas: personasNum, fechaIn, fechaOut, sort: sort || null }),
                 hayBusqueda ? Promise.resolve([]) : obtenerDestacados(5),
             ]);
+
+            let destacados = destacadosRaw;
+            if (!hayBusqueda && destacados.length < 5) {
+                const seen = new Set(destacados.map((d) => d.id));
+                const extras = await obtenerPropiedadesParaMarketplace({ limit: 16, sort: 'rating' });
+                for (const p of extras) {
+                    if (destacados.length >= 5) break;
+                    if (!seen.has(p.id)) {
+                        seen.add(p.id);
+                        destacados.push(p);
+                    }
+                }
+            }
 
             const mpLang = resolveMarketplaceLang(req);
             const mp = getMarketplaceStrings(mpLang);

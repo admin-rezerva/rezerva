@@ -16,6 +16,12 @@
     @media (min-width: 1024px) {
         .mp-container { padding-left: 2rem; padding-right: 2rem; }
     }
+    /* Columna de contenido centrada (márgenes equilibrados tipo Airbnb) */
+    .mp-main-body {
+        max-width: min(1320px, 100%);
+        margin-left: auto;
+        margin-right: auto;
+    }
     .mp-header {
         background: #FFFFFF;
         border-bottom: 1px solid #DDDDDD;
@@ -435,26 +441,60 @@
             pointer-events: auto !important;
         }
     }
-    /* Rejilla densa: columnas de ancho fijo (sin 1fr → no estiran pocas tarjetas a ancho completo) */
-    .mp-card-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, 156px);
-        gap: 0.75rem 0.625rem;
-        justify-content: start;
-    }
-    .mp-card-grid--favoritos {
+    .mp-favoritos-wrap {
+        display: flex;
         justify-content: center;
+        width: 100%;
     }
-    @media (min-width: 640px) {
-        .mp-card-grid {
-            grid-template-columns: repeat(auto-fill, 164px);
+    /* Favoritos: máx. 5 tarjetas por fila, bloque centrado (ancho fit-content) */
+    .mp-card-grid--favoritos {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(2, minmax(0, 148px));
+        width: fit-content;
+        max-width: 100%;
+        margin: 0 auto;
+        justify-items: stretch;
+    }
+    @media (min-width: 480px) {
+        .mp-card-grid--favoritos {
+            grid-template-columns: repeat(3, minmax(0, 152px));
+        }
+    }
+    @media (min-width: 900px) {
+        .mp-card-grid--favoritos {
+            grid-template-columns: repeat(5, minmax(0, 158px));
             gap: 1rem 0.75rem;
         }
     }
-    @media (min-width: 1280px) {
-        .mp-card-grid {
-            grid-template-columns: repeat(auto-fill, 172px);
+    /* Listado principal / búsqueda: 7 columnas en pantallas anchas */
+    .mp-card-grid--listing {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    @media (min-width: 640px) {
+        .mp-card-grid--listing {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem 0.75rem;
         }
+    }
+    @media (min-width: 900px) {
+        .mp-card-grid--listing {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+    }
+    @media (min-width: 1200px) {
+        .mp-card-grid--listing {
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+        }
+    }
+    /* Catálogos legacy que solo usan .mp-card-grid */
+    .mp-card-grid:not(.mp-card-grid--favoritos):not(.mp-card-grid--listing) {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(156px, 1fr));
+        gap: 0.75rem 0.625rem;
+        justify-content: start;
     }
     .prop-card {
         background: #FFFFFF; border-radius: 10px; overflow: hidden;
@@ -478,9 +518,32 @@
     .prop-price { font-size: 12px; color: #222222; margin-top: 4px; }
     .prop-price strong { font-weight: 600; }
     .prop-price em { font-style: normal; color: #717171; font-size: 12px; }
-    .section-title { font-size: 1.35rem; font-weight: 600; color: #222222; margin-bottom: 20px; }
-    .section-title--center { text-align: center; margin-bottom: 1rem; }
-    .mp-section-favoritos .section-title--center { font-size: 1.125rem; margin-bottom: 1.25rem; }
+    .section-title { font-size: 1.35rem; font-weight: 600; color: #222222; margin-bottom: 20px; text-align: left; }
+    .section-title--sub {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #222222;
+        margin-bottom: 1rem;
+        margin-top: 0;
+        text-align: left;
+    }
+    .mp-group-headline {
+        font-size: clamp(1.25rem, 2.2vw, 1.5rem);
+        font-weight: 600;
+        color: #222222;
+        letter-spacing: -0.02em;
+        margin: 0 0 0.35rem 0;
+        text-align: left;
+        line-height: 1.25;
+    }
+    .mp-group-lead {
+        font-size: 0.9375rem;
+        color: #717171;
+        line-height: 1.5;
+        margin: 0 0 1rem 0;
+        max-width: 40rem;
+        text-align: left;
+    }
     .mp-alert-soft { background: #FFFFFF; border: 1px solid #DDDDDD; border-radius: 12px; padding: 1rem 1.25rem; color: #222222; font-size: 0.95rem; }
     .mp-gh-cta-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.25rem; }
     .mp-gh-cta-text { font-size: 0.875rem; font-weight: 600; color: #222222; display: inline-flex; align-items: center; gap: 0.35rem; }
