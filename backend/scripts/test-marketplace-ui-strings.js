@@ -33,7 +33,7 @@ assert.strictEqual(resolveMarketplaceLang(mockReq({})), 'es');
 
 const en = getMarketplaceStrings('en');
 assert.strictEqual(en.htmlLang, 'en');
-assert.ok(en.pageTitle.includes('Chile'));
+assert.ok(en.pageTitle.includes('Stays'), 'pageTitle EN debe mencionar Stays (copy genérico sin región por defecto)');
 assert.ok(en.labelLlegada.length > 2);
 assert.ok(en.heroTitle && en.heroTitle.length > 4);
 assert.ok(en.heroSubtitle && en.heroSubtitle.length > 10);
@@ -41,7 +41,7 @@ assert.ok(en.heroSubtitle && en.heroSubtitle.length > 10);
 const es = getMarketplaceStrings('es');
 assert.strictEqual(es.htmlLang, 'es');
 assert.ok(es.sectionTodos.includes('alojamientos'));
-assert.ok(es.heroTitle && es.heroTitle.includes('Chile'));
+assert.ok(es.heroTitle && es.heroTitle.includes('estadía'), 'hero ES por defecto sin región explícita');
 assert.ok(es.navGoogleHotels && es.navGoogleHotels.length > 2);
 assert.strictEqual(precioDesdeToSchemaPriceRange(50000), '$');
 assert.strictEqual(precioDesdeToSchemaPriceRange(120000), '$$');
