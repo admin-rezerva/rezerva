@@ -449,6 +449,11 @@ async function uploadFotoToGaleria(db, empresaId, propiedadId, files) {
             thumbnailUrl = await uploadFile(thumbBuffer, `${base}_thumb.webp`, 'image/webp');
             assertDistinctPublicUrls(storageUrl, thumbnailUrl);
 
+            // Thumbnail móvil (_sm.webp, 400px) — URL derivada en template; no se guarda en BD.
+            optimizeImage(file.buffer, { maxWidth: 400, quality: 58 })
+                .then(({ buffer }) => uploadFile(buffer, `${base}_sm.webp`, 'image/webp'))
+                .catch(() => {});
+
             if (IS_POSTGRES) {
                 await pool.query(
                     `INSERT INTO galeria (id, empresa_id, propiedad_id, storage_url, thumbnail_url, storage_path, confianza, estado, rol, alt_text, orden, origen)
@@ -530,6 +535,11 @@ async function replaceFoto(db, empresaId, propiedadId, fotoId, file) {
         storageUrl = await uploadFile(fullBuffer, `${base}.webp`, 'image/webp');
         thumbnailUrl = await uploadFile(thumbBuffer, `${base}_thumb.webp`, 'image/webp');
         assertDistinctPublicUrls(storageUrl, thumbnailUrl);
+
+        // Thumbnail móvil (_sm.webp, 400px) — URL derivada en template; no se guarda en BD.
+        optimizeImage(file.buffer, { maxWidth: 400, quality: 58 })
+            .then(({ buffer }) => uploadFile(buffer, `${base}_sm.webp`, 'image/webp'))
+            .catch(() => {});
 
         if (IS_POSTGRES) {
             await pool.query(

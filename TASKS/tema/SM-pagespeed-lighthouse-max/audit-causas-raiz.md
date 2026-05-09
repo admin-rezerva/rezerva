@@ -69,3 +69,4 @@
 | 2026-05-05 | Concierge: carga diferida scroll + idle; `chat.js` init sin DOMContentLoaded exclusivo |
 | 2026-05-05 | FA modular solid+brands 6.5.0 + partials; preconnect marketplace; hero thumb + srcset/preload; a11y skip/main |
 | 2026-05-05 | PSI producción: srcset + URL `_thumb` si BD duplica full; Tailwind `--minify`; h2 sr-only listado; contraste footer/concierge |
+| 2026-05-08 | A11y (96→100 target): link "Rezerva" footer `text-white underline` (WCAG 1.4.1 — antes solo color, sin underline); logo footer: atributo `sizes` sin srcset removido. Pendiente mayor ganancia rendimiento: `node scripts/tooling/repair-web-images.js --subdomain=orillasdelcoilaco --apply --force --recompress-hero-full` (hero 56 KiB → ~31 KiB, cards ~70 KiB ahorros). Font-display FA queda pendiente (requiere alojar fuentes localmente, ganancia 20 ms). |

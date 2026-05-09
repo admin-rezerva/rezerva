@@ -7,7 +7,13 @@
     if (_fullImg && (!_thumbImg || _thumbImg === _fullImg) && /\.webp(\?|$)/i.test(_fullImg) && !_fullImg.includes('_thumb.webp')) {
         _thumbImg = _fullImg.replace(/\.webp(\?|$)/i, '_thumb.webp$1');
     }
-    // Listado home: solo miniatura WebP (~560px) — no srcset al full.
+    // Thumbnail móvil (_sm.webp, 400px) — URL derivada; el archivo lo genera el pipeline de subida y repair.
+    let _smImg = '';
+    const _smBase = (_thumbImg || _fullImg || '').trim();
+    if (_smBase && /\.webp(\?|$)/i.test(_smBase) && !_smBase.includes('_thumb.webp') && !_smBase.includes('_sm.webp')) {
+        _smImg = _smBase.replace(/\.webp(\?|$)/i, '_sm.webp$1');
+    }
+    // Listado home: srcset con 400w (móvil) y 560w (resto).
     const _img        = (_thumbImg || _fullImg || '').trim()
         || 'https://placehold.co/400x400/e5e7eb/9ca3af?text=Sin+imagen';
     const _alt      = prop.websiteData?.cardImage?.altText || prop.nombre;
@@ -25,6 +31,7 @@
 <a href="<%= _link %>" class="group block focus:outline-none">
     <div class="relative overflow-hidden rounded-xl bg-gray-100" style="aspect-ratio:1/1">
         <img src="<%= _img %>" alt="<%= _alt %>" width="560" height="560" loading="lazy" decoding="async"
+             <% if (_smImg) { %>srcset="<%= _smImg %> 400w, <%= _img %> 560w" sizes="(max-width: 639px) 150px, 560px"<% } %>
              onerror="this.onerror=null;this.src='https://placehold.co/560x560/e5e7eb/9ca3af?text=Foto';"
              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
         <% if (_tiene) { %>

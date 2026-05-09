@@ -12,6 +12,7 @@ const { ssrCache } = require('./cacheService');
 const {
     storagePathFromPublicUrl,
     thumbPathFromFullStoragePath,
+    smPathFromFullStoragePath,
     thumbUrlLooksValid,
     fetchImageBuffer,
 } = require('./webImagesRepairHelpers');
@@ -20,6 +21,10 @@ const { repairHeroTheme } = require('./webImagesRepairHero');
 /** Miniaturas galería/card en repair (algo más agresivo que el upload nuevo para ganar peso). */
 const REPAIR_GALLERY_THUMB_MAX = 560;
 const REPAIR_GALLERY_THUMB_QUALITY = 62;
+
+/** Thumbnail pequeño para mobile srcset (400px). No se guarda en BD; la URL se deriva en template. */
+const REPAIR_GALLERY_SM_MAX = 400;
+const REPAIR_GALLERY_SM_QUALITY = 58;
 
 async function regenerateThumbToPath(fullUrl, thumbDestinationPath) {
     const buf = await fetchImageBuffer(fullUrl);
@@ -31,6 +36,16 @@ async function regenerateThumbToPath(fullUrl, thumbDestinationPath) {
     const newThumbUrl = await uploadFile(thumbBuffer, thumbDestinationPath, 'image/webp');
     assertDistinctPublicUrls(fullUrl, newThumbUrl);
     return newThumbUrl;
+}
+
+async function regenerateSmToPath(fullUrl, smDestinationPath) {
+    const buf = await fetchImageBuffer(fullUrl);
+    const { buffer: smBuffer } = await optimizeImage(buf, {
+        maxWidth: REPAIR_GALLERY_SM_MAX,
+        quality: REPAIR_GALLERY_SM_QUALITY,
+    });
+    assertOptimizedBuffers([smBuffer]);
+    await uploadFile(smBuffer, smDestinationPath, 'image/webp');
 }
 
 /**
@@ -137,6 +152,8 @@ async function runWebImagesRepair(opts) {
                  WHERE id = $2 AND empresa_id = $3 AND propiedad_id = $4`,
                 [newThumbUrl, row.id, empresaId, row.propiedad_id]
             );
+            const smPath = smPathFromFullStoragePath(fullPath);
+            if (smPath) await regenerateSmToPath(fullUrl, smPath).catch(() => {});
             repaired++;
         } catch (e) {
             log(`    FALLÓ (${e.message}) → eliminar fila`);
@@ -202,6 +219,8 @@ async function runWebImagesRepair(opts) {
                 `UPDATE propiedades SET metadata = $1::jsonb, updated_at = NOW() WHERE id = $2 AND empresa_id = $3`,
                 [JSON.stringify(newMeta), pr.id, empresaId]
             );
+            const smPathCard = smPathFromFullStoragePath(fullPathCard);
+            if (smPathCard) await regenerateSmToPath(fullU, smPathCard).catch(() => {});
             cardsFixed++;
         } catch (e) {
             log(`    FALLÓ card (${e.message}) → quitar cardImage`);

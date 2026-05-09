@@ -21,6 +21,14 @@ function thumbPathFromFullStoragePath(fullPath) {
     return p.replace(/\.webp$/i, '_thumb.webp');
 }
 
+/** Deriva la ruta del thumbnail pequeño (_sm.webp, ~400px) desde la ruta full. */
+function smPathFromFullStoragePath(fullPath) {
+    const p = String(fullPath || '').trim();
+    if (!p.toLowerCase().endsWith('.webp')) return '';
+    if (p.toLowerCase().includes('_thumb.webp') || p.toLowerCase().includes('_sm.webp')) return '';
+    return p.replace(/\.webp$/i, '_sm.webp');
+}
+
 function thumbUrlLooksValid(fullUrl, thumbUrl) {
     const f = String(fullUrl || '').trim();
     const t = String(thumbUrl || '').trim();
@@ -38,6 +46,7 @@ async function fetchImageBuffer(url) {
 module.exports = {
     storagePathFromPublicUrl,
     thumbPathFromFullStoragePath,
+    smPathFromFullStoragePath,
     thumbUrlLooksValid,
     fetchImageBuffer,
 };
