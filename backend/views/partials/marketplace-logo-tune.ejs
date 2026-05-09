@@ -1,0 +1,112 @@
+<%#
+  TEMPORAL — Quitar este partial y la query ?mpLogoTune=1 del router cuando el tamaño del logo quede fijo.
+  Uso: https://rezerva.cl/?mpLogoTune=1  (o con &lang=en, etc.)
+%>
+<div id="mp-logo-tune-panel" role="region" aria-label="Ajuste temporal del logo" lang="es"
+     style="position:fixed;bottom:16px;right:16px;z-index:99999;max-width:min(420px,94vw);background:#111827;color:#f9fafb;padding:14px 16px;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.35);font-family:system-ui,sans-serif;font-size:13px;line-height:1.4;">
+    <div style="font-weight:700;margin-bottom:6px;">Ajuste logo (header)</div>
+    <p style="margin:0 0 10px;opacity:.85;font-size:12px;">Deslizá el control; cuando te guste, copiá el CSS y pegalo en <code style="background:#1f2937;padding:2px 6px;border-radius:4px;">marketplace-common-styles.ejs</code>. Luego borrá este partial y <code style="background:#1f2937;padding:2px 6px;border-radius:4px;">mpLogoTune</code> en <code style="background:#1f2937;padding:2px 6px;border-radius:4px;">marketplace.js</code>.</p>
+    <label for="mp-logo-tune-range" style="display:block;margin-bottom:4px;">Alto móvil: <strong id="mp-logo-tune-h-out">60</strong>px · desktop ≈ <strong id="mp-logo-tune-h-md-out">72</strong>px</label>
+    <input type="range" id="mp-logo-tune-range" min="36" max="96" step="1" value="60"
+           style="width:100%;margin-bottom:10px;accent-color:#FF385C;">
+    <button type="button" id="mp-logo-tune-copy" style="width:100%;padding:8px 12px;border-radius:8px;border:none;background:#FF385C;color:#fff;font-weight:600;cursor:pointer;font-size:13px;">
+        Copiar CSS fijo (reemplazar bloque en .ejs)
+    </button>
+    <textarea id="mp-logo-tune-snippet" readonly rows="10" spellcheck="false"
+              style="width:100%;margin-top:10px;box-sizing:border-box;font-size:11px;font-family:ui-monospace,monospace;background:#1f2937;color:#e5e7eb;border:1px solid #374151;border-radius:8px;padding:8px;resize:vertical;"></textarea>
+</div>
+<script>
+(function () {
+    var root = document.documentElement;
+    var range = document.getElementById('mp-logo-tune-range');
+    var outH = document.getElementById('mp-logo-tune-h-out');
+    var outHmd = document.getElementById('mp-logo-tune-h-md-out');
+    var ta = document.getElementById('mp-logo-tune-snippet');
+    var btn = document.getElementById('mp-logo-tune-copy');
+    if (!range || !ta) return;
+
+    var KEY = 'mpLogoTuneH';
+
+    function dims(h) {
+        var hMd = Math.round(h * 1.2);
+        var maxw = Math.round(h * 5.67);
+        var maxwMd = Math.round(hMd * 5.56);
+        var maxwLg = Math.round(hMd * 5.83);
+        return { h: h, hMd: hMd, maxw: maxw, maxwMd: maxwMd, maxwLg: maxwLg };
+    }
+
+    function apply(h) {
+        var d = dims(h);
+        root.style.setProperty('--mp-logo-h', d.h + 'px');
+        root.style.setProperty('--mp-logo-h-md', d.hMd + 'px');
+        root.style.setProperty('--mp-logo-maxw', d.maxw + 'px');
+        root.style.setProperty('--mp-logo-maxw-md', d.maxwMd + 'px');
+        root.style.setProperty('--mp-logo-maxw-lg', d.maxwLg + 'px');
+        if (outH) outH.textContent = String(d.h);
+        if (outHmd) outHmd.textContent = String(d.hMd);
+        ta.value = [
+            '    .mp-brand-logo--header .mp-brand-logo__img {',
+            '        display: block;',
+            '        height: ' + d.h + 'px;',
+            '        width: auto;',
+            '        max-height: ' + d.h + 'px;',
+            '        max-width: min(' + d.maxw + 'px, 86vw);',
+            '        object-fit: contain;',
+            '        object-position: left center;',
+            '    }',
+            '    @media (min-width: 768px) {',
+            '        .mp-brand-logo--header .mp-brand-logo__img {',
+            '            height: ' + d.hMd + 'px;',
+            '            max-height: ' + d.hMd + 'px;',
+            '            max-width: min(' + d.maxwMd + 'px, 42vw);',
+            '        }',
+            '    }',
+            '    @media (min-width: 1280px) {',
+            '        .mp-brand-logo--header .mp-brand-logo__img {',
+            '            max-width: min(' + d.maxwLg + 'px, 36vw);',
+            '        }',
+            '    }',
+        ].join('\n');
+    }
+
+    try {
+        var saved = sessionStorage.getItem(KEY);
+        if (saved !== null && saved !== '') {
+            var n = parseInt(saved, 10);
+            if (!isNaN(n) && n >= 36 && n <= 96) range.value = String(n);
+        }
+    } catch (e) {}
+
+    apply(parseInt(range.value, 10));
+
+    range.addEventListener('input', function () {
+        var h = parseInt(range.value, 10);
+        try { sessionStorage.setItem(KEY, String(h)); } catch (e2) {}
+        apply(h);
+    });
+
+    if (btn) {
+        btn.addEventListener('click', function () {
+            var text = ta.value;
+            var ok = function () {
+                btn.textContent = 'Copiado — pegá en el .ejs';
+                setTimeout(function () { btn.textContent = 'Copiar CSS fijo (reemplazar bloque en .ejs)'; }, 2200);
+            };
+            var fail = function () {
+                ta.select();
+                ta.setSelectionRange(0, text.length);
+                btn.textContent = 'Ctrl+C en el recuadro';
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(ok).catch(fail);
+            } else {
+                try {
+                    ta.select();
+                    document.execCommand('copy');
+                    ok();
+                } catch (e3) { fail(); }
+            }
+        });
+    }
+})();
+</script>

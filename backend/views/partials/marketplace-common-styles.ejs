@@ -38,26 +38,29 @@
         border-top: 1px solid #EBEBEB;
     }
     .mp-brand-logo { line-height: 0; text-decoration: none; color: inherit; }
-    /* Logo wordmark: alto legible (antes quedaba mini por max-width + height bajos) */
+    /*
+     * Logo header: valores por defecto. Con ?mpLogoTune=1 el partial marketplace-logo-tune
+     * escribe --mp-logo-h* / --mp-logo-maxw* en :root; al cerrar el ajuste, fija px aquí y borra el partial.
+     */
     .mp-brand-logo--header .mp-brand-logo__img {
         display: block;
-        height: 60px;
+        height: var(--mp-logo-h, 60px);
         width: auto;
-        max-height: 60px;
-        max-width: min(340px, 86vw);
+        max-height: var(--mp-logo-h, 60px);
+        max-width: min(var(--mp-logo-maxw, 340px), 86vw);
         object-fit: contain;
         object-position: left center;
     }
     @media (min-width: 768px) {
         .mp-brand-logo--header .mp-brand-logo__img {
-            height: 72px;
-            max-height: 72px;
-            max-width: min(400px, 42vw);
+            height: var(--mp-logo-h-md, 72px);
+            max-height: var(--mp-logo-h-md, 72px);
+            max-width: min(var(--mp-logo-maxw-md, 400px), 42vw);
         }
     }
     @media (min-width: 1280px) {
         .mp-brand-logo--header .mp-brand-logo__img {
-            max-width: min(420px, 36vw);
+            max-width: min(var(--mp-logo-maxw-lg, 420px), 36vw);
         }
     }
     /* Pie: mismo asset fondo blanco sobre tarjeta #FFF (encima del gris #F7F7F7) */
