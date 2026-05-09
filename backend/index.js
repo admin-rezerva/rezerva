@@ -168,6 +168,23 @@ try {
     const backendPublicPath = path.join(__dirname, 'public');
     app.use('/public', cors({ origin: '*' }), express.static(backendPublicPath));
 
+    // Iconos en raíz — los navegadores piden /favicon.ico y /apple-touch-icon.png sin mirar <link>
+    const brandingPath = (...segments) => path.join(backendPublicPath, 'branding', ...segments);
+    app.get('/favicon.ico', (req, res) => {
+        res.type('image/png');
+        res.set('Cache-Control', 'public, max-age=604800, immutable');
+        res.sendFile(brandingPath('favicon-transparent-48.png'), (err) => {
+            if (err && !res.headersSent) res.sendStatus(404);
+        });
+    });
+    app.get('/apple-touch-icon.png', (req, res) => {
+        res.type('image/png');
+        res.set('Cache-Control', 'public, max-age=604800, immutable');
+        res.sendFile(brandingPath('apple-touch-icon-bg-white.png'), (err) => {
+            if (err && !res.headersSent) res.sendStatus(404);
+        });
+    });
+
     // ── Config pública de plataforma (sin auth — la SPA la lee en arranque) ──
     app.get('/api/config/platform', cors(), (_req, res) => {
         res.json({
