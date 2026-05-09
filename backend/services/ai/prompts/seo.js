@@ -23,19 +23,20 @@ const { withSsrCommerceObjective } = require('./ssrCommerceContext');
 function promptSeoHomePage({ nombreEmpresa, historia, slogan, enfoqueMarketing, tipoAlojamientoPrincipal }) {
     return withSsrCommerceObjective(`Actúa como un Experto SEO Senior especializado en hospitalidad y turismo.
 
-Genera los metadatos SEO para la página de inicio de este negocio:
+Genera los metadatos SEO para la página de inicio de este negocio de ARRIENDO de alojamiento turístico:
 
 - Empresa: "${nombreEmpresa}"
+- Tipo de alojamiento: "${tipoAlojamientoPrincipal || 'Alojamiento turístico'}"
 - Historia: "${historia}"
 - Slogan: "${slogan}"
 - Enfoque de marketing: "${enfoqueMarketing}"
-- Tipo de alojamiento principal: "${tipoAlojamientoPrincipal}"
 
 REGLAS:
 1. "metaTitle": máximo 60 caracteres, incluir nombre de empresa y tipo de alojamiento.
-2. "metaDescription": máximo 155 caracteres, orientada a conversión con CTA implícita.
-3. Usar palabras clave naturales de turismo en español.
-4. No usar mayúsculas excesivas ni caracteres especiales.
+2. "metaDescription": máximo 155 caracteres, orientada a conversión. DEBE mencionar "arriendo" o "reserva" de ${tipoAlojamientoPrincipal || 'alojamiento'} para que Google entienda que es hospedaje, no venta inmobiliaria.
+3. Usar palabras clave naturales de turismo en español: estadía, noches, huéspedes, reservar.
+4. No usar términos inmobiliarios (parcela, lote, metro cuadrado, escritura, loteo).
+5. No usar mayúsculas excesivas ni caracteres especiales.
 
 Responde SOLO JSON (sin markdown):
 {
@@ -57,18 +58,20 @@ Responde SOLO JSON (sin markdown):
 function promptContenidoHomePage({ nombreEmpresa, slogan, enfoqueMarketing, tipoAlojamientoPrincipal }) {
     return withSsrCommerceObjective(`Actúa como Copywriter especializado en CRO (Conversion Rate Optimization) para turismo.
 
-Genera el contenido principal de la página de inicio:
+Genera el contenido principal de la página de inicio de este negocio de ARRIENDO de alojamiento:
 
 - Empresa: "${nombreEmpresa}"
+- Tipo de alojamiento: "${tipoAlojamientoPrincipal || 'alojamiento turístico'}"
 - Slogan: "${slogan}"
 - Enfoque de marketing: "${enfoqueMarketing}"
-- Tipo de alojamiento: "${tipoAlojamientoPrincipal}"
 
 REGLAS:
-1. "h1": título impactante, máximo 8 palabras, orientado a la experiencia del huésped.
-2. "introParagraph": 2-3 oraciones que transmitan emoción y propuesta de valor única.
+1. "h1": título impactante, máximo 8 palabras, orientado a la experiencia de HOSPEDAJE del huésped. Debe evocar estadía, descanso o experiencia, nunca compra de terrenos.
+2. "introParagraph": 2-3 oraciones que transmitan emoción, propuesta de valor, y dejen claro que el visitante puede RESERVAR una estadía (no adquirir un inmueble).
 3. No repetir el slogan exactamente en el h1.
-4. Tono cálido, invitante, sin tecnicismos.
+4. Tono cálido, invitante, sin tecnicismos ni lenguaje inmobiliario.
+5. Palabras permitidas: estadía, huéspedes, reservar, noches, experiencia, descanso, naturaleza (si aplica).
+6. Palabras PROHIBIDAS: parcela, lote, terreno, loteo, m², escritura, inversión inmobiliaria.
 
 Responde SOLO JSON (sin markdown):
 {

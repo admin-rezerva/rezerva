@@ -16,8 +16,10 @@ function buildCompanyContext(contextoSanitizado) {
     const amenidadesStr = contextoSanitizado.amenidades?.length > 0
         ? contextoSanitizado.amenidades.join(', ')
         : 'No especificadas';
+    const tipoLabel = contextoSanitizado.tipoAlojamientoPrincipal || contextoSanitizado.tipoNegocio || 'Alojamiento turístico';
     return `CONTEXTO DE LA EMPRESA:
 - Nombre: ${contextoSanitizado.nombre}
+- Tipo de negocio: ${tipoLabel} — ARRIENDO/ALQUILER TEMPORAL de alojamientos, NO venta de bienes raíces ni terrenos.
 - Historia: ${contextoSanitizado.historia}
 - Misión: ${contextoSanitizado.mision}
 - Valores: ${contextoSanitizado.valores}
@@ -28,7 +30,10 @@ function buildCompanyContext(contextoSanitizado) {
 - Contacto: ${contextoSanitizado.contacto.telefonoPrincipal || ''}, ${contextoSanitizado.contacto.emailContacto || ''}
 - Amenidades e instalaciones disponibles: ${amenidadesStr}
 
-REGLA CRÍTICA: Cuando menciones amenidades o beneficios, DEBES referirte ÚNICAMENTE a las listadas arriba. Jamás inventes instalaciones ausentes.`;
+REGLAS CRÍTICAS:
+1. Cuando menciones amenidades o beneficios, DEBES referirte ÚNICAMENTE a las listadas arriba. Jamás inventes instalaciones ausentes.
+2. Este negocio es de ARRIENDO TEMPORAL (hospedaje vacacional o por noche). El texto debe dejar claro que los visitantes RESERVAN estadías, NO compran terrenos ni propiedades.
+3. Usa términos de hospitalidad: "estadía", "huéspedes", "noches", "reserva", "disponibilidad". Evita términos inmobiliarios: "parcelas", "loteos", "metro cuadrado", "escritura".`;
 }
 
 function buildInstructions() {
@@ -210,6 +215,8 @@ function sanitizeEmpresaContext(empresaContext) {
         contacto: empresaContext.contacto || {},
         amenidades,
         baseUrl: empresaContext.baseUrl || '',
+        tipoAlojamientoPrincipal: empresaContext.tipoAlojamientoPrincipal || '',
+        tipoNegocio: empresaContext.tipoNegocio || '',
     };
 }
 

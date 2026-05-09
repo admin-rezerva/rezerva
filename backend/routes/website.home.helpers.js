@@ -186,7 +186,9 @@ async function loadHomeSeoAndContent({
             corporateContent = await generarContenidoCorporativo({
                 ...req.empresaContext,
                 amenidades: [...amenidadesSet],
-                baseUrl: req.baseUrl || ''
+                baseUrl: req.baseUrl || '',
+                // tipoNegocio no está en empresaContext (SSR), se toma de empresaCompleta
+                tipoNegocio: empresaCompleta.tipoNegocio || '',
             });
         } catch (_) {}
     }
