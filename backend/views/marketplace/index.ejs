@@ -347,12 +347,20 @@
         <% } %>
     </section>
     <% } else if (gruposHome.length > 0) { %>
-    <% gruposHome.forEach((grupo, gi) => { %>
+    <% gruposHome.forEach((grupo, gi) => {
+        const _g0 = grupo.items[0];
+        const _prefix = (mp.htmlLang === 'en'
+            ? ((_g0 && _g0.empresaMarketplacePrefixEn) || '').trim()
+            : ((_g0 && _g0.empresaMarketplacePrefixEs) || '').trim()) || mp.sectionGroupedBrand;
+        const _lead = (mp.htmlLang === 'en'
+            ? ((_g0 && _g0.empresaMarketplaceLeadEn) || '').trim()
+            : ((_g0 && _g0.empresaMarketplaceLeadEs) || '').trim();
+    %>
     <section class="mb-14 mp-section-group" aria-labelledby="mp-grupo-<%= gi %>-head">
         <h2 id="mp-grupo-<%= gi %>-head" class="mp-group-headline">
-            <%= mp.sectionGroupedBrand %> <%= grupo.empresaNombre %><% if (grupo.ciudadPublica) { %> <%= grupo.ciudadPublica %><% } %>
+            <%= _prefix %> <%= grupo.empresaNombre %><% if (grupo.ciudadPublica) { %> <%= grupo.ciudadPublica %><% } %>
         </h2>
-        <p class="mp-group-lead"><%= mp.sectionGroupedLead %></p>
+        <% if (_lead) { %><p class="mp-group-lead"><%= _lead %></p><% } %>
         <h3 class="section-title section-title--sub" id="mp-grupo-<%= gi %>-lista"><%= mp.sectionTodos %> · <%= grupo.items.length %></h3>
         <div class="mp-card-grid mp-card-grid--listing">
             <% grupo.items.forEach(p => { %>

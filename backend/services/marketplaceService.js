@@ -23,6 +23,10 @@ function mapearPropiedad(row) {
         tienePromoTarifa: false,
         promoTarifaPctMax: 0,
         ciudadPublica: row.ciudad_publica ? String(row.ciudad_publica).trim() : '',
+        empresaMarketplaceLeadEs: row.empresa_lead_es ? String(row.empresa_lead_es).trim() : '',
+        empresaMarketplaceLeadEn: row.empresa_lead_en ? String(row.empresa_lead_en).trim() : '',
+        empresaMarketplacePrefixEs: row.empresa_prefix_es ? String(row.empresa_prefix_es).trim() : '',
+        empresaMarketplacePrefixEn: row.empresa_prefix_en ? String(row.empresa_prefix_en).trim() : '',
     };
 }
 
@@ -59,7 +63,11 @@ const QUERY_BASE = `
                 NULLIF(BTRIM(COALESCE(e.configuracion->'ubicacion'->>'ciudad', '')), ''),
                 ''
             )
-        ) AS ciudad_publica
+        ) AS ciudad_publica,
+        MAX(NULLIF(BTRIM(COALESCE(e.configuracion->'marketplace'->>'sectionLead', '')), '')) AS empresa_lead_es,
+        MAX(NULLIF(BTRIM(COALESCE(e.configuracion->'marketplace'->>'sectionLeadEn', '')), '')) AS empresa_lead_en,
+        MAX(NULLIF(BTRIM(COALESCE(e.configuracion->'marketplace'->>'sectionTitlePrefix', '')), '')) AS empresa_prefix_es,
+        MAX(NULLIF(BTRIM(COALESCE(e.configuracion->'marketplace'->>'sectionTitlePrefixEn', '')), '')) AS empresa_prefix_en
     FROM propiedades p
     JOIN empresas e ON p.empresa_id = e.id
     LEFT JOIN resenas r ON r.propiedad_id = p.id AND r.estado = 'publicada'

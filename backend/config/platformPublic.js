@@ -77,6 +77,11 @@ function getMarketplaceBrandLabel() {
     return 'Rezerva';
 }
 
+/** Región o país opcional en hero/meta del marketplace (`MARKETPLACE_HERO_REGION_LABEL`). Vacío = sin mencionar lugar en títulos genéricos. */
+function getMarketplaceHeroRegionLabel() {
+    return String(process.env.MARKETPLACE_HERO_REGION_LABEL || '').trim();
+}
+
 function getMarketplaceHostnamesSet() {
     const set = new Set();
     const d = getPlatformDomain();
@@ -103,4 +108,5 @@ module.exports = {
     getRenderPublicHostname,
     getMarketplaceForceHostAlias,
     getMarketplaceBrandLabel,
+    getMarketplaceHeroRegionLabel,
 };

@@ -45,14 +45,22 @@ async function sendMarketplaceSearchJson(req, res) {
             propiedades: propiedades.map((p) => ({
                 id: p.id,
                 titulo: p.titulo,
+                empresaId: p.empresaId,
                 empresa: p.empresaNombre,
+                ciudadPublica: p.ciudadPublica || null,
                 capacidad: p.capacidad,
                 precioDesde: p.precioDesde,
-                moneda: 'CLP',
+                moneda: String(process.env.MARKETPLACE_DEFAULT_CURRENCY || 'CLP').trim() || 'CLP',
                 rating: p.rating,
                 numResenas: p.numResenas,
                 fotoUrl: p.fotoUrl,
                 url: p.url,
+                marketplaceEmpresa: {
+                    sectionLeadEs: p.empresaMarketplaceLeadEs || null,
+                    sectionLeadEn: p.empresaMarketplaceLeadEn || null,
+                    sectionTitlePrefixEs: p.empresaMarketplacePrefixEs || null,
+                    sectionTitlePrefixEn: p.empresaMarketplacePrefixEn || null,
+                },
             })),
         });
     } catch (err) {

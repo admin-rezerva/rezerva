@@ -1,5 +1,7 @@
 /**
- * UI del marketplace global: copys ES/EN. Marca desde env / dominio (platformPublic).
+ * UI del marketplace global: copys ES/EN desde marca/dominio (platformPublic), env opcional
+ * (MARKETPLACE_HERO_REGION_LABEL, MARKETPLACE_HERO_SUBTITLE_*) y datos por empresa en
+ * `empresas.configuracion.marketplace` (sectionLead, sectionTitlePrefix, … — ver mapper SQL).
  * Idioma: ?lang=en | ?lang=es; si no, Accept-Language (en*) → en; defecto es.
  */
 
@@ -13,21 +15,34 @@ function resolveMarketplaceLang(req) {
     return 'es';
 }
 
-function getMarketplaceStrings(lang) {
+function getMarketplaceStrings(lang, opts = {}) {
     const brand = getMarketplaceBrandLabel();
+    const region = String(opts.heroRegionLabel ?? '').trim();
+    const heroSubEsEnv = String(process.env.MARKETPLACE_HERO_SUBTITLE_ES || '').trim();
+    const heroSubEnEnv = String(process.env.MARKETPLACE_HERO_SUBTITLE_EN || '').trim();
     const L = lang === 'en' ? 'en' : 'es';
+
+    const regEn = region ? ` in ${region}` : '';
+    const regEs = region ? ` en ${region}` : '';
+
     if (L === 'en') {
         return {
             brandLabel: brand,
             htmlLang: 'en',
             ogLocale: 'en_US',
-            pageTitle: `${brand} — Stays in Chile`,
-            metaDescription: 'Find cabins, homes and apartments in Chile’s best destinations. Book direct with the host.',
-            ogTitle: `${brand} — Stays in Chile`,
-            ogDescription: 'Find unique cabins, homes and apartments. Book direct with the host.',
+            pageTitle: region ? `${brand} — Stays${regEn}` : `${brand} — Stays`,
+            metaDescription: region
+                ? `Find cabins, homes and apartments${regEn}. Book direct with verified hosts — no booking commissions.`
+                : 'Find cabins, homes and apartments. Book direct with verified hosts — no booking commissions.',
+            ogTitle: region ? `${brand} — Stays${regEn}` : `${brand} — Stays`,
+            ogDescription: region
+                ? `Unique cabins, homes and apartments${regEn}. Book direct with verified hosts — no booking commissions.`
+                : 'Unique cabins, homes and apartments. Book direct with verified hosts — no booking commissions.',
             twitterDescription: 'Book direct with the host. No middlemen.',
-            jsonLdSiteDescription: 'Marketplace of stays in Chile. Direct booking with hosts.',
-            jsonLdItemListName: 'Stays in Chile',
+            jsonLdSiteDescription: region
+                ? `Marketplace of stays${regEn}. Direct booking with hosts.`
+                : 'Marketplace of stays. Direct booking with hosts.',
+            jsonLdItemListName: region ? `Stays${regEn}` : 'Stays',
             jsonLdItemListDescription: `Cabins, homes and apartments on ${brand}`,
             labelDestino: 'Destination',
             placeholderDestino: 'Search destinations',
@@ -49,7 +64,7 @@ function getMarketplaceStrings(lang) {
             sectionTodos: 'All stays',
             noResults: 'No stays match those filters.',
             verTodos: 'View all stays',
-            footerTagline: 'Direct rental platform in Chile',
+            footerTagline: region ? `Direct rental platform${regEn}` : 'Direct rental platform',
             footerTerms: 'Terms',
             footerPrivacy: 'Privacy',
             langSwitchEs: 'ES',
@@ -65,10 +80,11 @@ function getMarketplaceStrings(lang) {
             ghCatalogBackHome: 'Back to marketplace',
             ghCatalogErrorLoad: 'Could not load this page.',
             ghFooterCatalog: 'Google Hotels catalog',
-            heroTitle: 'Find your next stay in Chile',
-            heroSubtitle: 'Unique cabins, homes, and apartments — book direct with verified hosts, no booking commissions.',
+            heroTitle: region ? `Find your next stay${regEn}` : 'Find your next stay',
+            heroSubtitle:
+                heroSubEnEnv ||
+                'Unique cabins, homes, and apartments — book direct with verified hosts, no booking commissions.',
             sectionGroupedBrand: 'Stays',
-            sectionGroupedLead: 'Hand-picked properties you can book directly with the host.',
             navGoogleHotels: 'Google Hotels',
             labelSort: 'Sort by',
             sortRecommended: 'Recommended',
@@ -84,13 +100,19 @@ function getMarketplaceStrings(lang) {
         brandLabel: brand,
         htmlLang: 'es',
         ogLocale: 'es_CL',
-        pageTitle: `${brand} — Alojamientos en Chile`,
-        metaDescription: 'Encuentra cabañas, casas y departamentos únicos en los mejores destinos de Chile. Reserva directo con el anfitrión, sin comisiones.',
-        ogTitle: `${brand} — Alojamientos en Chile`,
-        ogDescription: 'Encuentra cabañas, casas y departamentos únicos en los mejores destinos de Chile. Reserva directo con anfitriones verificados sin comisiones.',
+        pageTitle: region ? `${brand} — Alojamientos${regEs}` : `${brand} — Alojamientos`,
+        metaDescription: region
+            ? `Encuentra cabañas, casas y departamentos únicos${regEs}. Reserva directo con el anfitrión, sin comisiones.`
+            : 'Encuentra cabañas, casas y departamentos únicos. Reserva directo con el anfitrión, sin comisiones.',
+        ogTitle: region ? `${brand} — Alojamientos${regEs}` : `${brand} — Alojamientos`,
+        ogDescription: region
+            ? `Encuentra cabañas, casas y departamentos únicos${regEs}. Reserva directo con anfitriones verificados sin comisiones.`
+            : 'Encuentra cabañas, casas y departamentos únicos. Reserva directo con anfitriones verificados sin comisiones.',
         twitterDescription: 'Reserva directo con el anfitrión. Sin intermediarios.',
-        jsonLdSiteDescription: 'Marketplace de alojamientos en Chile. Reserva directa con anfitriones.',
-        jsonLdItemListName: 'Alojamientos en Chile',
+        jsonLdSiteDescription: region
+            ? `Marketplace de alojamientos${regEs}. Reserva directa con anfitriones.`
+            : 'Marketplace de alojamientos. Reserva directa con anfitriones.',
+        jsonLdItemListName: region ? `Alojamientos${regEs}` : 'Alojamientos',
         jsonLdItemListDescription: `Cabañas, casas y departamentos disponibles en ${brand}`,
         labelDestino: 'Destino',
         placeholderDestino: 'Buscar destinos',
@@ -112,7 +134,7 @@ function getMarketplaceStrings(lang) {
         sectionTodos: 'Todos los alojamientos',
         noResults: 'No encontramos alojamientos con esos filtros.',
         verTodos: 'Ver todos los alojamientos',
-        footerTagline: 'Plataforma de arrendamiento directo en Chile',
+        footerTagline: region ? `Plataforma de arrendamiento directo${regEs}` : 'Plataforma de arrendamiento directo',
         footerTerms: 'Términos',
         footerPrivacy: 'Privacidad',
         langSwitchEs: 'ES',
@@ -128,10 +150,11 @@ function getMarketplaceStrings(lang) {
         ghCatalogBackHome: 'Volver al marketplace',
         ghCatalogErrorLoad: 'No se pudo cargar esta página.',
         ghFooterCatalog: 'Catálogo Google Hotels',
-        heroTitle: 'Encuentra tu próxima estadía en Chile',
-        heroSubtitle: 'Cabañas, casas y departamentos únicos — reserva directo con anfitriones verificados sin comisiones.',
+        heroTitle: region ? `Encuentra tu próxima estadía${regEs}` : 'Encuentra tu próxima estadía',
+        heroSubtitle:
+            heroSubEsEnv ||
+            'Cabañas, casas y departamentos únicos — reserva directo con anfitriones verificados sin comisiones.',
         sectionGroupedBrand: 'Alojamientos',
-        sectionGroupedLead: 'Propiedades seleccionadas para reservar directo con el anfitrión.',
         navGoogleHotels: 'Google Hotels',
         labelSort: 'Ordenar por',
         sortRecommended: 'Recomendados',

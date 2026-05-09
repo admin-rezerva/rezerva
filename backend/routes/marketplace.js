@@ -17,6 +17,7 @@ const {
 } = require('../services/marketplaceUiStrings');
 const { sendMarketplaceSearchJson } = require('./marketplaceSearchJson.handler');
 const { getPartnerCatalogItems } = require('../services/googleHotelsPartner/googleHotelsPartnerFeeds');
+const { getMarketplaceHeroRegionLabel } = require('../config/platformPublic');
 
 const IS_PROD = !!process.env.RENDER;
 
@@ -61,7 +62,7 @@ const createMarketplaceRouter = (_db) => {
     // ── Google Hotels partner catalog (§7.6 — misma elegibilidad que Property List feed) ──
     router.get('/google-hotels', async (req, res) => {
         const mpLang = resolveMarketplaceLang(req);
-        const mp = getMarketplaceStrings(mpLang);
+        const mp = getMarketplaceStrings(mpLang, { heroRegionLabel: getMarketplaceHeroRegionLabel() });
         try {
             const { items, postgresRequired } = await getPartnerCatalogItems();
             const protocol = req.protocol || 'https';
@@ -123,7 +124,7 @@ const createMarketplaceRouter = (_db) => {
             }
 
             const mpLang = resolveMarketplaceLang(req);
-            const mp = getMarketplaceStrings(mpLang);
+            const mp = getMarketplaceStrings(mpLang, { heroRegionLabel: getMarketplaceHeroRegionLabel() });
             const qBase = buildMarketplaceQueryBase({
                 busqueda: q.trim(),
                 personas: personasNum,
