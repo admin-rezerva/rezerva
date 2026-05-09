@@ -13,6 +13,7 @@ import {
     bindUnifiedHeroUpload,
     bindGoogleHotelsHealthRefresh,
     loadGoogleHotelsHealth,
+    bindRepairWebImages,
 } from './webPublica.general.unified.handlers.js';
 import { initHeatmapEventosRowsEditor } from './webPublica.general.unified.heatmapEventosRows.js';
 import { handleNavigation } from '../../../router.js';
@@ -138,6 +139,7 @@ export function setupUnifiedEvents(empresaData, onComplete = null) {
     bindUnifiedLogoUpload({ fetchAPI, setStatus });
     bindUnifiedHeroUpload({ fetchAPI, setStatus });
     bindGoogleHotelsHealthRefresh({ attach, fetchAPI });
+    bindRepairWebImages({ attach, fetchAPI });
     if (document.getElementById('google-hotels-health-summary')) {
         loadGoogleHotelsHealth({ fetchAPI }).catch((e) => console.warn('[google-hotels-health]', e.message));
     }

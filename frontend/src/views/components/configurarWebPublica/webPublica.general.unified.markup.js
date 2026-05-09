@@ -456,5 +456,29 @@ export async function buildUnifiedMarkup(empresaData) {
         ${unifyReadonlyContentSection(strategy, theme)}
         ${unifyActionRow()}
         ${unifyDomainPanel(empresa)}
+        ${renderWebImagesMaintenanceSection()}
+    </div>`;
+}
+
+export function renderWebImagesMaintenanceSection() {
+    return `
+    <div class="mt-6 bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-200 flex items-center gap-2">
+            <i class="fa-solid fa-image text-primary-500"></i>
+            <span class="font-semibold text-gray-800 text-sm">Mantenimiento de imágenes móvil</span>
+        </div>
+        <div class="p-4 space-y-3">
+            <p class="text-sm text-gray-600">
+                Regenera las versiones comprimidas para celular de todas las fotos del sitio web.
+                Ejecuta esto si las tarjetas de propiedades no cargan más rápido en dispositivos móviles o después de subir nuevas fotos masivamente.
+            </p>
+            <div class="flex items-center gap-3">
+                <button id="btn-repair-web-images" class="btn-outline gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Regenerar imágenes móvil
+                </button>
+                <span id="repair-web-images-status" class="text-xs text-gray-500"></span>
+            </div>
+            <div id="repair-web-images-result" class="hidden text-xs bg-success-50 border border-success-200 rounded-lg p-3 text-success-800"></div>
+        </div>
     </div>`;
 }

@@ -465,3 +465,41 @@ export async function loadGoogleHotelsHealth({ fetchAPI }) {
 export function bindGoogleHotelsHealthRefresh({ attach, fetchAPI }) {
     attach('btn-google-hotels-health-refresh', () => loadGoogleHotelsHealth({ fetchAPI }));
 }
+
+export function bindRepairWebImages({ attach, fetchAPI }) {
+    attach('btn-repair-web-images', async () => {
+        const btn = document.getElementById('btn-repair-web-images');
+        const status = document.getElementById('repair-web-images-status');
+        const result = document.getElementById('repair-web-images-result');
+        if (!btn) return;
+
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Procesando...';
+        if (status) status.textContent = 'Esto puede tardar unos segundos...';
+        if (result) result.classList.add('hidden');
+
+        try {
+            const data = await fetchAPI('/website/maintenance/regenerate-web-images', {
+                method: 'POST',
+                body: { force: true },
+            });
+            const g = data.gallery || {};
+            const c = data.cardImage || {};
+            if (result) {
+                result.classList.remove('hidden');
+                result.innerHTML = `
+                    <p class="font-semibold mb-1">Proceso completado</p>
+                    <p>Galería: ${g.repaired || 0} reparadas, ${g.skipped || 0} ya estaban OK, ${g.deleted || 0} eliminadas.</p>
+                    <p>Tarjetas: ${c.thumbsNew || 0} miniaturas generadas.</p>
+                `;
+            }
+            if (status) status.textContent = '';
+        } catch (err) {
+            if (status) status.textContent = `Error: ${err.message}`;
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    });
+}
