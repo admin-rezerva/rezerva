@@ -42,7 +42,12 @@ const aiConfig = {
 
     gemini: {
         apiKey: envApiKey('GEMINI_API_KEY'),
-        model: process.env.GEMINI_MODEL || 'gemini-2.0-flash'
+        // 1.5-flash suele tener cuota free distinta a 2.0; override con GEMINI_MODEL en Render.
+        model: (() => {
+            const raw = process.env.GEMINI_MODEL;
+            if (raw == null || String(raw).trim() === '') return 'gemini-1.5-flash';
+            return String(raw).trim().replace(/^\uFEFF/, '');
+        })(),
     },
     openai: {
         apiKey: envApiKey('OPENAI_API_KEY'),
@@ -109,5 +114,14 @@ const aiConfig = {
         providerName: 'Ollama (Local Dev)'
     }
 };
+
+if (process.env.NODE_ENV !== 'test') {
+    console.log(
+        '[aiConfig] IA: AI_PROVIDER=%s gemini.model=%s GEMINI_API_KEY=%s',
+        aiConfig.provider,
+        aiConfig.gemini.model,
+        aiConfig.gemini.apiKey ? 'definida' : 'ausente',
+    );
+}
 
 module.exports = aiConfig;

@@ -3,14 +3,15 @@ const pool = require('../db/postgres');
 const { withSsrCommerceObjective } = require('./ai/prompts/ssrCommerceContext');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// Load dotenv only if not in production
+// Load dotenv only if not in production (antes de aiConfig para que GEMINI_* se lean en local)
 if (!process.env.RENDER) {
     require('dotenv').config();
 }
 
-const API_KEY = process.env.GEMINI_API_KEY;
-const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
-const model = genAI ? genAI.getGenerativeModel({ model: "models/gemini-2.5-flash" }) : null;
+const aiConfig = require('../config/aiConfig');
+
+const genAI = aiConfig.gemini.apiKey ? new GoogleGenerativeAI(String(aiConfig.gemini.apiKey).trim()) : null;
+const model = genAI ? genAI.getGenerativeModel({ model: aiConfig.gemini.model }) : null;
 
 // --- Helper: Fallback AI ---
 async function llamarIASimulada(prompt) {

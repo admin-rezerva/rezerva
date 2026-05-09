@@ -10,8 +10,8 @@ async function listModels() {
         console.error("NO API KEY");
         return;
     }
-    const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`;
-    console.log("Fetching models from:", url.replace(key, 'MASKED'));
+    const url = `https://generativelanguage.googleapis.com/v1/models?key=${key}`;
+    console.log('Fetching models from (v1):', url.replace(key, 'MASKED'));
     try {
         const res = await fetch(url);
         const data = await res.json();

@@ -12,8 +12,9 @@ class GeminiProvider {
         }
 
         try {
-            this.genAI = new GoogleGenerativeAI(config.apiKey);
-            this.modelName = config.model || "gemini-2.0-flash"; // Default to 2.0-flash
+            const apiKey = String(config.apiKey).trim();
+            this.genAI = new GoogleGenerativeAI(apiKey);
+            this.modelName = String(config.model || 'gemini-1.5-flash').trim();
             this.model = this.genAI.getGenerativeModel({ model: this.modelName });
             console.log(`✅ [GeminiProvider] Initialized with model: ${this.modelName}`);
         } catch (error) {
@@ -54,6 +55,12 @@ class GeminiProvider {
             return JSON.parse(jsonString);
         } catch (error) {
             console.error(`❌ [GeminiProvider] Vision Error:`, error.message);
+            const msg = String(error.message || '');
+            if (msg.includes('403') && (msg.includes('denied access') || msg.includes('Forbidden'))) {
+                console.error(
+                    '[GeminiProvider] 403 denied (vision): mismo caso que generateJSON — proyecto Gemini denegado; nueva key desde AI Studio u otro proyecto.',
+                );
+            }
             if (error.message.includes('429') || error.message.includes('Quota exceeded')) {
                 const quotaError = new Error(`⏳ Cuota de IA excedida.`);
                 quotaError.code = 'AI_QUOTA_EXCEEDED';
@@ -103,9 +110,22 @@ class GeminiProvider {
 
         } catch (error) {
             console.error("❌ [GeminiProvider] Generate Error:", error.message);
+            const msg = String(error.message || '');
+            if (msg.includes('403') && (msg.includes('denied access') || msg.includes('Forbidden'))) {
+                console.error(
+                    '[GeminiProvider] 403: el proyecto de Google asociado a esta API key está denegado para la API de Gemini. '
+                    + 'Suele resolverse creando una clave nueva en https://aistudio.google.com/apikey vinculada a otro proyecto de Google Cloud, '
+                    + 'o contactando el soporte de Google AI / revisando facturación y políticas del proyecto. Cambiar solo la cadena de la clave sin cambiar de proyecto no corrige este mensaje.',
+                );
+            }
 
             // ERROR HANDLING FOR QUOTA (429)
             if (error.message.includes('429') || error.message.includes('Quota exceeded')) {
+                if (error.message.includes('gemini-2.0') || this.modelName.includes('2.0')) {
+                    console.warn(
+                        '[GeminiProvider] Cuota free agotada o límite 0 en este modelo. Prueba GEMINI_MODEL=gemini-1.5-flash en Render (Environment → Add) y redeploy.',
+                    );
+                }
                 // Try to extract time
                 const timeMatch = error.message.match(/retry in ([\d\.]+)s/);
                 const waitSeconds = timeMatch ? parseFloat(timeMatch[1]) : 60;

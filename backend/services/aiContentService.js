@@ -71,9 +71,8 @@ async function llamarGeminiAPI(prompt, imageBuffer = null) {
     }
 
     try {
-        const genAI = new GoogleGenerativeAI(API_KEY);
-        // Use configured model or default to gemini-2.0-flash (Available in v1beta/recent utils)
-        const MODEL_NAME = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+        const genAI = new GoogleGenerativeAI(String(API_KEY).trim());
+        const MODEL_NAME = aiConfig.gemini.model;
         const model = genAI.getGenerativeModel({ model: MODEL_NAME });
 
         let result;

@@ -38,7 +38,7 @@ function getBlogInternalProvider() {
         }
         const inst = new GeminiProvider({
             apiKey,
-            model: process.env.BLOG_INTERNAL_GEMINI_MODEL || 'gemini-2.0-flash',
+            model: process.env.BLOG_INTERNAL_GEMINI_MODEL || 'gemini-1.5-flash',
         });
         if (!inst.model) {
             return { error: 'No se pudo inicializar Gemini para el blog interno.' };
