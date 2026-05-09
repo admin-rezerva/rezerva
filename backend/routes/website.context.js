@@ -1,6 +1,7 @@
 const { getEmpresaContextForSSR, getSSROptimizedData } = require('../services/buildContextService');
 const { generateCustomCSS } = require('../services/brandIdentityService');
 const { ssrCache } = require('../services/cacheService');
+const { normalizeWebsiteImageUrl } = require('../services/websitePublicImageUrl');
 
 function createWebsiteContextMiddleware({ db, obtenerDetallesEmpresa }) {
     return async (req, res, next) => {
@@ -14,6 +15,8 @@ function createWebsiteContextMiddleware({ db, obtenerDetallesEmpresa }) {
         }
 
         console.log(`[DEBUG website.js middleware] Empresa ID ${req.empresa.id} identificada.`);
+
+        res.locals.normalizeWebsiteImageUrl = normalizeWebsiteImageUrl;
 
         try {
             req.empresaCompleta = await obtenerDetallesEmpresa(db, req.empresa.id);

@@ -43,6 +43,28 @@
         const depEtiqueta = dep.tipo === 'monto_fijo'
             ? 'Abono para reservar (monto fijo):'
             : `Abono para reservar (${Number(dep.porcentaje || 10)}%):`;
+        const _normCheckoutImg = typeof normalizeWebsiteImageUrl === 'function'
+            ? normalizeWebsiteImageUrl
+            : (u) => String(u || '').trim();
+        const _checkoutPlaceholder = 'https://placehold.co/800x480/e5e7eb/9ca3af?text=Sin+imagen';
+        function checkoutCoverImageUrl(p) {
+            if (!p || typeof p !== 'object') return '';
+            const card = p.websiteData?.cardImage || {};
+            let u = String(card.storagePath || card.storageUrl || '').trim();
+            if (!u && Array.isArray(p.fotosSSR) && p.fotosSSR.length) {
+                const f = p.fotosSSR[0];
+                u = String(f.storagePath || f.storageUrl || '').trim();
+            }
+            if (!u) {
+                const imgs = p.websiteData?.images || {};
+                const flat = Object.values(imgs).flat().filter(Boolean);
+                const first = flat[0];
+                u = String(first?.storagePath || first?.storageUrl || '').trim();
+            }
+            u = _normCheckoutImg(u);
+            if (u.startsWith('//')) u = `https:${u}`;
+            return u;
+        }
     %>
 </head>
 <body class="bg-gray-50">
@@ -119,9 +141,9 @@
                             <%# Mosaico de Imágenes %>
                             <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                                 <% propiedad.forEach(p => { %>
-                                    <% const imgUrl = p.websiteData?.cardImage?.storagePath || 'https://via.placeholder.com/150x100.png?text=Sin+Imagen'; %>
+                                    <% const imgUrl = checkoutCoverImageUrl(p) || _checkoutPlaceholder; %>
                                     <div class="relative rounded-lg overflow-hidden aspect-w-1 aspect-h-1 bg-gray-100">
-                                        <img src="<%= imgUrl %>" alt="<%= p.nombre %>" class="w-full h-full object-cover">
+                                        <img src="<%= imgUrl %>" alt="<%= p.nombre %>" class="w-full h-full object-cover" width="400" height="400" decoding="async" onerror="this.onerror=null;this.src='<%= _checkoutPlaceholder %>'">
                                         <div class="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent">
                                             <p class="text-white text-xs font-semibold truncate"><%= p.nombre %></p>
                                         </div>
@@ -133,13 +155,13 @@
                     <% } else { %>
                         <%# --- LÓGICA PARA PROPIEDAD INDIVIDUAL (EXISTENTE) --- %>
                         <%
-                            const imgUrl = propiedad.websiteData?.cardImage?.storagePath || 'https://via.placeholder.com/400x300.png?text=Sin+Imagen';
+                            const imgUrl = checkoutCoverImageUrl(propiedad) || _checkoutPlaceholder;
                         %>
                         <div>
                             <h2 class="text-2xl font-semibold text-gray-800 mb-4">Tu Estadía en: <%= propiedad.nombre %></h2>
                             
                             <div class="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
-                                <img src="<%= imgUrl %>" alt="<%= propiedad.nombre %>" class="w-full h-48 object-cover">
+                                <img src="<%= imgUrl %>" alt="<%= propiedad.nombre %>" class="w-full h-48 object-cover" width="800" height="480" decoding="async" onerror="this.onerror=null;this.src='<%= _checkoutPlaceholder %>'">
                                 <div class="p-6">
                                     <div class="space-y-3">
                                         <div class="flex justify-between items-center">

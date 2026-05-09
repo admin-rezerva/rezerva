@@ -4,11 +4,25 @@
 <header class="bg-white shadow-sm sticky top-0 z-50">
     <div class="container py-3 flex items-center justify-between">
         <a href="/" class="flex items-center space-x-3">
-            <%# Logo de la identidad visual o configuración de empresa %>
-            <% if (locals.brandIdentity?.logoUrl) { %>
-                <img src="<%= locals.brandIdentity.logoUrl %>" alt="<%= empresa.nombre %> Logo" width="150" height="36" class="h-9 max-w-[150px] object-contain">
-            <% } else if (empresa.websiteSettings?.theme?.logoUrl) { %>
-                <img src="<%= empresa.websiteSettings.theme.logoUrl %>" alt="<%= empresa.nombre %> Logo" width="150" height="36" class="h-9 max-w-[150px] object-contain">
+            <%# Logo: brandIdentity nunca tuvo logoUrl; usar logos.* o theme (URLs relativas al bucket → https) %>
+            <%
+                const _normLogo = typeof normalizeWebsiteImageUrl === 'function' ? normalizeWebsiteImageUrl : (u) => String(u || '').trim();
+                const _coerceLogo = (raw) => {
+                    if (!raw) return '';
+                    if (typeof raw === 'string') return raw.trim();
+                    if (typeof raw === 'object' && raw.url) return String(raw.url).trim();
+                    return '';
+                };
+                const _headerLogoRaw =
+                    _coerceLogo(locals.brandIdentity?.logos?.primary)
+                    || _coerceLogo(locals.brandIdentity?.logos?.secondary)
+                    || _coerceLogo(empresa.websiteSettings?.brand?.logos?.primary)
+                    || _coerceLogo(empresa.websiteSettings?.brand?.logos?.secondary)
+                    || String(empresa.websiteSettings?.theme?.logoUrl || '').trim();
+                const _headerLogoUrl = _normLogo(_headerLogoRaw);
+            %>
+            <% if (_headerLogoUrl) { %>
+                <img src="<%= _headerLogoUrl %>" alt="<%= empresa.nombre %> Logo" width="150" height="36" class="h-9 max-w-[150px] object-contain" decoding="async" onerror="this.style.display='none'">
             <% } %>
             <span class="text-xl md:text-2xl font-bold text-gray-900 truncate">
                 <%= empresa.nombre %>
