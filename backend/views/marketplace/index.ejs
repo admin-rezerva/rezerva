@@ -167,17 +167,17 @@
                            placeholder="<%= mp.placeholderDestino %>"
                            value="<%= busqueda %>">
                 </div>
-                <div class="search-segment search-segment-llegada" style="max-width: 140px;">
+                <div class="search-segment search-segment-llegada">
                     <label for="s-fecha-in"><%= mp.labelLlegada %></label>
                     <input id="s-fecha-in" name="fecha_in" type="date"
                            value="<%= fechaIn %>" style="color-scheme:light;">
                 </div>
-                <div class="search-segment search-segment-salida" style="max-width: 140px;">
+                <div class="search-segment search-segment-salida">
                     <label for="s-fecha-out"><%= mp.labelSalida %></label>
                     <input id="s-fecha-out" name="fecha_out" type="date"
                            value="<%= fechaOut %>" style="color-scheme:light;">
                 </div>
-                <div class="search-segment search-segment-huespedes" style="max-width: 120px;">
+                <div class="search-segment search-segment-huespedes">
                     <label for="s-personas"><%= mp.labelHuespedes %></label>
                     <input id="s-personas" name="personas" type="number"
                            placeholder="<%= mp.placeholderHuespedes %>" min="1" max="20"
@@ -246,7 +246,7 @@
             <i class="fas fa-star text-warning-500 mr-2" style="font-size:1.1rem;"></i>
             <%= mp.sectionFavoritos %>
         </h2>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
+        <div class="mp-card-grid">
             <% destacados.forEach(p => { %>
             <a href="/ir?s=<%= p.subdominio %>&id=<%= p.id %>" class="prop-card">
                 <div class="prop-photo">
@@ -308,7 +308,7 @@
             <a href="<%= mpHomeUrl %>" class="inline-block mt-4 font-semibold text-[#222222] underline underline-offset-2 hover:opacity-80"><%= mp.verTodos %></a>
         </div>
         <% } else { %>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4">
+        <div class="mp-card-grid">
             <% propiedades.forEach(p => { %>
             <a href="/ir?s=<%= p.subdominio %>&id=<%= p.id %>" class="prop-card">
                 <div class="prop-photo">
