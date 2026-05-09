@@ -4,6 +4,15 @@ const pool = require('../db/postgres');
 
 const PLATFORM_DOMAIN = process.env.PLATFORM_DOMAIN || 'rezerva.cl';
 
+/** Mismo ORDER BY que la subconsulta de portada (evita divergencia fila full vs miniatura). */
+const GALERIA_PORTADA_ORDER = `
+                CASE rol WHEN 'portada' THEN 0 ELSE 1 END,
+                CASE espacio WHEN 'Exterior' THEN 0
+                             WHEN 'Terraza' THEN 1
+                             WHEN 'Living' THEN 2
+                             ELSE 3 END,
+                orden ASC NULLS LAST`;
+
 function mapearPropiedad(row) {
     const titulo = row.website_h1 || row.home_h1 || row.nombre;
 
@@ -16,6 +25,9 @@ function mapearPropiedad(row) {
         empresaNombre: row.empresa_nombre,
         subdominio: (row.subdominio || '').toLowerCase(),
         fotoUrl: row.foto_portada || null,
+        fotoUrlThumb: row.foto_portada_thumb
+            ? String(row.foto_portada_thumb).trim() || null
+            : null,
         rating: row.rating ? parseFloat(parseFloat(row.rating).toFixed(1)) : null,
         numResenas: parseInt(row.num_resenas) || 0,
         precioDesde: row.precio_desde ? parseInt(row.precio_desde) : null,
@@ -44,15 +56,15 @@ const QUERY_BASE = `
         (
             SELECT storage_url FROM galeria
             WHERE propiedad_id = p.id AND storage_url IS NOT NULL
-            ORDER BY
-                CASE rol WHEN 'portada' THEN 0 ELSE 1 END,
-                CASE espacio WHEN 'Exterior' THEN 0
-                             WHEN 'Terraza' THEN 1
-                             WHEN 'Living' THEN 2
-                             ELSE 3 END,
-                orden ASC NULLS LAST
+            ORDER BY ${GALERIA_PORTADA_ORDER}
             LIMIT 1
         ) AS foto_portada,
+        (
+            SELECT thumbnail_url FROM galeria
+            WHERE propiedad_id = p.id AND storage_url IS NOT NULL
+            ORDER BY ${GALERIA_PORTADA_ORDER}
+            LIMIT 1
+        ) AS foto_portada_thumb,
         ROUND(AVG(r.punt_general)::numeric, 1) AS rating,
         COUNT(r.id) AS num_resenas,
         MIN(t.precio_base) AS precio_desde,
@@ -176,10 +188,36 @@ const contarPorEmpresa = async () => {
     return rows;
 };
 
+/**
+ * Atributos responsive para <img> en tarjetas del marketplace (miniatura + full en srcset).
+ * @param {{ fotoUrl?: string|null, fotoUrlThumb?: string|null }} p
+ * @param {'favoritos'|'listing'} variant
+ * @param {boolean} isLcp - primera imagen sobre el pliegue: sin lazy + fetchpriority high
+ */
+function getMarketplaceCardImageAttrs(p, variant, isLcp) {
+    const full = p.fotoUrl ? String(p.fotoUrl).trim() : '';
+    if (!full) return null;
+    const thumbRaw = p.fotoUrlThumb ? String(p.fotoUrlThumb).trim() : '';
+    const thumb = thumbRaw && thumbRaw !== full ? thumbRaw : full;
+    const sizes = variant === 'favoritos'
+        ? '(max-width: 479px) 148px, (max-width: 899px) 152px, 158px'
+        : '(max-width: 639px) 50vw, (max-width: 899px) 34vw, (max-width: 1199px) 22vw, 200px';
+    if (thumb === full) {
+        return { src: full, srcset: null, sizes, isLcp: !!isLcp };
+    }
+    return {
+        src: thumb,
+        srcset: `${thumb} 480w, ${full} 1200w`,
+        sizes,
+        isLcp: !!isLcp,
+    };
+}
+
 module.exports = {
     obtenerPropiedadesParaMarketplace,
     obtenerDestacados,
     contarPorEmpresa,
     buildMarketplaceOrderBy,
+    getMarketplaceCardImageAttrs,
     PLATFORM_DOMAIN,
 };

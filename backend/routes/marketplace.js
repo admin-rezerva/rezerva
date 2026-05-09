@@ -5,6 +5,7 @@ const cors = require('cors');
 const {
     obtenerPropiedadesParaMarketplace,
     obtenerDestacados,
+    getMarketplaceCardImageAttrs,
     PLATFORM_DOMAIN,
 } = require('../services/marketplaceService');
 const { generarLlmsTxt } = require('../services/marketplace.seo.js');
@@ -158,6 +159,7 @@ const createMarketplaceRouter = (_db) => {
             marketplaceBrandImageUrl,
             ogImageUsesBrandAsset,
             precioDesdeToSchemaPriceRange,
+            getMarketplaceCardImageAttrs,
             marketplaceLoadFailed: marketplaceLoadFailed === true,
         });
     }

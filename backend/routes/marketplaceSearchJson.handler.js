@@ -54,6 +54,7 @@ async function sendMarketplaceSearchJson(req, res) {
                 rating: p.rating,
                 numResenas: p.numResenas,
                 fotoUrl: p.fotoUrl,
+                fotoUrlThumb: p.fotoUrlThumb || null,
                 url: p.url,
                 marketplaceEmpresa: {
                     sectionLeadEs: p.empresaMarketplaceLeadEs || null,

@@ -9,6 +9,8 @@
     <%- include('../partials/marketplace-favicon') %>
     <%- include('../partials/marketplace-preload-logo') %>
     <%- include('../partials/ssr-preconnect-cdnjs') %>
+    <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin>
+    <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com">
     <title><%= mp.pageTitle %></title>
     <meta name="description" content="<%= mp.metaDescription %>">
     <link rel="canonical" href="<%= canonicalUrl %>">
@@ -195,6 +197,7 @@
                 <label for="mp-sort" class="mp-header__sort-label text-xs sm:text-sm font-medium whitespace-nowrap hidden sm:inline" style="color:#717171;"><%= mp.labelSort %></label>
                 <select id="mp-sort" name="sort" form="mp-search-form"
                         class="mp-header__sort-select text-xs sm:text-sm rounded-full pl-2.5 pr-8 py-2 max-w-[min(100%,11rem)] sm:max-w-none border border-[#DDDDDD] bg-white text-[#222222] focus:outline-none focus:ring-2 focus:ring-[#222222] focus:ring-offset-1"
+                        aria-label="<%= mp.labelSort %>"
                         onchange="var f=document.getElementById('mp-search-form'); if(f) f.submit();">
                     <option value="" <%= !sort ? 'selected' : '' %>><%= mp.sortRecommended %></option>
                     <option value="rating" <%= sort === 'rating' ? 'selected' : '' %>><%= mp.sortRating %></option>
@@ -256,6 +259,14 @@
             return Array.from(m.values());
         })()
         : [];
+    let _marketplaceLcpPropiedadId = null;
+    if (!hayBusqueda && destacados.length > 0 && destacados[0].fotoUrl) {
+        _marketplaceLcpPropiedadId = destacados[0].id;
+    } else if (hayBusqueda && propiedades.length > 0 && propiedades[0].fotoUrl) {
+        _marketplaceLcpPropiedadId = propiedades[0].id;
+    } else if (!hayBusqueda && gruposHome.length > 0 && gruposHome[0].items[0] && gruposHome[0].items[0].fotoUrl) {
+        _marketplaceLcpPropiedadId = gruposHome[0].items[0].id;
+    }
     %>
 
     <!-- Destacados (solo si no hay búsqueda activa) -->
@@ -271,7 +282,8 @@
             <a href="/ir?s=<%= p.subdominio %>&id=<%= p.id %>" class="prop-card">
                 <div class="prop-photo">
                     <% if (p.fotoUrl) { %>
-                        <img src="<%= p.fotoUrl %>" alt="<%= p.titulo %>" loading="lazy">
+                        <% const _fi = getMarketplaceCardImageAttrs(p, 'favoritos', p.id === _marketplaceLcpPropiedadId); %>
+                        <img src="<%= _fi.src %>" alt="<%= p.titulo %>" width="400" height="400" decoding="async"<% if (_fi.srcset) { %> srcset="<%= _fi.srcset %>" sizes="<%= _fi.sizes %>"<% } %><% if (_fi.isLcp) { %> fetchpriority="high"<% } else { %> loading="lazy"<% } %>>
                     <% } else { %>
                         <div class="prop-photo-placeholder"><i class="fas fa-home"></i></div>
                     <% } %>
@@ -328,7 +340,8 @@
             <a href="/ir?s=<%= p.subdominio %>&id=<%= p.id %>" class="prop-card">
                 <div class="prop-photo">
                     <% if (p.fotoUrl) { %>
-                        <img src="<%= p.fotoUrl %>" alt="<%= p.titulo %>" loading="lazy">
+                        <% const _fi = getMarketplaceCardImageAttrs(p, 'listing', p.id === _marketplaceLcpPropiedadId); %>
+                        <img src="<%= _fi.src %>" alt="<%= p.titulo %>" width="400" height="400" decoding="async"<% if (_fi.srcset) { %> srcset="<%= _fi.srcset %>" sizes="<%= _fi.sizes %>"<% } %><% if (_fi.isLcp) { %> fetchpriority="high"<% } else { %> loading="lazy"<% } %>>
                     <% } else { %>
                         <div class="prop-photo-placeholder"><i class="fas fa-home"></i></div>
                     <% } %>
@@ -376,7 +389,8 @@
             <a href="/ir?s=<%= p.subdominio %>&id=<%= p.id %>" class="prop-card">
                 <div class="prop-photo">
                     <% if (p.fotoUrl) { %>
-                        <img src="<%= p.fotoUrl %>" alt="<%= p.titulo %>" loading="lazy">
+                        <% const _fi = getMarketplaceCardImageAttrs(p, 'listing', p.id === _marketplaceLcpPropiedadId); %>
+                        <img src="<%= _fi.src %>" alt="<%= p.titulo %>" width="400" height="400" decoding="async"<% if (_fi.srcset) { %> srcset="<%= _fi.srcset %>" sizes="<%= _fi.sizes %>"<% } %><% if (_fi.isLcp) { %> fetchpriority="high"<% } else { %> loading="lazy"<% } %>>
                     <% } else { %>
                         <div class="prop-photo-placeholder"><i class="fas fa-home"></i></div>
                     <% } %>
