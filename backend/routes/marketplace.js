@@ -106,7 +106,7 @@ const createMarketplaceRouter = (_db) => {
 
             const [propiedades, destacados] = await Promise.all([
                 obtenerPropiedadesParaMarketplace({ busqueda: q.trim(), personas: personasNum, fechaIn, fechaOut, sort: sort || null }),
-                hayBusqueda ? Promise.resolve([]) : obtenerDestacados(21),
+                hayBusqueda ? Promise.resolve([]) : obtenerDestacados(5),
             ]);
 
             const mpLang = resolveMarketplaceLang(req);

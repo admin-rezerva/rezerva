@@ -125,21 +125,28 @@
         background: #F7F7F7;
     }
     .mp-brand-logo { line-height: 0; text-decoration: none; color: inherit; }
-    /* Logo cabecera: una sola fila con buscador (referencia densidad Airbnb) */
+    /* Logo cabecera: tamaño legible (marca); la píldora sigue acotada por CSS aparte */
     .mp-brand-logo--header .mp-brand-logo__img {
         display: block;
-        height: 48px;
+        height: 72px;
         width: auto;
-        max-height: 48px;
-        max-width: min(200px, 52vw);
+        max-height: 72px;
+        max-width: min(420px, 72vw);
         object-fit: contain;
         object-position: left center;
     }
     @media (min-width: 768px) {
         .mp-brand-logo--header .mp-brand-logo__img {
-            height: 56px;
-            max-height: 56px;
-            max-width: min(220px, 16vw);
+            height: 96px;
+            max-height: 96px;
+            max-width: min(544px, 42vw);
+        }
+    }
+    @media (min-width: 1280px) {
+        .mp-brand-logo--header .mp-brand-logo__img {
+            height: 115px;
+            max-height: 115px;
+            max-width: min(670px, 36vw);
         }
     }
     /* Pie: mismo asset fondo blanco sobre tarjeta #FFF (encima del gris #F7F7F7) */
@@ -205,6 +212,33 @@
     .mp-hero {
         background: #FFFFFF;
         border-bottom: 1px solid #EBEBEB;
+    }
+    .mp-hero__inner {
+        text-align: center;
+        padding-top: 1.25rem;
+        padding-bottom: 1.5rem;
+    }
+    @media (min-width: 768px) {
+        .mp-hero__inner {
+            padding-top: 1.5rem;
+            padding-bottom: 1.75rem;
+        }
+    }
+    .mp-hero__title {
+        font-size: clamp(1.35rem, 2.4vw, 1.85rem);
+        font-weight: 600;
+        color: #222222;
+        line-height: 1.28;
+        letter-spacing: -0.02em;
+        max-width: 34rem;
+        margin: 0 auto;
+    }
+    .mp-hero__subtitle {
+        font-size: clamp(0.875rem, 1.35vw, 1rem);
+        color: #717171;
+        line-height: 1.55;
+        max-width: 32rem;
+        margin: 0.65rem auto 0;
     }
     .search-pill {
         display: flex; align-items: center;
@@ -408,6 +442,9 @@
         gap: 0.75rem 0.625rem;
         justify-content: start;
     }
+    .mp-card-grid--favoritos {
+        justify-content: center;
+    }
     @media (min-width: 640px) {
         .mp-card-grid {
             grid-template-columns: repeat(auto-fill, 164px);
@@ -442,6 +479,8 @@
     .prop-price strong { font-weight: 600; }
     .prop-price em { font-style: normal; color: #717171; font-size: 12px; }
     .section-title { font-size: 1.35rem; font-weight: 600; color: #222222; margin-bottom: 20px; }
+    .section-title--center { text-align: center; margin-bottom: 1rem; }
+    .mp-section-favoritos .section-title--center { font-size: 1.125rem; margin-bottom: 1.25rem; }
     .mp-alert-soft { background: #FFFFFF; border: 1px solid #DDDDDD; border-radius: 12px; padding: 1rem 1.25rem; color: #222222; font-size: 0.95rem; }
     .mp-gh-cta-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.25rem; }
     .mp-gh-cta-text { font-size: 0.875rem; font-weight: 600; color: #222222; display: inline-flex; align-items: center; gap: 0.35rem; }

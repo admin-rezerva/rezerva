@@ -133,7 +133,7 @@ const obtenerPropiedadesParaMarketplace = async ({ busqueda = '', personas = 0, 
     return rows.map(mapearPropiedad);
 };
 
-const obtenerDestacados = async (limit = 21) => {
+const obtenerDestacados = async (limit = 5) => {
     if (!pool) return [];
     const { rows } = await pool.query(
         `${QUERY_BASE}

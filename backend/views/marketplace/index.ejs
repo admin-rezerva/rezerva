@@ -217,13 +217,9 @@
 
 <% if (!hayBusqueda) { %>
 <section class="mp-hero" aria-labelledby="mp-hero-heading">
-    <div class="mp-container pt-8 pb-10 md:pt-12 md:pb-14 text-center">
-        <h1 id="mp-hero-heading" class="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-[#222222] max-w-3xl mx-auto leading-tight">
-            <%= mp.heroTitle %>
-        </h1>
-        <p class="mt-4 text-base sm:text-lg text-[#717171] max-w-2xl mx-auto leading-relaxed">
-            <%= mp.heroSubtitle %>
-        </p>
+    <div class="mp-container mp-hero__inner">
+        <h1 id="mp-hero-heading" class="mp-hero__title"><%= mp.heroTitle %></h1>
+        <p class="mp-hero__subtitle"><%= mp.heroSubtitle %></p>
     </div>
 </section>
 <% } %>
@@ -241,12 +237,12 @@
 
     <!-- Destacados (solo si no hay búsqueda activa) -->
     <% if (!hayBusqueda && destacados.length > 0) { %>
-    <section class="mb-14" aria-labelledby="mp-destacados-heading">
-        <h2 id="mp-destacados-heading" class="section-title">
-            <i class="fas fa-star text-warning-500 mr-2" style="font-size:1.1rem;"></i>
+    <section class="mb-14 mp-section-favoritos" aria-labelledby="mp-destacados-heading">
+        <h2 id="mp-destacados-heading" class="section-title section-title--center">
+            <i class="fas fa-star text-warning-500 mr-2" style="font-size:1rem;"></i>
             <%= mp.sectionFavoritos %>
         </h2>
-        <div class="mp-card-grid">
+        <div class="mp-card-grid mp-card-grid--favoritos">
             <% destacados.forEach(p => { %>
             <a href="/ir?s=<%= p.subdominio %>&id=<%= p.id %>" class="prop-card">
                 <div class="prop-photo">
