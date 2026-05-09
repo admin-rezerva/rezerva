@@ -13,7 +13,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      # test:ci ejecuta scripts bajo backend/ que hacen require de servicios; con DB_MODE=postgres hace falta `pg` en node_modules.
+      # Raíz: dependencias de `package.json` (scripts test:ci vía `npm run`). Backend: `pg`, Express, servicios bajo `backend/`.
+      - name: npm ci (raíz)
+        run: npm ci
       - name: npm ci (backend)
         run: npm ci --prefix backend
       - name: Cadena test:ci (plan release 1.0.0 §2 + regresión)
