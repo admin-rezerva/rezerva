@@ -75,8 +75,34 @@ Referencia operativa para cualquier cambio de UI. Detalle de negocio y arquitect
 ## 6. Formularios y datos tabulares
 
 - Inputs/select estándar: clases **`form-input`**, **`form-select`** (`source.css`).
-- Tablas anchas: envolver en **`overflow-x-auto`**; usar **`hide-scrollbar`** si se busca barra fina y discreta; celdas con **`whitespace-nowrap`** solo cuando el scroll horizontal sea intencional.
 - Cabeceras sticky reutilizables: **`.th`**, contenedores **`.table-container`** cuando encaje el patrón existente.
+- En **desktop**, tablas anchas pueden ir dentro de **`overflow-x-auto`**; **`hide-scrollbar`** si se desea barra fina; **`whitespace-nowrap`** solo cuando el scroll horizontal sea intencional (ver **§6.1** para móvil).
+
+### 6.1 Tablas de listado en la SPA (regla fuerte)
+
+**Objetivo:** por debajo de **768px** (breakpoint Tailwind **`md`**) la experiencia debe ser de **app nativa**: cada fila se muestra como **tarjeta**, no como tabla con scroll horizontal.
+
+**Cuándo aplica:** la tabla muestra una **lista homogénea de registros** (clientes, usuarios, filas de espera, canales, etc.) con varias columnas de datos.
+
+**Patrón técnico (obligatorio para vistas nuevas y al refactorizar una vista existente):**
+
+1. Contenedor de la **tabla** (y su `overflow-x-auto` si hace falta en desktop): clase **`spa-md-table-wrap`**.
+2. Contenedor hermano de **tarjetas**: **`spa-md-cards-wrap`**, con **`space-y-4`** (o similar) entre tarjetas.
+3. **Misma data:** un solo `map` / helper que genere (a) filas `<tr>` y (b) bloques de tarjeta, o dos strings concatenados desde los mismos `rows` — **sin** duplicar fuentes de verdad.
+4. **Estilo de tarjeta sugerido:** `rounded-xl border border-gray-200 bg-white p-4 shadow-sm`; cabecera `flex justify-between items-start gap-3`; cuerpo `text-sm text-gray-600` con `space-y-2.5`; pie de acciones `border-t border-gray-200 pt-3`; inputs **`w-full`** en móvil.
+5. **Eventos:** delegación desde un ancestro estable del panel (p. ej. `#…-panel`) con **clases hook** por vista (`…-row-btn`, `…-select`), para que tabla y tarjetas compartan handlers sin duplicar listeners por fila si no hace falta.
+6. **Por qué no solo `hidden md:block`:** las clases host están en `source.css` con `@media` explícita para que el cambio sea fiable aunque el cliente cachee mal el bundle de utilidades.
+
+**Excepciones** (aceptable mantener scroll u otro patrón hasta diseño dedicado; **comentar en la vista** `// excepción §6.1: …`):
+
+- Tablas **matriciales muy anchas** (ej. matriz de tarifas), **pivot** o comparativas que no se prestan a una tarjeta por fila sin rediseño de dominio.
+- Vistas que ya tienen **modo móvil específico** (ej. calendario compacto + Gantt desktop).
+- Tablas **dentro de modales** con pocas columnas y sin listado largo: scroll horizontal puntual es tolerable; al agrandar el modal en móvil, preferir migrar a §6.1.
+- Tablas puramente **clave-valor** de 2 columnas: puede reemplazarse por lista / grid en todos los anchos sin duplicar tabla+cards.
+
+**Referencia implementada:** `frontend/src/views/gestionarEsperaDisponibilidad.js`.
+
+En **desktop** (`≥768px`), la tabla puede seguir usando **`overflow-x-auto hide-scrollbar`** si el contenido es ancho; en móvil el wrap de tabla queda oculto por **`spa-md-table-wrap`**.
 
 ---
 
@@ -90,6 +116,7 @@ Referencia operativa para cualquier cambio de UI. Detalle de negocio y arquitect
 
 Aplicar de forma consistente en vistas nuevas o refactors:
 
+- **Tablas de listado:** cumplir **§6.1** (tarjetas en móvil con `spa-md-table-wrap` / `spa-md-cards-wrap`).
 - **Contenedores flex:** `min-w-0` en hijos que puedan desbordar texto largo.
 - **Cabeceras de página:** `flex-col` / `sm:flex-row`, `gap-*`, `flex-wrap` para que filtros y títulos no se recorten (`overflow-x-hidden` del shell).
 - **CRM Kanban:** móvil en columna; desde `md` scroll horizontal + snap y paneles con `min-w-0`.

@@ -127,7 +127,7 @@ async function handleReconcileClick() {
     }
 }
 
-/** Tabla en md+; tarjetas en móvil. Misma data y mismos selects (clase `espera-estado-select`). */
+/** Tabla en md+; tarjetas en móvil (`spa-md-table-wrap` / `spa-md-cards-wrap`). Misma data y mismos selects (`espera-estado-select`). */
 export async function render() {
     return `
     <div id="espera-disponibilidad-panel" class="space-y-4 rounded-lg bg-white p-4 shadow sm:p-8">
@@ -139,7 +139,7 @@ export async function render() {
         <button type="button" id="espera-reconciliar-btn" class="btn-outline w-full shrink-0 sm:w-auto">Reconciliar ahora</button>
       </div>
       <p id="espera-reconciliar-status" class="text-xs text-gray-500"></p>
-      <div class="espera-disponibilidad-table-host">
+      <div class="spa-md-table-wrap">
         <div class="w-full overflow-x-auto hide-scrollbar">
           <table class="min-w-full whitespace-nowrap bg-white">
             <thead>
@@ -158,7 +158,7 @@ export async function render() {
           </table>
         </div>
       </div>
-      <div id="espera-disponibilidad-cards" class="espera-disponibilidad-cards-host space-y-4" aria-label="Lista de espera (vista móvil)"></div>
+      <div id="espera-disponibilidad-cards" class="spa-md-cards-wrap space-y-4" aria-label="Lista de espera (vista móvil)"></div>
     </div>`;
 }
 

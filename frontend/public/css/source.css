@@ -186,22 +186,23 @@
     }
 
     /*
-     * Lista de espera disponibilidad: tabla vs tarjetas (mismo breakpoint que Tailwind `md`: 768px).
-     * Clases dedicadas evitan depender solo de `hidden` + `md:block` si el bundle CSS viejo o el orden de capas no aplica bien en el cliente.
+     * SPA — tablas de listado vs tarjetas en móvil (breakpoint = Tailwind `md`, 768px).
+     * Patrón obligatorio para listas de registros: ver `.cursor/rules/20-frontend-design-system.mdc` §6.1.
+     * Clases host evitan depender solo de `hidden`/`md:block` si hay caché de CSS u orden de capas raro.
      */
-    .espera-disponibilidad-table-host {
+    .spa-md-table-wrap {
         display: none;
     }
     @media (min-width: 768px) {
-        .espera-disponibilidad-table-host {
+        .spa-md-table-wrap {
             display: block;
         }
     }
-    .espera-disponibilidad-cards-host {
+    .spa-md-cards-wrap {
         display: block;
     }
     @media (min-width: 768px) {
-        .espera-disponibilidad-cards-host {
+        .spa-md-cards-wrap {
             display: none;
         }
     }
