@@ -14,11 +14,11 @@ jobs:
         with:
           node-version: '20'
       # Raíz: dependencias de `package.json` (scripts test:ci vía `npm run`). Backend: `pg`, Express, servicios bajo `backend/`.
-      # Backend: solo dependencias de producción. `firebase-tools` y `tailwindcss` (dev) no participan en `test:ci` y su árbol ha provocado `npm ci` fallando al instante en ubuntu-latest.
+      # Backend: solo prod (`firebase-tools` / tailwind no hacen falta en smoke). `npm ci --omit=dev` falla en caliente en algunos runners; `npm install --omit=dev` respeta `package-lock.json`.
       - name: npm ci (raíz)
         run: npm ci
-      - name: npm ci (backend, prod)
+      - name: npm install (backend, prod)
         working-directory: backend
-        run: npm ci --omit=dev
+        run: npm install --omit=dev --no-audit --no-fund
       - name: Cadena test:ci (plan release 1.0.0 §2 + regresión)
         run: npm run test:ci
