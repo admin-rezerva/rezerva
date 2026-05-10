@@ -58,8 +58,8 @@ function renderFinancialDetails(grupo) {
         </div>`;
 }
 
-/** Botones táctiles en móvil: ancho completo; en sm+ fila alineada a la derecha como antes. */
-const BTN_CARD = 'gestion-btn text-xs w-full sm:w-auto min-h-[2.5rem] inline-flex items-center justify-center gap-1 px-3 py-2 rounded-md';
+/** Botones táctiles en móvil: ancho completo; en sm+ fila alineada a la derecha. Misma familia que paneles (btn-*). */
+const BTN_CARD = 'gestion-btn text-xs font-medium w-full sm:w-auto min-h-[2.5rem] inline-flex items-center justify-center gap-1';
 
 function renderActionButtons(grupo, allEstados) {
     const estadoInfo = getStatusInfo(grupo.estadoGestion, allEstados);
@@ -70,26 +70,26 @@ function renderActionButtons(grupo, allEstados) {
     const reservaAdjunta = grupo.documentos && grupo.documentos.enlaceReserva;
 
     let buttons = `
-        <button class="${BTN_CARD} btn-table-copy" data-gestion="ajuste_tarifa">Ajuste Tarifa ${ajusteRealizado ? '<i class="fa-solid fa-check text-success-600"></i>' : ''}</button>
-        <button class="${BTN_CARD} btn-table-copy" data-gestion="bitacora">Bitácora (${grupo.notasCount})</button>
-        <button class="${BTN_CARD} btn-table-copy" data-gestion="gestionar_reserva">Doc. Reserva ${reservaAdjunta ? '<i class="fa-solid fa-check text-success-600"></i>' : ''}</button>
+        <button class="${BTN_CARD} btn-outline" data-gestion="ajuste_tarifa">Ajuste Tarifa ${ajusteRealizado ? '<i class="fa-solid fa-check text-success-600"></i>' : ''}</button>
+        <button class="${BTN_CARD} btn-outline" data-gestion="bitacora">Bitácora (${grupo.notasCount})</button>
+        <button class="${BTN_CARD} btn-outline" data-gestion="gestionar_reserva">Doc. Reserva ${reservaAdjunta ? '<i class="fa-solid fa-check text-success-600"></i>' : ''}</button>
     `;
 
     if (estadoInfo.level >= 2) {
-        buttons += `<button class="${BTN_CARD} btn-table-edit" data-gestion="pagos">Pagos (${grupo.transaccionesCount}) ${pagoFinalRealizado ? '<i class="fa-solid fa-check text-success-600"></i>' : ''}</button>`;
+        buttons += `<button class="${BTN_CARD} btn-primary" data-gestion="pagos">Pagos (${grupo.transaccionesCount}) ${pagoFinalRealizado ? '<i class="fa-solid fa-check text-white/90"></i>' : ''}</button>`;
     }
 
     if (estadoInfo.level >= 4) {
-        const docStatusClass = boletaAdjunta ? 'bg-success-500 hover:bg-success-700' : 'bg-amber-500 hover:bg-amber-700';
-        buttons += `<button class="${BTN_CARD} btn-table-edit ${docStatusClass}" data-gestion="boleta">Boleta ${boletaAdjunta ? '<i class="fa-solid fa-check"></i>' : ''}</button>`;
+        const boletaVariant = boletaAdjunta ? 'btn-success' : 'btn-warning';
+        buttons += `<button class="${BTN_CARD} ${boletaVariant}" data-gestion="boleta">Boleta ${boletaAdjunta ? '<i class="fa-solid fa-check"></i>' : ''}</button>`;
     }
 
     if (estadoInfo.level >= 5) {
-        buttons += `<button class="${BTN_CARD} btn-table-edit" data-gestion="gestionar_cliente">Gestionar Cliente ${grupo.clienteGestionado ? '<i class="fa-solid fa-check text-success-600"></i>' : ''}</button>`;
+        buttons += `<button class="${BTN_CARD} btn-primary" data-gestion="gestionar_cliente">Gestionar Cliente ${grupo.clienteGestionado ? '<i class="fa-solid fa-check text-white/90"></i>' : ''}</button>`;
     }
 
     if (estadoInfo.level > 1) {
-        buttons += `<button class="revert-btn ${BTN_CARD} btn-table-delete">Revertir</button>`;
+        buttons += `<button class="revert-btn ${BTN_CARD} btn-danger">Revertir</button>`;
     }
 
     return buttons;
