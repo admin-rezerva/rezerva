@@ -63,7 +63,12 @@ export function renderGantt(recursos, eventos, colorMap, dias, hoy) {
         ].filter(Boolean).join(' · ');
 
         // Eventos de esta propiedad que tocan este mes
-        const eventosFila = eventos.filter(e => e.resourceId === rec.id && e.start < dias[dias.length - 1] && e.end > dias[0]);
+        const eventosFila = eventos.filter(e => {
+            if (String(e.resourceId) !== String(rec.id)) return false;
+            const s = String(e.start).slice(0, 10);
+            const en = String(e.end).slice(0, 10);
+            return s < dias[dias.length - 1] && en > dias[0];
+        });
 
         const bloques = eventosFila.map(ev => {
             const inicioVisible = ev.start < dias[0] ? dias[0] : ev.start;

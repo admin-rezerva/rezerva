@@ -317,7 +317,14 @@
    ═══════════════════════════════════════════════════ */
 
 .cal-container { padding: 1.5rem; max-width: 100%; }
-.cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: .75rem; }
+/* Móvil: título y nav en columna para que ‹ Hoy › no queden recortados por overflow-x-hidden del shell */
+.cal-header {
+    display: flex; flex-direction: column; align-items: stretch; gap: .75rem;
+    margin-bottom: 1rem;
+}
+@media (min-width: 640px) {
+    .cal-header { flex-direction: row; align-items: center; justify-content: space-between; }
+}
 .cal-titulo { font-size: 1.4rem; font-weight: 700; color: #1e293b; }
 
 .cal-metricas { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
@@ -325,11 +332,20 @@
 .cal-metrica-val { font-size: 1.75rem; font-weight: 700; color: #0f172a; line-height: 1; }
 .cal-metrica-label { font-size: .72rem; color: #64748b; margin-top: .25rem; text-transform: uppercase; letter-spacing: .04em; }
 
-.cal-nav { display: flex; align-items: center; gap: .5rem; }
+.cal-nav {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .5rem;
+    width: 100%;
+}
+@media (min-width: 640px) {
+    .cal-nav { width: auto; justify-content: flex-end; }
+}
 .cal-nav-btn { border: 1px solid #e2e8f0; background: #fff; border-radius: .5rem; padding: .35rem .75rem; cursor: pointer; font-size: 1.1rem; color: #475569; transition: background .15s; }
 .cal-nav-btn:hover { background: #f1f5f9; }
 .cal-nav-today { font-size: .82rem; font-weight: 600; }
-.cal-nav-titulo { font-size: 1.05rem; font-weight: 600; color: #1e293b; min-width: 160px; text-align: center; text-transform: capitalize; }
+.cal-nav-titulo {
+    font-size: 1.05rem; font-weight: 600; color: #1e293b;
+    min-width: 0; flex: 1 1 9rem; text-align: center; text-transform: capitalize;
+}
 
 .cal-leyenda { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
 .cal-leyenda-item { display: flex; align-items: center; gap: .35rem; font-size: .8rem; color: #374151; }

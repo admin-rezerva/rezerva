@@ -17,6 +17,28 @@ function hoyISO() {
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
+/** Comparación estable aunque el API devuelva ISO con hora o resourceId como string distinto al recurso. */
+function soloFecha(iso) {
+    if (iso == null || iso === '') return '';
+    const s = String(iso);
+    return s.length >= 10 ? s.slice(0, 10) : s;
+}
+
+function escHtml(s) {
+    return String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/"/g, '&quot;');
+}
+
+function etiquetaCompactaCliente(nombre) {
+    const partes = (nombre || '').trim().split(/\s+/);
+    const apellido = partes[0] || '';
+    const inicial = partes[1] ? `${partes[1][0]}.` : '';
+    const t = `${apellido}${inicial ? ', ' + inicial : ''}`.trim();
+    return t || 'Reserva';
+}
+
 /** Siete fechas ISO: desde hoy si el mes visible es el actual; si no, desde el día 1 del mes visible. */
 function diasParaVistaCompacta(año, mes) {
     const hoy = new Date();
@@ -45,7 +67,13 @@ function diasParaVistaCompacta(año, mes) {
 }
 
 function ocupacionEnDia(resourceId, iso, eventos) {
-    const matches = eventos.filter(e => e.resourceId === resourceId && iso >= e.start && iso < e.end);
+    const rid = String(resourceId);
+    const matches = eventos.filter(e => {
+        if (String(e.resourceId) !== rid) return false;
+        const start = soloFecha(e.start);
+        const end = soloFecha(e.end);
+        return iso >= start && iso < end;
+    });
     if (!matches.length) return null;
     const bloq = matches.find(e => e.extendedProps?.tipo === 'bloqueo');
     if (bloq) return { tipo: 'bloqueo', ev: bloq };
@@ -150,7 +178,7 @@ function renderVistaCompacta() {
             } else if (occ.tipo === 'bloqueo') {
                 const p = occ.ev.extendedProps;
                 const payload = JSON.stringify({ tipo: 'bloqueo', motivo: p.motivo, start: occ.ev.start, end: occ.ev.end }).replace(/'/g, '&#39;');
-                celda = `<div class="cal-compact-bloque min-h-6 flex-1 rounded-md bg-gray-700 touch-manipulation" data-reserva='${payload}'></div>`;
+                celda = `<div class="cal-compact-bloque flex min-h-6 flex-1 items-center rounded-md bg-gray-700 px-1.5 touch-manipulation" data-reserva='${payload}'><span class="truncate text-[10px] font-semibold text-white">🔒 ${escHtml((p.motivo || 'Bloqueo').slice(0, 24))}</span></div>`;
             } else {
                 const p = occ.ev.extendedProps;
                 const payload = JSON.stringify({
@@ -167,7 +195,8 @@ function renderVistaCompacta() {
                     idReserva: p.idReserva,
                     idReservaCanal: p.idReservaCanal
                 }).replace(/'/g, '&#39;');
-                celda = `<div class="cal-compact-bloque min-h-6 flex-1 rounded-md cursor-pointer touch-manipulation" style="background:${color}" data-reserva='${payload}'></div>`;
+                const mini = escHtml(etiquetaCompactaCliente(p.clienteNombre));
+                celda = `<div class="cal-compact-bloque flex min-h-6 flex-1 cursor-pointer items-center rounded-md px-1.5 touch-manipulation" style="background:${color}" data-reserva='${payload}'><span class="truncate text-[10px] font-semibold leading-tight text-white drop-shadow-sm">${mini}</span></div>`;
             }
 
             return `
@@ -191,9 +220,9 @@ function renderVistaCompacta() {
     }).join('');
 
     return `
-        <div class="flex flex-col gap-1">
-            <h3 class="text-base font-semibold text-gray-900">Próximos 7 días</h3>
-            <p class="text-xs text-gray-500">${rango}</p>
+        <div class="flex flex-col gap-1 border-b border-gray-100 pb-3">
+            <h3 class="text-base font-semibold text-gray-900">Vista semanal</h3>
+            <p class="text-xs text-gray-500">Usa <strong>‹ ›</strong> arriba para cambiar el mes. ${rango}</p>
         </div>
         <div class="flex flex-col gap-4">${tarjetas}</div>`;
 }
