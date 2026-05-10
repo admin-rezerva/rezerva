@@ -15,18 +15,18 @@ let recargarCallback = null;
 
 export async function render() {
     return `
-        <div class="bg-white p-8 rounded-lg shadow">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-                <h2 class="text-2xl font-semibold text-gray-900">Panel de Gestión Diaria</h2>
-                <div class="mt-4 md:mt-0 flex flex-col md:flex-row gap-2 md:w-2/3 md:justify-end">
-                    <select id="garantia-filter" class="form-select md:w-64">
+        <div class="rounded-lg bg-white p-4 shadow sm:p-6 lg:p-8">
+            <div class="mb-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <h2 class="text-xl font-semibold text-gray-900 sm:text-2xl">Panel de Gestión Diaria</h2>
+                <div class="flex w-full flex-col gap-2 md:mt-0 md:w-2/3 md:flex-row md:justify-end">
+                    <select id="garantia-filter" class="form-select w-full md:w-64">
                         <option value="todos">Garantía: Todos</option>
                         <option value="pendiente_garantia">Garantía: Pendiente</option>
                         <option value="garantia_validada">Garantía: Validada</option>
                         <option value="garantia_rechazada">Garantía: Rechazada</option>
                         <option value="sin_garantia_configurada">Garantía: Sin política web</option>
                     </select>
-                    <input type="text" id="search-input" placeholder="Buscar por nombre, reserva, teléfono..." class="form-input md:w-[22rem]">
+                    <input type="text" id="search-input" placeholder="Buscar por nombre, reserva, teléfono..." class="form-input w-full md:w-[22rem]">
                 </div>
             </div>
             <div id="diagnostico-container"></div>

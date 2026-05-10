@@ -30,15 +30,15 @@ function renderFinancialDetails(grupo) {
         const payoutFinalRealUSD = valorDolar > 0 ? grupo.payoutFinalReal / valorDolar : 0;
 
         return `
-            <div class="grid grid-cols-2 gap-x-4 text-xs">
-                <div class="text-right border-r pr-2">
+            <div class="grid grid-cols-1 gap-4 text-xs sm:grid-cols-2 sm:gap-x-4">
+                <div class="text-left sm:text-right sm:border-r sm:pr-2">
                     <div class="font-bold text-gray-500 mb-1">USD</div>
                     <div class="flex justify-between"><span>Total:</span> <span class="font-medium">${formatUSD(totalClienteUSD)}</span></div>
                     ${ivaUSD > 0 ? `<div class="flex justify-between"><span>IVA:</span> <span class="font-medium">${formatUSD(ivaUSD)}</span></div>` : ''}
                     <div class="flex justify-between"><span>Costo Canal:</span> <span class="font-medium text-danger-600">-${formatUSD(costoCanalUSD)}</span></div>
                     <div class="flex justify-between border-t mt-1 pt-1"><span>Payout:</span> <span class="font-semibold text-success-700">${formatUSD(payoutFinalRealUSD)}</span></div>
                 </div>
-                <div class="text-right">
+                <div class="text-left sm:text-right">
                     <div class="font-bold text-gray-800 mb-1">CLP</div>
                     <div class="flex justify-between"><span>Total:</span> <span class="font-medium">${formatCurrency(grupo.valorTotalHuesped)}</span></div>
                     <div class="flex justify-between"><span>Abonado:</span> <span class="font-medium text-success-600">${formatCurrency(grupo.abonoTotal)}</span></div>
@@ -58,6 +58,9 @@ function renderFinancialDetails(grupo) {
         </div>`;
 }
 
+/** Botones táctiles en móvil: ancho completo; en sm+ fila alineada a la derecha como antes. */
+const BTN_CARD = 'gestion-btn text-xs w-full sm:w-auto min-h-[2.5rem] inline-flex items-center justify-center gap-1 px-3 py-2 rounded-md';
+
 function renderActionButtons(grupo, allEstados) {
     const estadoInfo = getStatusInfo(grupo.estadoGestion, allEstados);
 
@@ -67,26 +70,26 @@ function renderActionButtons(grupo, allEstados) {
     const reservaAdjunta = grupo.documentos && grupo.documentos.enlaceReserva;
 
     let buttons = `
-        <button class="gestion-btn btn-table-copy text-xs" data-gestion="ajuste_tarifa">Ajuste Tarifa ${ajusteRealizado ? '<i class="fa-solid fa-check text-success-600 ml-1"></i>' : ''}</button>
-        <button class="gestion-btn btn-table-copy text-xs" data-gestion="bitacora">Bitácora (${grupo.notasCount})</button>
-        <button class="gestion-btn btn-table-copy text-xs" data-gestion="gestionar_reserva">Doc. Reserva ${reservaAdjunta ? '<i class="fa-solid fa-check text-success-600 ml-1"></i>' : ''}</button>
+        <button class="${BTN_CARD} btn-table-copy" data-gestion="ajuste_tarifa">Ajuste Tarifa ${ajusteRealizado ? '<i class="fa-solid fa-check text-success-600"></i>' : ''}</button>
+        <button class="${BTN_CARD} btn-table-copy" data-gestion="bitacora">Bitácora (${grupo.notasCount})</button>
+        <button class="${BTN_CARD} btn-table-copy" data-gestion="gestionar_reserva">Doc. Reserva ${reservaAdjunta ? '<i class="fa-solid fa-check text-success-600"></i>' : ''}</button>
     `;
 
     if (estadoInfo.level >= 2) {
-        buttons += `<button class="gestion-btn btn-table-edit text-xs" data-gestion="pagos">Pagos (${grupo.transaccionesCount}) ${pagoFinalRealizado ? '<i class="fa-solid fa-check text-success-600 ml-1"></i>' : ''}</button>`;
+        buttons += `<button class="${BTN_CARD} btn-table-edit" data-gestion="pagos">Pagos (${grupo.transaccionesCount}) ${pagoFinalRealizado ? '<i class="fa-solid fa-check text-success-600"></i>' : ''}</button>`;
     }
 
     if (estadoInfo.level >= 4) {
         const docStatusClass = boletaAdjunta ? 'bg-success-500 hover:bg-success-700' : 'bg-amber-500 hover:bg-amber-700';
-        buttons += `<button class="gestion-btn btn-table-edit text-xs ${docStatusClass}" data-gestion="boleta">Boleta ${boletaAdjunta ? '<i class="fa-solid fa-check ml-1"></i>' : ''}</button>`;
+        buttons += `<button class="${BTN_CARD} btn-table-edit ${docStatusClass}" data-gestion="boleta">Boleta ${boletaAdjunta ? '<i class="fa-solid fa-check"></i>' : ''}</button>`;
     }
 
     if (estadoInfo.level >= 5) {
-        buttons += `<button class="gestion-btn btn-table-edit text-xs" data-gestion="gestionar_cliente">Gestionar Cliente ${grupo.clienteGestionado ? '<i class="fa-solid fa-check text-success-600 ml-1"></i>' : ''}</button>`;
+        buttons += `<button class="${BTN_CARD} btn-table-edit" data-gestion="gestionar_cliente">Gestionar Cliente ${grupo.clienteGestionado ? '<i class="fa-solid fa-check text-success-600"></i>' : ''}</button>`;
     }
 
     if (estadoInfo.level > 1) {
-        buttons += `<button class="revert-btn btn-table-delete text-xs">Revertir</button>`;
+        buttons += `<button class="revert-btn ${BTN_CARD} btn-table-delete">Revertir</button>`;
     }
 
     return buttons;
@@ -136,25 +139,29 @@ function createCard(grupo, allEstados) {
     const alojamientosNombres = grupo.reservasIndividuales.map(r => r.alojamientoNombre).join(', ');
 
     const estadoBotonHtml = estadoInfo.gestionType
-        ? `<button class="gestion-btn px-2 py-1 text-xs font-semibold rounded-full" data-gestion="${estadoInfo.gestionType}" style="background-color: ${estadoInfo.color}; color: white;">${estadoInfo.text}</button>`
-        : `<span class="px-2 py-1 text-xs font-semibold rounded-full" style="background-color: ${estadoInfo.color}; color: white;">${estadoInfo.text}</span>`;
+        ? `<button type="button" class="gestion-btn shrink-0 px-2 py-1 text-xs font-semibold rounded-full" data-gestion="${estadoInfo.gestionType}" style="background-color: ${estadoInfo.color}; color: white;">${estadoInfo.text}</button>`
+        : `<span class="inline-flex shrink-0 items-center px-2 py-1 text-xs font-semibold rounded-full" style="background-color: ${estadoInfo.color}; color: white;">${estadoInfo.text}</span>`;
+
+    const countdownTxt = diasParaLlegada > 0
+        ? `Llega en ${diasParaLlegada} día(s)`
+        : (diasParaLlegada === 0 ? 'Llega HOY' : `Llegó hace ${-diasParaLlegada} día(s)`);
 
     return `
-    <div id="card-${grupo.reservaIdOriginal}" class="p-4 border rounded-lg bg-white shadow-sm flex flex-col md:flex-row gap-4">
-        <div class="flex-grow">
-            <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-3">
+    <div id="card-${grupo.reservaIdOriginal}" class="flex flex-col gap-4 rounded-lg border bg-white p-4 shadow-sm md:flex-row md:gap-5">
+        <div class="min-w-0 flex-1">
+            <div class="mb-3 flex flex-col gap-2 sm:gap-3">
+                <div class="flex min-w-0 flex-wrap items-center gap-2">
                     ${estadoBotonHtml}
                     <button
-                        class="client-trigger text-lg font-bold text-primary-800 hover:underline focus:outline-none text-left"
+                        class="client-trigger min-w-0 text-left text-lg font-bold text-primary-800 hover:underline focus:outline-none"
                         data-cliente-id="${grupo.clienteId}"
                         title="Ver perfil del cliente"
                     >
                         ${grupo.clienteNombre}
                     </button>
-                    <span class="px-2 py-0.5 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full">${grupo.tipoCliente} (${grupo.numeroDeReservas})</span>
+                    <span class="inline-flex shrink-0 items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-800">${grupo.tipoCliente} (${grupo.numeroDeReservas})</span>
                 </div>
-                <span class="text-sm font-semibold text-gray-600">${diasParaLlegada > 0 ? `Llega en ${diasParaLlegada} día(s)` : (diasParaLlegada === 0 ? 'Llega HOY' : `Llegó hace ${-diasParaLlegada} día(s)`)}</span>
+                <p class="text-sm font-semibold leading-snug text-gray-600 sm:max-w-md">${countdownTxt}</p>
             </div>
 
             ${grupo.clienteBloqueado ? `
@@ -163,18 +170,27 @@ function createCard(grupo, allEstados) {
                 <div><span class="font-semibold text-danger-700">Cliente Bloqueado:</span> <span class="text-danger-600">${grupo.motivoBloqueo || 'Sin motivo especificado'}</span></div>
             </div>` : ''}
             ${crearDropdownEstadosReserva(grupo, allEstados)}
-            <div class="grid grid-cols-3 gap-4 text-sm">
-                <div><span class="font-medium text-gray-500">Check-in:</span> ${formatDate(grupo.fechaLlegada)}</div>
-                <div><span class="font-medium text-gray-500">Check-out:</span> ${formatDate(grupo.fechaSalida)}</div>
-                <div><span class="font-medium text-gray-500">Noches:</span> ${grupo.totalNoches}</div>
-                <div class="col-span-3"><span class="font-medium text-gray-500">Alojamientos:</span> ${alojamientosNombres}</div>
-                <div class="col-span-3"><span class="font-medium text-gray-500">ID Reserva:</span> <span class="font-mono text-xs">${grupo.reservaIdOriginal}</span></div>
+            <div class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3 sm:gap-4">
+                <div class="rounded-lg border border-gray-100 bg-gray-50/80 px-3 py-2 sm:border-0 sm:bg-transparent sm:p-0">
+                    <div class="text-xs font-medium uppercase tracking-wide text-gray-500">Check-in</div>
+                    <div class="mt-0.5 font-semibold text-gray-900">${formatDate(grupo.fechaLlegada)}</div>
+                </div>
+                <div class="rounded-lg border border-gray-100 bg-gray-50/80 px-3 py-2 sm:border-0 sm:bg-transparent sm:p-0">
+                    <div class="text-xs font-medium uppercase tracking-wide text-gray-500">Check-out</div>
+                    <div class="mt-0.5 font-semibold text-gray-900">${formatDate(grupo.fechaSalida)}</div>
+                </div>
+                <div class="rounded-lg border border-gray-100 bg-gray-50/80 px-3 py-2 sm:border-0 sm:bg-transparent sm:p-0">
+                    <div class="text-xs font-medium uppercase tracking-wide text-gray-500">Noches</div>
+                    <div class="mt-0.5 font-semibold text-gray-900">${grupo.totalNoches}</div>
+                </div>
+                <div class="sm:col-span-3"><span class="font-medium text-gray-500">Alojamientos:</span> <span class="text-gray-900">${alojamientosNombres}</span></div>
+                <div class="sm:col-span-3 break-all"><span class="font-medium text-gray-500">ID Reserva:</span> <span class="font-mono text-xs text-gray-900">${grupo.reservaIdOriginal}</span></div>
             </div>
             ${renderGarantiaLineaTarjeta(grupo)}
         </div>
-        <div class="flex-shrink-0 w-full md:w-96 space-y-3">
+        <div class="flex w-full min-w-0 flex-shrink-0 flex-col gap-3 md:w-96">
             ${renderFinancialDetails(grupo)}
-            <div class="flex flex-wrap gap-2 justify-end pt-2 border-t">
+            <div class="flex flex-col gap-2 border-t pt-3 sm:flex-row sm:flex-wrap sm:justify-end">
                 ${renderActionButtons(grupo, allEstados)}
             </div>
         </div>
