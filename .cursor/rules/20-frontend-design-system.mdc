@@ -1,30 +1,121 @@
 ---
-description: Convenciones frontend para design system y separacion SPA/SSR
-globs: frontend/**/*.js,frontend/**/*.css,backend/views/**/*.ejs
+description: Design system admin SPA — tokens, CSS, layout shell, responsive, botones, checklist post-cambio
+globs: frontend/**/*.js,frontend/**/*.css,frontend/index.html,backend/views/**/*.ejs
 alwaysApply: false
 ---
 
-# Frontend Design System - StayManager
+# Frontend design system (panel admin SPA + vistas EJS)
 
-## Tokens y estilos
+Referencia operativa para cualquier cambio de UI. Detalle de negocio y arquitectura: `CLAUDE.md`, `SHARED_CONTEXT.md`. **Tokens:** `backend/tailwind.config.js`. **Capa de componentes y layout:** `frontend/public/css/source.css`.
 
-- Usar solo tokens semanticos (`primary-*`, `danger-*`, `success-*`, `warning-*`).
-- No usar colores Tailwind hardcodeados (`blue-*`, `red-*`, `green-*`, etc).
-- Botones con clases estandar (`btn-primary`, `btn-danger`, `btn-success`, `btn-outline`, `btn-ghost`).
+---
 
-## Arquitectura de UI
+## 1. Pipeline CSS (obligatorio tras tocar estilos)
 
-- `SPA` y `SSR` no se mezclan: componentes y flujos deben permanecer separados.
-- Cambios en `frontend/src` no deben inyectar logica de `backend/views` y viceversa.
+| Entrada | Salida | Comando (desde `backend/`) |
+|---------|--------|----------------------------|
+| `frontend/public/css/source.css` | `frontend/public/css/style.css` | `npm run build:css` |
+| `backend/public/css/website-source.css` | `backend/public/css/website.css` | `npm run build:website-css` |
 
-## Multiempresa
+- Tras modificar `source.css` o clases usadas en `content` de Tailwind, ejecutar **`npm run build:css`** y **commitear** `style.css` minificado.
+- `npm run build` en backend ejecuta **ambos** builds de CSS.
 
-- Toda vista debe representar datos del tenant actual.
-- No mostrar ni combinar datos de empresas distintas.
-- Recordatorio de dominio: unica entidad compartida global permitida son clientes.
+---
 
-## Validacion post-cambio
+## 2. Tokens de color (Tailwind)
 
-- Ejecutar `node scripts/tooling/audit-ui-monitored.js`.
-- Si hay alta prioridad, ejecutar `node scripts/tooling/migrate-colors.js`.
-- Reconstruir CSS cuando corresponda (`backend` -> `npm run build`).
+- En **vistas JS y utilidades**: usar solo paletas semánticas extendidas: `primary-*`, `danger-*`, `success-*`, `warning-*`.
+- **No** usar como estilo principal `blue-*`, `red-*`, `green-*`, `yellow-*`, `indigo-*` en markup nuevo (las auditorías `audit-ui-monitored.js` / `migrate-colors.js` refuerzan esto).
+- **Excepción pragmática:** bloques legacy en `source.css` (calendario Gantt, chips, algunos hex fijos). Las **nuevas** piezas en `@layer components` deberían preferir `@apply` con tokens; si hace falta un color literal puntual, documentar en el comentario del bloque.
+
+---
+
+## 3. Layout del shell (`#app-root`)
+
+- `html, body` y `#app-root`: altura acotada, `overflow: hidden`; `#app-root` usa **`max-height: 100dvh`** para barras móviles.
+- **`#app-root`:** `flex flex-col md:flex-row`, `min-h-0` — en móvil el scroll **no** es del body, sino de **`#view-content`**.
+- **`.main-content`:** `flex-1 min-h-0 min-w-0`, `overflow-x-hidden overflow-y-hidden`.
+- **`#view-content`:** `flex-1 min-h-0 min-w-0`, `overflow-y-auto`, `-webkit-overflow-scrolling: touch`.
+- Cualquier vista larga debe asumir este patrón: no forzar altura mínima en el body que rompa el flex.
+
+---
+
+## 4. Sidebar y drawer móvil
+
+- **No** añadir en `source.css` reglas globales sobre `.sidebar` que fijen `transform` o `z-index`: el estado abierto/cerrado lo controlan **clases Tailwind** en JS (`-translate-x-full` / `translate-x-0`, `z-50`, etc.). Sobrescribir `transform` aquí dejó el menú fuera de pantalla con overlay visible.
+- Overlay: `.sidebar-overlay` con `z-index` por debajo del drawer; coherente con el orden definido en JS.
+- Desktop: breakpoint alineado a Tailwind **`lg` (1024px)** — sidebar estática, colapsable.
+
+---
+
+## 5. Botones
+
+### 5.1 Acciones de panel, modales y tarjetas (preferido)
+
+| Clase | Uso |
+|-------|-----|
+| `btn` | Base (no usar sola salvo composición muy puntual) |
+| `btn-primary` | Acción principal, guardar, flujo crítico |
+| `btn-outline` | Secundaria visible (filtros, acciones frecuentes no destructivas) |
+| `btn-secondary` | Neutra / menos énfasis |
+| `btn-ghost` | Muy ligera, toolbar |
+| `btn-danger` | Eliminar, revertir, destructiva |
+| `btn-success` | Estado completado / confirmación fuerte (ej. documento OK) |
+| `btn-warning` | Atención requerida sin ser error (ej. boleta pendiente) |
+
+- Incluyen foco, disabled y sombra coherentes; **no** duplicar con utilidades sueltas salvo `text-xs`, `gap-1`, o ancho responsive (`w-full sm:w-auto`).
+- **Gestión diaria (tarjeta):** acciones usan `gestion-btn` + variantes anteriores; `revert-btn` en el botón Revertir (delegación en `gestionDiaria.js`). Mantener **área táctil** razonable (`min-h-[2.5rem]` donde aplique).
+
+### 5.2 Tablas densas
+
+- `btn-table`, `btn-table-edit`, `btn-table-delete`, `btn-table-copy`, `btn-table-sync`, `btn-table-view` — solo donde el contexto sea **fila de tabla compacta**, no para la misma jerarquía visual que botones de panel.
+
+---
+
+## 6. Formularios y datos tabulares
+
+- Inputs/select estándar: clases **`form-input`**, **`form-select`** (`source.css`).
+- Tablas anchas: envolver en **`overflow-x-auto`**; usar **`hide-scrollbar`** si se busca barra fina y discreta; celdas con **`whitespace-nowrap`** solo cuando el scroll horizontal sea intencional.
+- Cabeceras sticky reutilizables: **`.th`**, contenedores **`.table-container`** cuando encaje el patrón existente.
+
+---
+
+## 7. Utilidades
+
+- **`hide-scrollbar`:** scrollbars delgados (Firefox + WebKit); usar en carruseles horizontales, Kanban, listas con scroll X.
+
+---
+
+## 8. Patrones responsive (admin)
+
+Aplicar de forma consistente en vistas nuevas o refactors:
+
+- **Contenedores flex:** `min-w-0` en hijos que puedan desbordar texto largo.
+- **Cabeceras de página:** `flex-col` / `sm:flex-row`, `gap-*`, `flex-wrap` para que filtros y títulos no se recorten (`overflow-x-hidden` del shell).
+- **CRM Kanban:** móvil en columna; desde `md` scroll horizontal + snap y paneles con `min-w-0`.
+- **Calendario ocupación:** vista Gantt **`hidden lg:block`**; vista compacta en `< lg`. Navegación **‹ ›**: semana en móvil, mes en desktop según la lógica actual en `calendario.js`. KPIs: criterio semana vs “hoy” local según breakpoint documentado en código.
+- **Tarjetas (gestión diaria, etc.):** stack en móvil; panel lateral con ancho fijo solo desde breakpoint acordado (`md:w-96`); filas de botones `flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end`.
+
+---
+
+## 9. Badges y chips
+
+- Reutilizar clases ya definidas en `source.css`: `badge-soft-*`, `badge-cliente-tipo-*`, `badge-segmento-*`, `btn-chip-area`, `catalogo-chip-btn`, `chip-filter`, etc., antes de inventar pills nuevas.
+
+---
+
+## 10. Arquitectura SPA / SSR
+
+- No mezclar lógica de `frontend/src` con `backend/views` en el mismo flujo; mismos tokens Tailwind pueden servir a ambos mundos vía build correspondiente.
+- Toda vista del panel debe respetar **multi-tenant**: solo datos del tenant actual.
+
+---
+
+## 11. Validación después de cambios UI
+
+```bash
+node scripts/tooling/audit-ui-monitored.js
+```
+
+- **0 problemas de alta prioridad** antes de commit; si aparecen, `node scripts/tooling/migrate-colors.js` cuando aplique.
+- Si se tocó `source.css`: **`cd backend && npm run build:css`** (o `npm run build`).

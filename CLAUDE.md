@@ -84,18 +84,18 @@ El proyecto usa un sistema de tokens de color centralizado en `backend/tailwind.
 | Error / Eliminar | `danger-*` (ej: `bg-danger-600`) | `bg-red-*` |
 | Éxito / Confirmación | `success-*` (ej: `bg-success-600`) | `bg-green-*` |
 | Advertencia | `warning-*` (ej: `bg-warning-600`) | `bg-yellow-*` |
-| Botones | `.btn-primary`, `.btn-danger`, `.btn-success`, `.btn-outline`, `.btn-ghost` | Clases Tailwind ad-hoc en botones |
+| Botones (panel / tarjetas / modales) | `.btn-primary`, `.btn-secondary`, `.btn-danger`, `.btn-success`, `.btn-warning`, `.btn-outline`, `.btn-ghost` | Clases Tailwind ad-hoc que dupliquen estos roles |
+| Botones en tablas densas | `.btn-table`, `.btn-table-edit`, `.btn-table-delete`, `.btn-table-copy`, … | Mezclar `btn-table-*` con jerarquía visual de `btn-primary` en el mismo contexto sin criterio |
 
-Antes de escribir cualquier código frontend, leer obligatoriamente:
-- `.claude/skills/frontend.md` — Design system, componentes, patrones JS y checklist de calidad
-```
+**Design system completo (layout shell, sidebar, responsive, calendario, pipeline CSS):** `.cursor/rules/20-frontend-design-system.mdc`.
+
 **Al terminar cualquier tarea que toque el frontend, ejecutar siempre:**
 ```bash
 node scripts/tooling/audit-ui-monitored.js
 ```
 El resultado debe tener **0 problemas de alta prioridad** antes de hacer commit.
 Si hay problemas de alta prioridad, ejecutar `node scripts/tooling/migrate-colors.js` para corregirlos automáticamente.
-Luego reconstruir el CSS: `cd backend && npm run build`.
+Luego reconstruir el CSS si cambiaste estilos: `cd backend && npm run build:css` (panel admin) o `npm run build` para admin + sitio público.
 
 ## 🧩 Modularidad — Convenciones (OBLIGATORIO)
 El código debe ser modular. Un archivo que falla NO debe tumbar todo el sistema.
