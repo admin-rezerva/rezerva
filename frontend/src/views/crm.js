@@ -35,9 +35,9 @@ export async function render() {
                 </div>
             </div>
 
-            <!-- Tabs -->
-            <div class="border-b border-gray-200">
-                <nav class="flex gap-6 -mb-px">
+            <!-- Tabs: scroll horizontal en móvil si no caben -->
+            <div class="border-b border-gray-200 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:h-0">
+                <nav class="flex min-w-0 flex-nowrap gap-4 -mb-px sm:gap-6">
                     <button id="tab-pipeline" class="crm-tab pb-3 text-sm ${getTabClasses('pipeline')}" data-tab="pipeline">
                         <i class="fa-solid fa-chart-column mr-1.5"></i>Pipeline
                     </button>

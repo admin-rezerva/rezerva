@@ -25,7 +25,7 @@ export function renderPipeline(dashboard) {
     const { segmentos, kpis } = dashboard;
 
     const kpisHtml = `
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div class="bg-white rounded-xl border border-gray-200 p-4">
                 <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide">Total Clientes</p>
                 <p class="text-2xl font-bold text-gray-900">${kpis.totalClientes}</p>
@@ -54,7 +54,7 @@ export function renderPipeline(dashboard) {
             : `border-${seg.color}-300`;
 
         return `
-        <div class="flex-1 min-w-[200px]">
+        <div class="w-[85vw] flex-shrink-0 snap-center sm:w-[320px] md:w-auto md:flex-1 md:min-w-[200px]">
             <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
                 <div class="px-4 py-3 border-b-2 ${headerBorder} bg-gray-50">
                     <div class="flex items-center justify-between">
@@ -73,11 +73,11 @@ export function renderPipeline(dashboard) {
 
     return `
         ${kpisHtml}
-        <div class="flex items-center justify-between mb-4">
+        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h3 class="text-lg font-semibold text-gray-900">Pipeline por Segmento</h3>
-            <button id="pipeline-recalcular-btn" class="btn-outline text-sm flex items-center gap-1.5"><i class="fa-solid fa-rotate"></i> Recalcular Segmentos</button>
+            <button id="pipeline-recalcular-btn" type="button" class="btn-outline flex w-full items-center justify-center gap-1.5 text-sm sm:w-auto"><i class="fa-solid fa-rotate"></i> Recalcular Segmentos</button>
         </div>
-        <div class="flex gap-4 overflow-x-auto pb-4">${columnsHtml}</div>
+        <div class="flex gap-4 pb-4 max-md:snap-x max-md:snap-mandatory max-md:overflow-x-auto max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden md:overflow-x-visible md:snap-none">${columnsHtml}</div>
 
         <div id="pipeline-sidebar" class="fixed inset-y-0 right-0 w-96 bg-white shadow-2xl border-l border-gray-200 transform translate-x-full transition-transform duration-300 z-50">
             <div class="p-6 h-full overflow-y-auto">
