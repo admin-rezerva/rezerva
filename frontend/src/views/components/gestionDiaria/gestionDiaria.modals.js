@@ -91,7 +91,7 @@ async function abrirEdicionCliente(clienteId) {
     }
 }
 
-export function openManagementModal(type, grupo, allEstados = []) {
+export async function openManagementModal(type, grupo, allEstados = []) {
     currentGrupo = grupo;
     currentAllEstados = allEstados;
     const modal = document.getElementById('gestion-modal');
@@ -122,7 +122,8 @@ export function openManagementModal(type, grupo, allEstados = []) {
         },
     };
 
-    const shouldOpenModal = actionMap[type] ? actionMap[type]() : true;
+    const fn = actionMap[type];
+    const shouldOpenModal = fn ? await Promise.resolve(fn()) : true;
     
     if (type !== 'bitacora' && shouldOpenModal !== false) {
         modal.classList.remove('hidden');

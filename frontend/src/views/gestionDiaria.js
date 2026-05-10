@@ -117,7 +117,7 @@ async function loadAndRender() {
     }
 }
 
-function handleCardButtonClick(e) {
+async function handleCardButtonClick(e) {
     const target = e.target.closest('.gestion-btn, .revert-btn');
     if (!target) return;
 
@@ -129,7 +129,7 @@ function handleCardButtonClick(e) {
     if (!currentGrupo) return;
     
     if (target.classList.contains('gestion-btn')) {
-        openManagementModal(target.dataset.gestion, currentGrupo, allEstados);
+        await openManagementModal(target.dataset.gestion, currentGrupo, allEstados);
     }
     
     if (target.classList.contains('revert-btn')) {

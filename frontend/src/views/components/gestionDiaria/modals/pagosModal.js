@@ -1,4 +1,5 @@
 import { fetchAPI } from '../../../../api.js';
+import { ensurePlatformConfig, getPlatformDisplayLabelForUi } from '../../../../platformConfig.js';
 import { formatCurrency } from '../gestionDiaria.utils.js';
 import { buildGarantiaOperacionReadonlyHtml } from '../../gestionarReservas/reservas.utils.js';
 import { showPreview, handlePaste } from '../gestionDiaria.utils.js';
@@ -14,6 +15,19 @@ const ESTADOS_GARANTIA = [
     { value: 'garantia_validada', label: 'Garantía validada' },
     { value: 'garantia_rechazada', label: 'Garantía rechazada' },
 ];
+
+function escHtml(s) {
+    return String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/'/g, '&#39;')
+        .replace(/"/g, '&quot;');
+}
+
+async function platformLabelForCopy() {
+    await ensurePlatformConfig();
+    return escHtml(getPlatformDisplayLabelForUi());
+}
 
 const DEFAULT_MEDIOS = [
     { value: 'Transferencia', requiereComprobanteSugerido: true },
@@ -287,6 +301,7 @@ async function showActionForm() {
     currentAction = 'pagos';
     const container = document.getElementById('pagos-form-container');
     const saldoPendiente = currentGrupo.valorTotalHuesped - currentGrupo.abonoTotal;
+    const brand = await platformLabelForCopy();
 
     container.innerHTML = `
         <form id="modal-form-accion" class="border p-4 rounded-md">
@@ -296,7 +311,7 @@ async function showActionForm() {
                 <div><label class="block text-sm">Medio de Pago</label><select id="medio-pago-select" class="form-select"></select></div>
                 <div class="flex items-center"><input id="pago-final-checkbox" type="checkbox" class="h-4 w-4 rounded"><label for="pago-final-checkbox" class="ml-2 text-sm">¿Es el pago final?</label></div>
                 <div class="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-md p-2">
-                    Registro manual: no se procesa cobro electrónico ni link de pago desde StayManager.
+                    Registro manual: no se procesa cobro electrónico ni link de pago desde ${brand}.
                     Solo se documenta el pago recibido por canal presencial/externo.
                 </div>
             </div>
@@ -398,14 +413,15 @@ async function renderPagosList() {
     }
 }
 
-export function renderPagosModal(grupo, callback) {
+export async function renderPagosModal(grupo, callback) {
     currentGrupo = grupo;
     onActionComplete = callback;
+    const brand = await platformLabelForCopy();
     const contentContainer = document.getElementById('modal-content-container');
     const bloqueGarantia = buildGarantiaOperacionReadonlyHtml(grupo.garantiaOperacion);
     contentContainer.innerHTML = `
         <div class="mb-3 text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-md p-2">
-            Operación vigente: StayManager solo registra pagos ya recibidos (sin pasarela integrada, sin links de cobro).
+            Operación vigente: ${brand} solo registra pagos ya recibidos (sin pasarela integrada, sin links de cobro).
         </div>
         ${bloqueGarantia ? `<div id="garantia-estado-readonly" class="mb-3">${bloqueGarantia}</div>` : ''}
         ${renderGarantiaEstadoForm(grupo)}

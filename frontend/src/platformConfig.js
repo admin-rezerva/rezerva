@@ -52,6 +52,15 @@ export function getPlatformDisplayLabel() {
     return getPlatformProductName() || getPlatformDomain() || '';
 }
 
+/**
+ * Copy en español cuando el texto necesita un nombre ("desde X", "X solo registra…").
+ * Si aún no cargó la API o viene vacío, evita dejar el hueco sin sustantivo.
+ */
+export function getPlatformDisplayLabelForUi(fallback = 'la plataforma') {
+    const l = getPlatformDisplayLabel().trim();
+    return l || fallback;
+}
+
 export function getSidebarBrandInitials() {
     return initialsFromLabel(getPlatformDisplayLabel());
 }

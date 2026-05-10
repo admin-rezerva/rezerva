@@ -1,11 +1,22 @@
 import { fetchAPI } from '../api.js';
+import { ensurePlatformConfig, getPlatformDisplayLabelForUi } from '../platformConfig.js';
 
-export function render() {
+function escHtml(s) {
+    return String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/'/g, '&#39;')
+        .replace(/"/g, '&quot;');
+}
+
+export async function render() {
+    await ensurePlatformConfig();
+    const brand = escHtml(getPlatformDisplayLabelForUi());
     return `
         <div class="bg-white p-8 rounded-lg shadow max-w-2xl mx-auto">
             <h2 class="text-2xl font-semibold text-gray-900 mb-2">Autorizar Conexión con Google</h2>
             <p class="text-gray-600 mt-4">
-                Al autorizar, StayManager podrá acceder a dos servicios de Google con un solo click:
+                Al autorizar, ${brand} podrá acceder a dos servicios de Google con un solo click:
             </p>
             <ul class="mt-3 space-y-1 text-gray-600 text-sm list-disc list-inside">
                 <li><strong>Google Contacts</strong> — sincroniza clientes automáticamente</li>
