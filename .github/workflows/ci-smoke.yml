@@ -14,11 +14,11 @@ jobs:
         with:
           node-version: '20'
       # Raíz: dependencias de `package.json` (scripts test:ci vía `npm run`). Backend: `pg`, Express, servicios bajo `backend/`.
-      # `working-directory: backend` + `npm ci` es más fiable en ubuntu-latest que `npm ci --prefix backend` (evita fallos inmediatos por resolución de prefijo en algunas versiones de npm).
+      # Backend: solo dependencias de producción. `firebase-tools` y `tailwindcss` (dev) no participan en `test:ci` y su árbol ha provocado `npm ci` fallando al instante en ubuntu-latest.
       - name: npm ci (raíz)
         run: npm ci
-      - name: npm ci (backend)
+      - name: npm ci (backend, prod)
         working-directory: backend
-        run: npm ci
+        run: npm ci --omit=dev
       - name: Cadena test:ci (plan release 1.0.0 §2 + regresión)
         run: npm run test:ci
