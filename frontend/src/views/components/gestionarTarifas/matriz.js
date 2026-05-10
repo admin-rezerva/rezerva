@@ -103,7 +103,8 @@ export function renderMatriz(temporada, tarifas, propiedades) {
             </div>
 
             <!-- Tabla -->
-            <div class="flex-1 min-h-0 w-full overflow-x-auto overflow-y-auto">
+            <div class="min-h-0 flex-1 overflow-y-auto">
+                <div class="w-full overflow-x-auto">
                 <table class="min-w-[800px] w-full bg-white border border-gray-200 rounded-xl overflow-hidden text-sm">
                     <thead class="bg-gray-50 border-b">
                         <tr>
@@ -162,6 +163,7 @@ export function renderMatriz(temporada, tarifas, propiedades) {
                         `).join('')}
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>`;
 

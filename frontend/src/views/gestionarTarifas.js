@@ -30,20 +30,21 @@ export async function render() {
         </div>`;
     }
 
+    // Temporadas: scroll horizontal en móvil; matriz con overflow-x en components/gestionarTarifas/matriz.js.
     return `
-    <div class="flex flex-col lg:flex-row gap-6 lg:h-[calc(100vh-130px)] min-h-0">
+    <div class="flex flex-col gap-6 lg:flex-row min-h-0 lg:h-[calc(100vh-130px)]">
 
         <!-- Panel izquierdo: lista de temporadas -->
-        <div class="w-full lg:w-80 lg:shrink-0 bg-white rounded-xl shadow flex flex-col lg:min-h-0">
-            <div class="flex items-center justify-between px-4 pt-4 pb-3 border-b flex-shrink-0">
+        <div class="flex w-full flex-shrink-0 flex-col bg-white rounded-xl shadow lg:max-h-[calc(100vh-140px)] lg:w-80 lg:min-h-0 lg:overflow-y-auto">
+            <div class="flex flex-shrink-0 items-center justify-between border-b px-4 pb-3 pt-4">
                 <h2 class="font-semibold text-gray-900">Temporadas</h2>
                 <button id="nueva-temporada-btn" class="btn-primary text-sm px-3 py-1.5">+ Nueva</button>
             </div>
-            <div id="temporadas-lista" class="flex-grow overflow-y-auto p-3 space-y-2"></div>
+            <div id="temporadas-lista" class="flex min-h-0 flex-1 gap-4 overflow-x-auto p-3 pb-4 snap-x lg:flex-col lg:overflow-visible lg:pb-0"></div>
         </div>
 
         <!-- Panel derecho: matriz de precios -->
-        <div class="flex-1 min-w-0 bg-white rounded-xl shadow p-4 overflow-hidden flex flex-col lg:min-h-0" id="matriz-container">
+        <div class="flex min-w-0 flex-1 flex-col overflow-hidden bg-white rounded-xl p-4 shadow lg:min-h-0" id="matriz-container">
             <div class="h-full flex flex-col items-center justify-center text-gray-400 py-20">
                 <div class="text-5xl mb-4">👈</div>
                 <p class="text-sm">Selecciona una temporada para ver y editar los precios</p>

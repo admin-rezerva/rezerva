@@ -305,10 +305,13 @@ export function renderMenu(currentUser = null) {
             e.preventDefault();
             const path = e.currentTarget.getAttribute('href');
 
+            // Cierra el drawer móvil al navegar (mismas clases que setupSidebarToggle en app.js).
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
             const sidebar = document.getElementById('sidebar');
-            if (sidebar?.classList.contains('open')) {
-                sidebar.classList.remove('open');
-                document.getElementById('sidebar-overlay').classList.remove('visible');
+            if (sidebar && sidebarOverlay && !sidebarOverlay.classList.contains('hidden')) {
+                sidebar.classList.add('-translate-x-full');
+                sidebar.classList.remove('translate-x-0');
+                sidebarOverlay.classList.add('hidden');
             }
 
             if (path !== '#') handleNavigation(path);

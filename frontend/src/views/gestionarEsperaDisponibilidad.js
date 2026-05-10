@@ -75,10 +75,11 @@ async function handleReconcileClick() {
     }
 }
 
+/** Tabla con scroll horizontal en pantallas chicas; cabecera y botón en columna en móvil. */
 export async function render() {
     return `
     <div class="space-y-4 rounded-lg bg-white p-4 shadow sm:p-8">
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div class="min-w-0 flex-1">
           <h2 class="text-xl font-semibold text-gray-900 sm:text-2xl">Lista de espera de disponibilidad</h2>
           <p class="mt-1 text-sm text-gray-500">Seguimiento de clientes sin disponibilidad y estado de notificación.</p>
@@ -86,7 +87,7 @@ export async function render() {
         <button type="button" id="espera-reconciliar-btn" class="btn-outline w-full shrink-0 sm:w-auto">Reconciliar ahora</button>
       </div>
       <p id="espera-reconciliar-status" class="text-xs text-gray-500"></p>
-      <div class="w-full overflow-x-auto rounded-lg border border-gray-200">
+      <div class="w-full overflow-x-auto hide-scrollbar">
         <table class="min-w-full whitespace-nowrap bg-white">
           <thead>
             <tr>

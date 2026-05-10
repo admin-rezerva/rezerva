@@ -39,6 +39,28 @@
     -webkit-overflow-scrolling: touch;
 }
 
+@layer utilities {
+    /* Scroll horizontal más discreto (evita barra gruesa del sistema en escritorio) */
+    .hide-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+        height: 6px;
+        width: 6px;
+    }
+    .hide-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .hide-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+    .hide-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+}
+
 /* --- Componentes de Formulario --- */
 @layer components {
     .form-input, .form-select {
@@ -258,7 +280,8 @@
     padding: 0 0.25rem; border-radius: 9999px;
     display: none; align-items: center; justify-content: center;
 }
-@media (min-width: 768px) {
+/* lg (1024px): alineado con Tailwind lg: del shell en app.js */
+@media (min-width: 1024px) {
     .sidebar { position: static; transform: none; flex-shrink: 0; }
     .sidebar-overlay { display: none; }
     .sidebar.collapsed { width: 64px; }

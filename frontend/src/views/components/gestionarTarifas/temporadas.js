@@ -53,7 +53,7 @@ export function renderListaTemporadas(temporadas, totalPropiedades) {
 
     if (temporadas.length === 0) {
         container.innerHTML = `
-            <div class="text-center py-12 text-gray-400">
+            <div class="w-full shrink-0 text-center py-12 text-gray-400 lg:w-auto">
                 <div class="h-14 w-14 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-3">
                     <i class="fa-solid fa-calendar-days text-2xl text-gray-300"></i>
                 </div>
@@ -69,7 +69,7 @@ export function renderListaTemporadas(temporadas, totalPropiedades) {
         const colorCobertura = cobertura === 100 ? 'bg-success-500' : cobertura > 0 ? 'bg-warning-500' : 'bg-gray-200';
 
         return `
-        <div data-id="${t.id}" class="temporada-item group cursor-pointer rounded-xl border p-4 transition-all
+        <div data-id="${t.id}" class="temporada-item group w-72 shrink-0 snap-start cursor-pointer rounded-xl border p-4 transition-all lg:w-full
              ${isActiva ? 'border-primary-400 bg-primary-50 shadow-sm' : 'border-gray-200 hover:border-primary-200 hover:bg-gray-50'}">
             <div class="flex items-start justify-between gap-2">
                 <div class="flex-1 min-w-0">

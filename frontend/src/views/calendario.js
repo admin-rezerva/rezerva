@@ -112,6 +112,7 @@ function renderNavegacion() {
 }
 
 
+/** Vista sustituta en móvil: tarjetas por recurso y 7 días en columna (el Gantt queda oculto hasta `lg`). */
 function renderVistaCompacta() {
     const año = mesActual.getFullYear();
     const mes = mesActual.getMonth();
@@ -132,7 +133,7 @@ function renderVistaCompacta() {
             ? `<span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">${rec.capacidad} huésp.</span>`
             : '';
 
-        const columnas = dias7.map(iso => {
+        const filasDia = dias7.map(iso => {
             const d = new Date(iso + 'T00:00:00');
             const letra = DIAS_SEMANA_CORTA[d.getDay()];
             const num = d.getDate();
@@ -140,16 +141,16 @@ function renderVistaCompacta() {
             const occ = ocupacionEnDia(rec.id, iso, todosEventos);
 
             const labelCls = esHoy
-                ? 'text-[10px] sm:text-xs font-semibold text-primary-600'
-                : 'text-[10px] sm:text-xs text-gray-600';
+                ? 'text-xs font-semibold text-primary-600 tabular-nums'
+                : 'text-xs text-gray-600 tabular-nums';
 
             let celda;
             if (!occ) {
-                celda = '<div class="w-full min-h-7 rounded-md bg-gray-200 shrink-0 touch-manipulation" aria-hidden="true"></div>';
+                celda = '<div class="min-h-6 flex-1 rounded-md bg-gray-200 touch-manipulation" aria-hidden="true"></div>';
             } else if (occ.tipo === 'bloqueo') {
                 const p = occ.ev.extendedProps;
                 const payload = JSON.stringify({ tipo: 'bloqueo', motivo: p.motivo, start: occ.ev.start, end: occ.ev.end }).replace(/'/g, '&#39;');
-                celda = `<div class="cal-compact-bloque w-full min-h-7 rounded-md bg-gray-700 shrink-0 touch-manipulation" data-reserva='${payload}'></div>`;
+                celda = `<div class="cal-compact-bloque min-h-6 flex-1 rounded-md bg-gray-700 touch-manipulation" data-reserva='${payload}'></div>`;
             } else {
                 const p = occ.ev.extendedProps;
                 const payload = JSON.stringify({
@@ -166,35 +167,35 @@ function renderVistaCompacta() {
                     idReserva: p.idReserva,
                     idReservaCanal: p.idReservaCanal
                 }).replace(/'/g, '&#39;');
-                celda = `<div class="cal-compact-bloque w-full min-h-7 rounded-md shrink-0 cursor-pointer touch-manipulation" style="background:${color}" data-reserva='${payload}'></div>`;
+                celda = `<div class="cal-compact-bloque min-h-6 flex-1 rounded-md cursor-pointer touch-manipulation" style="background:${color}" data-reserva='${payload}'></div>`;
             }
 
             return `
-                <div class="flex-1 flex flex-col items-center gap-1 min-w-0">
-                    <div class="${labelCls} whitespace-nowrap"><span>${letra}</span> <span>${num}</span></div>
+                <div class="flex min-w-0 items-center gap-2">
+                    <span class="${labelCls} w-9 shrink-0 whitespace-nowrap">${letra} ${num}</span>
                     ${celda}
                 </div>`;
         }).join('');
 
         return `
-            <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                <div class="flex items-center justify-between gap-2 mb-3">
-                    <div class="flex items-center gap-2 min-w-0">
-                        <span class="w-3 h-3 rounded-full shrink-0" style="background:${color}"></span>
-                        <span class="font-semibold text-gray-900 truncate">${rec.title}</span>
+            <div class="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                <div class="flex flex-shrink-0 items-center justify-between gap-2">
+                    <div class="flex min-w-0 items-center gap-2">
+                        <span class="h-3 w-3 shrink-0 rounded-full" style="background:${color}"></span>
+                        <span class="truncate font-semibold text-gray-900">${rec.title}</span>
                     </div>
                     ${badgeCap}
                 </div>
-                <div class="flex justify-between gap-1">${columnas}</div>
+                <div class="flex min-w-0 flex-col gap-2">${filasDia}</div>
             </div>`;
     }).join('');
 
     return `
-        <div class="mb-1">
+        <div class="flex flex-col gap-1">
             <h3 class="text-base font-semibold text-gray-900">Próximos 7 días</h3>
-            <p class="text-xs text-gray-500 mt-0.5">${rango}</p>
+            <p class="text-xs text-gray-500">${rango}</p>
         </div>
-        <div class="space-y-4">${tarjetas}</div>`;
+        <div class="flex flex-col gap-4">${tarjetas}</div>`;
 }
 
 function actualizarGantt() {

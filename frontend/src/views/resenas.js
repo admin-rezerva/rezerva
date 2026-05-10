@@ -1,4 +1,4 @@
-// frontend/src/views/resenas.js
+// frontend/src/views/resenas.js — KPIs y filtros en grid responsivo; botones w-full en móvil.
 import { fetchAPI } from '../api.js';
 import { renderModalManual, setupModalManual } from './components/resenas/resenas.modal.js';
 import { renderModalAuto, setupModalAuto } from './components/resenas/resenas.auto.js';
@@ -32,22 +32,21 @@ function badgeEstado(estado) {
 function renderResumenKPIs(res) {
     if (!res || !res.total) return '<p class="text-gray-400 text-sm">Sin reseñas registradas todavía.</p>';
     return `
-        <div class="flex flex-wrap gap-4 items-center">
-            <div class="text-center">
+        <div class="flex w-full flex-col gap-6 md:flex-row md:items-start md:gap-8">
+            <div class="flex flex-shrink-0 flex-col items-center gap-1 text-center md:items-start md:text-left">
                 <div class="text-3xl font-bold text-primary-600">${res.promedio_general != null ? (parseFloat(res.promedio_general) * 2).toFixed(1) : '—'}</div>
-                <div class="text-xs text-gray-500 mt-0.5">Promedio general (/10)</div>
-                <div class="text-lg mt-0.5">${estrellas(res.promedio_general)}</div>
+                <div class="text-xs text-gray-500">Promedio general (/10)</div>
+                <div class="text-lg">${estrellas(res.promedio_general)}</div>
+                <div class="text-sm text-gray-500">${res.total} reseña${res.total !== 1 ? 's' : ''}
+                    ${res.pendientes > 0 ? `<span class="ml-2 inline-block px-2 py-0.5 bg-warning-100 text-warning-700 rounded-full text-xs font-semibold">${res.pendientes} pendiente${res.pendientes !== 1 ? 's' : ''}</span>` : ''}
+                </div>
             </div>
-            <div class="w-px h-12 bg-gray-200 hidden md:block"></div>
-            <div class="flex flex-wrap gap-3 flex-1">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 w-full min-w-0">
                 ${CATS.map(c => `
-                    <div class="text-center min-w-[70px]">
+                    <div class="text-center">
                         <div class="text-sm font-semibold text-gray-700">${res[c.key] ?? '—'}</div>
                         <div class="text-xs text-gray-400">${c.label}</div>
                     </div>`).join('')}
-            </div>
-            <div class="text-sm text-gray-500">${res.total} reseña${res.total !== 1 ? 's' : ''}
-                ${res.pendientes > 0 ? `<span class="ml-2 px-2 py-0.5 bg-warning-100 text-warning-700 rounded-full text-xs font-semibold">${res.pendientes} pendiente${res.pendientes !== 1 ? 's' : ''}</span>` : ''}
             </div>
         </div>`;
 }
@@ -115,49 +114,53 @@ export function render() {
     return `
         <div class="space-y-6">
             <div class="bg-white p-6 rounded-xl shadow-sm">
-                <h2 class="text-xl font-semibold text-gray-900 mb-4">⭐ Reseñas</h2>
-                <div id="resumen-kpis" class="text-gray-400 text-sm">Cargando...</div>
+                <div class="flex flex-col gap-4 md:flex-row md:items-start md:gap-6">
+                    <h2 class="text-xl font-semibold text-gray-900 md:shrink-0">⭐ Reseñas</h2>
+                    <div id="resumen-kpis" class="min-w-0 flex-1 text-gray-400 text-sm">Cargando...</div>
+                </div>
             </div>
 
             <div class="bg-white p-6 rounded-xl shadow-sm">
-                <div class="flex flex-wrap gap-3 items-end mb-5">
-                    <div class="min-w-[180px] flex-1 max-w-md">
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Buscar</label>
-                        <input type="search" id="buscar-resenas" class="form-input text-sm w-full" placeholder="Nombre, texto, alojamiento, reserva…" autocomplete="off">
+                <div class="mb-5 flex w-full flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full min-w-0">
+                        <div class="min-w-0">
+                            <label class="mb-1 block text-xs font-medium text-gray-500">Buscar</label>
+                            <input type="search" id="buscar-resenas" class="form-input w-full text-sm" placeholder="Nombre, texto, alojamiento, reserva…" autocomplete="off">
+                        </div>
+                        <div class="min-w-0">
+                            <label class="mb-1 block text-xs font-medium text-gray-500">Orden</label>
+                            <select id="orden-resenas" class="form-select w-full text-sm min-w-0">
+                                <option value="created_at_desc">Más recientes</option>
+                                <option value="created_at_asc">Más antiguas</option>
+                                <option value="punt_general_desc">Mayor puntuación</option>
+                                <option value="punt_general_asc">Menor puntuación</option>
+                                <option value="nombre_asc">Nombre A–Z</option>
+                                <option value="nombre_desc">Nombre Z–A</option>
+                                <option value="propiedad_asc">Alojamiento A–Z</option>
+                                <option value="propiedad_desc">Alojamiento Z–A</option>
+                                <option value="fecha_resena_desc">Fecha reseña (reciente)</option>
+                            </select>
+                        </div>
+                        <div class="min-w-0">
+                            <label class="mb-1 block text-xs font-medium text-gray-500">Estado</label>
+                            <select id="filtro-estado" class="form-select w-full text-sm">
+                                <option value="">Todos</option>
+                                <option value="pendiente">Pendientes</option>
+                                <option value="publicada">Publicadas</option>
+                                <option value="oculta">Ocultas</option>
+                            </select>
+                        </div>
+                        <div class="min-w-0">
+                            <label class="mb-1 block text-xs font-medium text-gray-500">Alojamiento</label>
+                            <select id="filtro-propiedad" class="form-select w-full text-sm">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Orden</label>
-                        <select id="orden-resenas" class="form-select text-sm min-w-[200px]">
-                            <option value="created_at_desc">Más recientes</option>
-                            <option value="created_at_asc">Más antiguas</option>
-                            <option value="punt_general_desc">Mayor puntuación</option>
-                            <option value="punt_general_asc">Menor puntuación</option>
-                            <option value="nombre_asc">Nombre A–Z</option>
-                            <option value="nombre_desc">Nombre Z–A</option>
-                            <option value="propiedad_asc">Alojamiento A–Z</option>
-                            <option value="propiedad_desc">Alojamiento Z–A</option>
-                            <option value="fecha_resena_desc">Fecha reseña (reciente)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Estado</label>
-                        <select id="filtro-estado" class="form-select text-sm">
-                            <option value="">Todos</option>
-                            <option value="pendiente">Pendientes</option>
-                            <option value="publicada">Publicadas</option>
-                            <option value="oculta">Ocultas</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Alojamiento</label>
-                        <select id="filtro-propiedad" class="form-select text-sm">
-                            <option value="">Todos</option>
-                        </select>
-                    </div>
-                    <button id="btn-filtrar" type="button" class="btn-primary text-sm">Aplicar</button>
-                    <div class="ml-auto flex flex-wrap gap-2 justify-end">
-                        <button id="btn-generar-auto" type="button" class="btn-outline text-sm">✨ Generar automáticas</button>
-                        <button id="btn-nueva-manual" type="button" class="btn-outline text-sm">📝 Cargar reseña manual</button>
+                    <div class="flex w-full shrink-0 flex-col gap-2 sm:flex-row sm:flex-wrap md:w-auto md:justify-end">
+                        <button id="btn-filtrar" type="button" class="btn-primary w-full text-sm sm:w-auto">Aplicar</button>
+                        <button id="btn-generar-auto" type="button" class="btn-outline w-full text-sm sm:w-auto">✨ Generar automáticas</button>
+                        <button id="btn-nueva-manual" type="button" class="btn-outline w-full text-sm sm:w-auto">📝 Cargar reseña manual</button>
                     </div>
                 </div>
                 <div id="lista-resenas" class="space-y-4">
