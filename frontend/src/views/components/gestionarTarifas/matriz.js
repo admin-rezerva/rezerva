@@ -85,10 +85,10 @@ export function renderMatriz(temporada, tarifas, propiedades) {
     const totalProps     = propiedades.length;
 
     container.innerHTML = `
-        <div class="flex flex-col h-full">
+        <div class="flex flex-col h-full min-h-0">
             <!-- Header de la temporada seleccionada -->
-            <div class="flex items-center justify-between mb-4 flex-shrink-0">
-                <div>
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4 flex-shrink-0">
+                <div class="min-w-0">
                     <h3 class="text-lg font-semibold text-gray-900">${temporada.nombre}</h3>
                     <p class="text-sm text-gray-500">${temporada.fechaInicio} → ${temporada.fechaTermino}
                         <span class="ml-2 text-xs ${totalConPrecio === totalProps ? 'text-success-600' : 'text-warning-600'} font-medium">
@@ -96,15 +96,15 @@ export function renderMatriz(temporada, tarifas, propiedades) {
                         </span>
                     </p>
                 </div>
-                <div class="flex gap-2">
-                    <button id="guardar-matriz-btn" class="btn-primary">Guardar cambios</button>
-                    <button id="limpiar-matriz-btn" class="btn-outline text-sm">Limpiar sin precio</button>
+                <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto shrink-0">
+                    <button id="guardar-matriz-btn" type="button" class="btn-primary w-full sm:w-auto">Guardar cambios</button>
+                    <button id="limpiar-matriz-btn" type="button" class="btn-outline text-sm w-full sm:w-auto">Limpiar sin precio</button>
                 </div>
             </div>
 
             <!-- Tabla -->
-            <div class="overflow-auto flex-grow">
-                <table class="min-w-full bg-white border border-gray-200 rounded-xl overflow-hidden text-sm">
+            <div class="flex-1 min-h-0 w-full overflow-x-auto overflow-y-auto">
+                <table class="min-w-[800px] w-full bg-white border border-gray-200 rounded-xl overflow-hidden text-sm">
                     <thead class="bg-gray-50 border-b">
                         <tr>
                             <th class="th text-left pl-4">Alojamiento</th>

@@ -3,6 +3,8 @@ import { fetchAPI } from '../api.js';
 import { handleNavigation } from '../router.js';
 import { renderGantt, colorPropiedad, diasDelMes } from './components/calendario/calendario.gantt.js';
 
+const DIAS_SEMANA_CORTA = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+
 let todosEventos = [];
 let todosRecursos = [];
 let metricas = {};
@@ -15,6 +17,49 @@ function hoyISO() {
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
+/** Siete fechas ISO: desde hoy si el mes visible es el actual; si no, desde el día 1 del mes visible. */
+function diasParaVistaCompacta(año, mes) {
+    const hoy = new Date();
+    const esMesActual = año === hoy.getFullYear() && mes === hoy.getMonth();
+    const out = [];
+    if (esMesActual) {
+        let cur = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+        for (let i = 0; i < 7; i++) {
+            const yy = cur.getFullYear();
+            const mm = String(cur.getMonth() + 1).padStart(2, '0');
+            const dd = String(cur.getDate()).padStart(2, '0');
+            out.push(`${yy}-${mm}-${dd}`);
+            cur.setDate(cur.getDate() + 1);
+        }
+        return out;
+    }
+    let cur = new Date(año, mes, 1);
+    for (let i = 0; i < 7; i++) {
+        const yy = cur.getFullYear();
+        const mm = String(cur.getMonth() + 1).padStart(2, '0');
+        const dd = String(cur.getDate()).padStart(2, '0');
+        out.push(`${yy}-${mm}-${dd}`);
+        cur.setDate(cur.getDate() + 1);
+    }
+    return out;
+}
+
+function ocupacionEnDia(resourceId, iso, eventos) {
+    const matches = eventos.filter(e => e.resourceId === resourceId && iso >= e.start && iso < e.end);
+    if (!matches.length) return null;
+    const bloq = matches.find(e => e.extendedProps?.tipo === 'bloqueo');
+    if (bloq) return { tipo: 'bloqueo', ev: bloq };
+    return { tipo: 'reserva', ev: matches[0] };
+}
+
+function etiquetaRangoDias(diasISO) {
+    if (!diasISO.length) return '';
+    const a = new Date(diasISO[0] + 'T00:00:00');
+    const b = new Date(diasISO[diasISO.length - 1] + 'T00:00:00');
+    const o = { day: 'numeric', month: 'short' };
+    return `${a.toLocaleDateString('es-CL', o)} – ${b.toLocaleDateString('es-CL', o)}`;
+}
+
 function nombreMes(fecha) {
     return fecha.toLocaleDateString('es-CL', { month: 'long', year: 'numeric' });
 }
@@ -25,22 +70,22 @@ function renderMetricas() {
         : 0;
 
     return `
-        <div class="cal-metricas">
-            <div class="cal-metrica-card">
-                <p class="cal-metrica-val">${metricas.reservasActivas ?? 0}</p>
-                <p class="cal-metrica-label">Reservas activas</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <div class="bg-white border border-gray-200 rounded-xl py-3.5 px-5 text-center shadow-sm">
+                <p class="text-[1.75rem] font-bold text-slate-900 leading-none">${metricas.reservasActivas ?? 0}</p>
+                <p class="text-[0.72rem] text-slate-500 mt-1 uppercase tracking-wide">Reservas activas</p>
             </div>
-            <div class="cal-metrica-card">
-                <p class="cal-metrica-val text-success-600">${ocupPct}%</p>
-                <p class="cal-metrica-label">Ocupación hoy</p>
+            <div class="bg-white border border-gray-200 rounded-xl py-3.5 px-5 text-center shadow-sm">
+                <p class="text-[1.75rem] font-bold text-success-600 leading-none">${ocupPct}%</p>
+                <p class="text-[0.72rem] text-slate-500 mt-1 uppercase tracking-wide">Ocupación hoy</p>
             </div>
-            <div class="cal-metrica-card">
-                <p class="cal-metrica-val text-warning-600">${metricas.checkinHoy ?? 0}</p>
-                <p class="cal-metrica-label">Check-ins hoy</p>
+            <div class="bg-white border border-gray-200 rounded-xl py-3.5 px-5 text-center shadow-sm">
+                <p class="text-[1.75rem] font-bold text-warning-600 leading-none">${metricas.checkinHoy ?? 0}</p>
+                <p class="text-[0.72rem] text-slate-500 mt-1 uppercase tracking-wide">Check-ins hoy</p>
             </div>
-            <div class="cal-metrica-card">
-                <p class="cal-metrica-val">${metricas.checkoutHoy ?? 0}</p>
-                <p class="cal-metrica-label">Check-outs hoy</p>
+            <div class="bg-white border border-gray-200 rounded-xl py-3.5 px-5 text-center shadow-sm">
+                <p class="text-[1.75rem] font-bold text-slate-900 leading-none">${metricas.checkoutHoy ?? 0}</p>
+                <p class="text-[0.72rem] text-slate-500 mt-1 uppercase tracking-wide">Check-outs hoy</p>
             </div>
         </div>`;
 }
@@ -67,6 +112,91 @@ function renderNavegacion() {
 }
 
 
+function renderVistaCompacta() {
+    const año = mesActual.getFullYear();
+    const mes = mesActual.getMonth();
+    const dias7 = diasParaVistaCompacta(año, mes);
+    const hoy = hoyISO();
+    const rango = etiquetaRangoDias(dias7);
+
+    if (!todosRecursos.length) {
+        return `
+            <div class="rounded-xl border border-gray-200 bg-white p-6 text-center text-gray-500 text-sm shadow-sm">
+                No hay alojamientos para mostrar.
+            </div>`;
+    }
+
+    const tarjetas = todosRecursos.map(rec => {
+        const color = colorMap[rec.id];
+        const badgeCap = rec.capacidad
+            ? `<span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">${rec.capacidad} huésp.</span>`
+            : '';
+
+        const columnas = dias7.map(iso => {
+            const d = new Date(iso + 'T00:00:00');
+            const letra = DIAS_SEMANA_CORTA[d.getDay()];
+            const num = d.getDate();
+            const esHoy = iso === hoy;
+            const occ = ocupacionEnDia(rec.id, iso, todosEventos);
+
+            const labelCls = esHoy
+                ? 'text-[10px] sm:text-xs font-semibold text-primary-600'
+                : 'text-[10px] sm:text-xs text-gray-600';
+
+            let celda;
+            if (!occ) {
+                celda = '<div class="w-full min-h-7 rounded-md bg-gray-200 shrink-0 touch-manipulation" aria-hidden="true"></div>';
+            } else if (occ.tipo === 'bloqueo') {
+                const p = occ.ev.extendedProps;
+                const payload = JSON.stringify({ tipo: 'bloqueo', motivo: p.motivo, start: occ.ev.start, end: occ.ev.end }).replace(/'/g, '&#39;');
+                celda = `<div class="cal-compact-bloque w-full min-h-7 rounded-md bg-gray-700 shrink-0 touch-manipulation" data-reserva='${payload}'></div>`;
+            } else {
+                const p = occ.ev.extendedProps;
+                const payload = JSON.stringify({
+                    clienteNombre: p.clienteNombre,
+                    alojamientoNombre: p.alojamientoNombre,
+                    canalNombre: p.canalNombre,
+                    start: occ.ev.start,
+                    end: occ.ev.end,
+                    totalNoches: p.totalNoches,
+                    huespedes: p.huespedes,
+                    telefono: p.telefono,
+                    estado: p.estado,
+                    estadoGestion: p.estadoGestion,
+                    idReserva: p.idReserva,
+                    idReservaCanal: p.idReservaCanal
+                }).replace(/'/g, '&#39;');
+                celda = `<div class="cal-compact-bloque w-full min-h-7 rounded-md shrink-0 cursor-pointer touch-manipulation" style="background:${color}" data-reserva='${payload}'></div>`;
+            }
+
+            return `
+                <div class="flex-1 flex flex-col items-center gap-1 min-w-0">
+                    <div class="${labelCls} whitespace-nowrap"><span>${letra}</span> <span>${num}</span></div>
+                    ${celda}
+                </div>`;
+        }).join('');
+
+        return `
+            <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                <div class="flex items-center justify-between gap-2 mb-3">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="w-3 h-3 rounded-full shrink-0" style="background:${color}"></span>
+                        <span class="font-semibold text-gray-900 truncate">${rec.title}</span>
+                    </div>
+                    ${badgeCap}
+                </div>
+                <div class="flex justify-between gap-1">${columnas}</div>
+            </div>`;
+    }).join('');
+
+    return `
+        <div class="mb-1">
+            <h3 class="text-base font-semibold text-gray-900">Próximos 7 días</h3>
+            <p class="text-xs text-gray-500 mt-0.5">${rango}</p>
+        </div>
+        <div class="space-y-4">${tarjetas}</div>`;
+}
+
 function actualizarGantt() {
     const año = mesActual.getFullYear();
     const mes = mesActual.getMonth();
@@ -76,6 +206,9 @@ function actualizarGantt() {
     const contenedor = document.getElementById('gantt-contenedor');
     if (!contenedor) return;
     contenedor.innerHTML = renderGantt(todosRecursos, todosEventos, colorMap, dias, hoy);
+
+    const compacta = document.getElementById('cal-compacta-wrap');
+    if (compacta) compacta.innerHTML = renderVistaCompacta();
 
     document.getElementById('cal-mes-label').textContent = nombreMes(mesActual);
 
@@ -105,7 +238,7 @@ function actualizarGantt() {
 function adjuntarEventosGantt() {
     const tooltip = document.getElementById('cal-tooltip');
 
-    document.querySelectorAll('.gantt-bloque').forEach(bloque => {
+    document.querySelectorAll('.gantt-bloque, .cal-compact-bloque').forEach(bloque => {
         const data = JSON.parse(bloque.dataset.reserva);
 
         bloque.addEventListener('mouseenter', () => {
@@ -197,9 +330,10 @@ export async function render() {
             </div>
             <div id="cal-metricas-wrap"></div>
             <div id="cal-leyenda-wrap"></div>
-            <div id="gantt-contenedor" class="cal-gantt-wrap">
+            <div id="gantt-contenedor" class="cal-gantt-wrap hidden lg:block">
                 <p class="text-center text-gray-400 py-12">Cargando...</p>
             </div>
+            <div id="cal-compacta-wrap" class="block lg:hidden space-y-4"></div>
         </div>
 
         <!-- Tooltip flotante -->
@@ -261,7 +395,10 @@ export async function afterRender() {
         });
 
     } catch (error) {
-        document.getElementById('gantt-contenedor').innerHTML =
-            `<p class="text-danger-500 p-6">Error al cargar el calendario: ${error.message}</p>`;
+        const msg = `<p class="text-danger-500 p-6">Error al cargar el calendario: ${error.message}</p>`;
+        const g = document.getElementById('gantt-contenedor');
+        if (g) g.innerHTML = msg;
+        const c = document.getElementById('cal-compacta-wrap');
+        if (c) c.innerHTML = msg;
     }
 }

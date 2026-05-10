@@ -287,7 +287,21 @@ try {
 
     // **PRIORIDAD 3: Frontend Admin**
     const frontendPath = path.join(__dirname, '..', 'frontend');
-    app.use('/admin-assets', express.static(frontendPath));
+    /** Sin esto, el navegador/CDN puede dejar JS/CSS viejos en caché y el panel no refleja despliegues. */
+    const adminPanelRevalidate = 'no-cache, must-revalidate';
+    app.use('/admin-assets', express.static(frontendPath, {
+        setHeaders(res, filePath) {
+            const norm = String(filePath).replace(/\\/g, '/');
+            if (norm.endsWith('.js') || /\/public\/css\/[^/]+\.css$/i.test(norm)) {
+                res.setHeader('Cache-Control', adminPanelRevalidate);
+            }
+        },
+    }));
+
+    const sendAdminSpaIndex = (res) => {
+        res.setHeader('Cache-Control', adminPanelRevalidate);
+        res.sendFile(path.join(frontendPath, 'index.html'));
+    };
 
     // **PRIORIDAD 4: Páginas Legales Globales**
     const legalRoutes = require('./routes/legal.js');
@@ -389,7 +403,7 @@ try {
         // Rutas SPA — siempre van al admin panel, aunque haya cookie force_host activa
         const spaPaths = ['/login', '/logout', '/register', '/forgot-password'];
         if (spaPaths.includes(req.path)) {
-            return res.sendFile(path.join(frontendPath, 'index.html'));
+            return sendAdminSpaIndex(res);
         }
         if (req.isMarketplace) {
             return createMarketplaceRouter(db)(req, res, next);
@@ -397,7 +411,7 @@ try {
         if (req.empresa) {
             return websiteRoutes(db)(req, res, next);
         }
-        res.sendFile(path.join(frontendPath, 'index.html'));
+        sendAdminSpaIndex(res);
     });
 
     app.listen(PORT, '0.0.0.0', () => {

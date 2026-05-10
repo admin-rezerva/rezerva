@@ -28,7 +28,7 @@ const views = {
     '/procesar-y-consolidar': () => import('./views/procesarYConsolidar.js'),
     '/gestionar-reservas': () => import('./views/gestionarReservas.js'),
     '/gestionar-dolar': () => import('./views/gestionarDolar.js'),
-    '/autorizar-google': () => import('./views/autorizarGoogle.js?v=2'),
+    '/autorizar-google': () => import('./views/autorizarGoogle.js'),
     '/empresa': () => import('./views/empresa.js'),
     '/gestionar-usuarios': () => import('./views/gestionarUsuarios.js'),
     '/historial-cargas': () => import('./views/historialCargas.js'),
@@ -49,8 +49,8 @@ const views = {
     '/normas-alojamiento': () => import('./views/normasAlojamiento.js'),
     '/website-alojamientos': () => import('./views/websiteAlojamientos.js'),
     '/gestionar-tipos-componente': () => import('./views/gestionarTiposComponente.js'),
-    '/gestionar-tipos-elemento': () => import('./views/gestionarTiposElemento.js?v=1.7'),
-    '/importador-magico': () => import('./views/importadorMagico.js?v=1.2'),
+    '/gestionar-tipos-elemento': () => import('./views/gestionarTiposElemento.js'),
+    '/importador-magico': () => import('./views/importadorMagico.js'),
     '/galeria-propiedad': () => import('./views/galeriaPropiedad.js'),
     '/espacios-comunes': () => import('./views/espaciosComunes.js'),
     '/mapeos-centrales': () => import('./views/mapeosCentrales.js'),
@@ -339,8 +339,9 @@ function initialAppPath() {
 }
 
 window.addEventListener('popstate', () => loadView(initialAppPath()));
-document.addEventListener('DOMContentLoaded', async () => {
+
+export async function startAdminApp() {
     await ensurePlatformConfig();
     applyDocumentBranding();
-    loadView(initialAppPath());
-});
+    await loadView(initialAppPath());
+}

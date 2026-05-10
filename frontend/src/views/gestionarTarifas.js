@@ -31,10 +31,10 @@ export async function render() {
     }
 
     return `
-    <div class="flex gap-4 h-[calc(100vh-130px)]">
+    <div class="flex flex-col lg:flex-row gap-6 lg:h-[calc(100vh-130px)] min-h-0">
 
         <!-- Panel izquierdo: lista de temporadas -->
-        <div class="w-72 flex-shrink-0 bg-white rounded-xl shadow flex flex-col">
+        <div class="w-full lg:w-80 lg:shrink-0 bg-white rounded-xl shadow flex flex-col lg:min-h-0">
             <div class="flex items-center justify-between px-4 pt-4 pb-3 border-b flex-shrink-0">
                 <h2 class="font-semibold text-gray-900">Temporadas</h2>
                 <button id="nueva-temporada-btn" class="btn-primary text-sm px-3 py-1.5">+ Nueva</button>
@@ -43,7 +43,7 @@ export async function render() {
         </div>
 
         <!-- Panel derecho: matriz de precios -->
-        <div class="flex-grow bg-white rounded-xl shadow p-4 overflow-hidden flex flex-col" id="matriz-container">
+        <div class="flex-1 min-w-0 bg-white rounded-xl shadow p-4 overflow-hidden flex flex-col lg:min-h-0" id="matriz-container">
             <div class="h-full flex flex-col items-center justify-center text-gray-400 py-20">
                 <div class="text-5xl mb-4">👈</div>
                 <p class="text-sm">Selecciona una temporada para ver y editar los precios</p>

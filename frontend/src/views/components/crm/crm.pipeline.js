@@ -11,6 +11,30 @@ const SEGMENTOS_CONFIG = [
     { key: '🥶 Hibernando',  color: 'gray',     icon: '🥶', label: 'Hibernando' },
 ];
 
+/** Clases completas (Tailwind las ve en el scan; evita `bg-${color}-100` que el purge puede omitir). */
+const SEGMENT_PIPELINE_STYLES = {
+    warning: {
+        badge: 'bg-warning-100 text-warning-800 border-warning-200',
+        headerBorder: 'border-warning-300',
+    },
+    success: {
+        badge: 'bg-success-100 text-success-800 border-success-200',
+        headerBorder: 'border-success-300',
+    },
+    primary: {
+        badge: 'bg-primary-100 text-primary-800 border-primary-200',
+        headerBorder: 'border-primary-300',
+    },
+    orange: {
+        badge: 'bg-orange-100 text-orange-800 border-orange-200',
+        headerBorder: 'border-orange-300',
+    },
+    gray: {
+        badge: 'bg-gray-100 text-gray-800 border-gray-200',
+        headerBorder: 'border-gray-300',
+    },
+};
+
 function getColorAvatar(name) {
     return pickAvatarRgb(name || '');
 }
@@ -46,12 +70,9 @@ export function renderPipeline(dashboard) {
 
     const columnsHtml = SEGMENTOS_CONFIG.map(seg => {
         const data = segmentos[seg.key] || { count: 0, totalGastado: 0 };
-        const badgeColor = seg.color === 'orange'
-            ? 'bg-orange-100 text-orange-800 border-orange-200'
-            : `bg-${seg.color}-100 text-${seg.color}-800 border-${seg.color}-200`;
-        const headerBorder = seg.color === 'orange'
-            ? 'border-orange-300'
-            : `border-${seg.color}-300`;
+        const pipeStyle = SEGMENT_PIPELINE_STYLES[seg.color] || SEGMENT_PIPELINE_STYLES.gray;
+        const badgeColor = pipeStyle.badge;
+        const headerBorder = pipeStyle.headerBorder;
 
         return `
         <div class="w-[85vw] flex-shrink-0 snap-center sm:w-[320px] md:w-auto md:flex-1 md:min-w-[200px]">
