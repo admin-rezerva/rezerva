@@ -75,7 +75,7 @@ export function renderPipeline(dashboard) {
         const headerBorder = pipeStyle.headerBorder;
 
         return `
-        <div class="flex-shrink-0 w-[85vw] sm:w-[320px] snap-center">
+        <div class="w-full shrink-0 md:w-[320px] md:flex-shrink-0 md:snap-center">
             <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
                 <div class="px-4 py-3 border-b-2 ${headerBorder} bg-gray-50">
                     <div class="flex items-center justify-between">
@@ -92,14 +92,15 @@ export function renderPipeline(dashboard) {
         </div>`;
     }).join('');
 
-    // Kanban: fila con scroll horizontal en móvil (snap + hide-scrollbar en source.css).
+    // Móvil: columnas en columna (evita depender del scroll horizontal bajo overflow-x-hidden del shell).
+    // md+: fila con scroll horizontal + snap (hide-scrollbar en source.css).
     return `
         ${kpisHtml}
         <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h3 class="text-lg font-semibold text-gray-900">Pipeline por Segmento</h3>
             <button id="pipeline-recalcular-btn" type="button" class="btn-outline flex w-full items-center justify-center gap-1.5 text-sm sm:w-auto"><i class="fa-solid fa-rotate"></i> Recalcular Segmentos</button>
         </div>
-        <div class="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 hide-scrollbar">${columnsHtml}</div>
+        <div class="flex w-full min-w-0 max-w-full flex-col gap-4 md:flex-row md:overflow-x-auto md:snap-x md:snap-mandatory md:gap-4 md:pb-6 hide-scrollbar touch-pan-y md:touch-pan-x">${columnsHtml}</div>
 
         <div id="pipeline-sidebar" class="fixed inset-y-0 right-0 w-96 bg-white shadow-2xl border-l border-gray-200 transform translate-x-full transition-transform duration-300 z-50">
             <div class="p-6 h-full overflow-y-auto">

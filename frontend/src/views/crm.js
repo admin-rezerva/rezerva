@@ -26,7 +26,7 @@ export async function render() {
     }
 
     return `
-        <div class="space-y-6">
+        <div class="min-w-0 space-y-6">
             <!-- Header -->
             <div class="flex items-center justify-between">
                 <div>
@@ -54,7 +54,7 @@ export async function render() {
             </div>
 
             <!-- Tab panels -->
-            <div id="panel-pipeline" class="crm-panel ${activeTab !== 'pipeline' ? 'hidden' : ''}">
+            <div id="panel-pipeline" class="crm-panel min-w-0 ${activeTab !== 'pipeline' ? 'hidden' : ''}">
                 ${renderPipeline(dashboard)}
             </div>
             <div id="panel-clientes" class="crm-panel ${activeTab !== 'clientes' ? 'hidden' : ''}">
