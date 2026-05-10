@@ -60,6 +60,29 @@ function getRenderPublicHostname() {
     return hostnameFromEnvUrl(process.env.RENDER_EXTERNAL_URL);
 }
 
+/**
+ * Origen HTTPS del panel/API (sin path final). OAuth y enlaces “canónicos” del backend.
+ * Prioridad: PANEL_PUBLIC_ORIGIN → GOOGLE_OAUTH_PUBLIC_ORIGIN → RENDER_EXTERNAL_URL.
+ * En Render con dominio custom, definir PANEL_PUBLIC_ORIGIN=https://rezerva.cl (o el host real del panel).
+ */
+function getPanelPublicOrigin() {
+    const tryOrigin = (raw) => {
+        const s = String(raw || '').trim();
+        if (!s) return '';
+        try {
+            return new URL(s).origin;
+        } catch {
+            return '';
+        }
+    };
+    return (
+        tryOrigin(process.env.PANEL_PUBLIC_ORIGIN)
+        || tryOrigin(process.env.GOOGLE_OAUTH_PUBLIC_ORIGIN)
+        || tryOrigin(process.env.RENDER_EXTERNAL_URL)
+        || ''
+    );
+}
+
 function getMarketplaceForceHostAlias() {
     return String(process.env.MARKETPLACE_FORCE_HOST_ALIAS || 'marketplace').trim().toLowerCase();
 }
@@ -106,6 +129,7 @@ module.exports = {
     getPanelReleaseVersion,
     getMarketplaceHostnamesSet,
     getRenderPublicHostname,
+    getPanelPublicOrigin,
     getMarketplaceForceHostAlias,
     getMarketplaceBrandLabel,
     getMarketplaceHeroRegionLabel,

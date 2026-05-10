@@ -1,6 +1,7 @@
 const pool = require('../db/postgres');
 const { google } = require('googleapis');
 const { OAuth2Client } = require('google-auth-library');
+const { resolveGoogleOAuthRedirectUri } = require('../config/googleOAuthRedirectUri');
 
 let credentials;
 try {
@@ -14,8 +15,9 @@ try {
 async function getAuthenticatedClient(_db, empresaId) {
     if (!credentials) throw new Error('Las credenciales de Google no están configuradas en el servidor.');
 
-    const { client_secret, client_id, redirect_uris } = credentials.web;
-    const oauth2Client = new OAuth2Client(client_id, client_secret, redirect_uris[0]);
+    const { client_secret, client_id } = credentials.web;
+    const redirectUri = resolveGoogleOAuthRedirectUri(credentials.web) || credentials.web.redirect_uris[0];
+    const oauth2Client = new OAuth2Client(client_id, client_secret, redirectUri);
 
     const { rows } = await pool.query(
         'SELECT google_refresh_token FROM empresas WHERE id = $1',

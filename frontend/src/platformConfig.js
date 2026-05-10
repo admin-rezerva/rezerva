@@ -4,6 +4,7 @@
 let _domain = '';
 let _productName = '';
 let _panelVersion = '';
+let _panelPublicOrigin = '';
 let _fetched = false;
 
 function initialsFromLabel(label) {
@@ -30,6 +31,7 @@ export async function ensurePlatformConfig() {
             _domain = String(data.platformDomain || '').trim();
             _productName = String(data.platformProductName || '').trim();
             _panelVersion = String(data.panelReleaseVersion || '').trim();
+            _panelPublicOrigin = String(data.panelPublicOrigin || '').trim();
         }
     } catch { /* ignorar */ }
     _fetched = true;
@@ -45,6 +47,22 @@ export function getPlatformProductName() {
 
 export function getPanelReleaseVersion() {
     return _panelVersion;
+}
+
+/** Origen público del panel/API (OAuth), p. ej. https://rezerva.cl — viene del backend (env). */
+export function getPanelPublicOrigin() {
+    return _panelPublicOrigin;
+}
+
+/** Hostname para copy en UI (sin protocolo). */
+export function getPanelPublicHostnameForUi() {
+    const o = getPanelPublicOrigin();
+    if (!o) return '';
+    try {
+        return new URL(o).hostname;
+    } catch {
+        return '';
+    }
 }
 
 /** Etiqueta corta para UI: nombre de producto o dominio. */

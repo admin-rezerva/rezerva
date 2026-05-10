@@ -198,6 +198,7 @@ try {
             platformDomain: platformPublic.getPlatformDomain(),
             platformProductName: platformPublic.getPlatformProductName(),
             panelReleaseVersion: platformPublic.getPanelReleaseVersion(),
+            panelPublicOrigin: platformPublic.getPanelPublicOrigin(),
         });
     });
 

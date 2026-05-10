@@ -2,6 +2,7 @@
 const express = require('express');
 const { OAuth2Client } = require('google-auth-library');
 const pool = require('../db/postgres');
+const { resolveGoogleOAuthRedirectUri } = require('../config/googleOAuthRedirectUri');
 
 let credentials;
 try {
@@ -20,8 +21,12 @@ module.exports = (db) => {
     const router = express.Router();
     if (!credentials) return router;
 
-    const { client_secret, client_id, redirect_uris } = credentials.web;
-    const oauth2Client = new OAuth2Client(client_id, client_secret, redirect_uris[0]);
+    const { client_secret, client_id } = credentials.web;
+    const redirectUri = resolveGoogleOAuthRedirectUri(credentials.web);
+    if (!redirectUri) {
+        console.error('[authGoogle] No hay redirect URI (configura PANEL_PUBLIC_ORIGIN / GOOGLE_OAUTH_REDIRECT_URI o redirect_uris en JSON).');
+    }
+    const oauth2Client = new OAuth2Client(client_id, client_secret, redirectUri || credentials.web.redirect_uris[0]);
 
     router.get('/authorize', (req, res) => {
         const { empresaId } = req.user;
