@@ -12,6 +12,35 @@ let colorMap = {};
 let mesActual = new Date();
 mesActual.setDate(1);
 
+/** Primer día visible en la vista compacta (móvil): ventana de 7 días consecutivos. */
+function fechaLocalMedianoche(d) {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+let inicioSemanaCompacta = fechaLocalMedianoche(new Date());
+
+function syncMesActualDesdeInicioSemana() {
+    const d = inicioSemanaCompacta;
+    mesActual = new Date(d.getFullYear(), d.getMonth(), 1);
+}
+
+/** Siete fechas ISO locales desde inicioSemanaCompacta. */
+function sieteDiasVentanaCompacta() {
+    const cur = fechaLocalMedianoche(inicioSemanaCompacta);
+    const out = [];
+    for (let i = 0; i < 7; i++) {
+        const yy = cur.getFullYear();
+        const mm = String(cur.getMonth() + 1).padStart(2, '0');
+        const dd = String(cur.getDate()).padStart(2, '0');
+        out.push(`${yy}-${mm}-${dd}`);
+        cur.setDate(cur.getDate() + 1);
+    }
+    return out;
+}
+
+function esViewportCalendarioDesktop() {
+    return typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches;
+}
+
 function hoyISO() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -37,33 +66,6 @@ function etiquetaCompactaCliente(nombre) {
     const inicial = partes[1] ? `${partes[1][0]}.` : '';
     const t = `${apellido}${inicial ? ', ' + inicial : ''}`.trim();
     return t || 'Reserva';
-}
-
-/** Siete fechas ISO: desde hoy si el mes visible es el actual; si no, desde el día 1 del mes visible. */
-function diasParaVistaCompacta(año, mes) {
-    const hoy = new Date();
-    const esMesActual = año === hoy.getFullYear() && mes === hoy.getMonth();
-    const out = [];
-    if (esMesActual) {
-        let cur = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-        for (let i = 0; i < 7; i++) {
-            const yy = cur.getFullYear();
-            const mm = String(cur.getMonth() + 1).padStart(2, '0');
-            const dd = String(cur.getDate()).padStart(2, '0');
-            out.push(`${yy}-${mm}-${dd}`);
-            cur.setDate(cur.getDate() + 1);
-        }
-        return out;
-    }
-    let cur = new Date(año, mes, 1);
-    for (let i = 0; i < 7; i++) {
-        const yy = cur.getFullYear();
-        const mm = String(cur.getMonth() + 1).padStart(2, '0');
-        const dd = String(cur.getDate()).padStart(2, '0');
-        out.push(`${yy}-${mm}-${dd}`);
-        cur.setDate(cur.getDate() + 1);
-    }
-    return out;
 }
 
 function ocupacionEnDia(resourceId, iso, eventos) {
@@ -132,9 +134,9 @@ function renderLeyenda() {
 function renderNavegacion() {
     return `
         <div class="cal-nav">
-            <button id="cal-prev" class="cal-nav-btn" type="button" aria-label="Mes anterior">‹</button>
+            <button id="cal-prev" class="cal-nav-btn" type="button" aria-label="Anterior">‹</button>
             <button id="cal-hoy" class="cal-nav-btn cal-nav-today" type="button">Hoy</button>
-            <button id="cal-next" class="cal-nav-btn" type="button" aria-label="Mes siguiente">›</button>
+            <button id="cal-next" class="cal-nav-btn" type="button" aria-label="Siguiente">›</button>
             <h3 id="cal-mes-label" class="cal-nav-titulo">${nombreMes(mesActual)}</h3>
         </div>`;
 }
@@ -142,9 +144,7 @@ function renderNavegacion() {
 
 /** Vista sustituta en móvil: tarjetas por recurso y 7 días en columna (el Gantt queda oculto hasta `lg`). */
 function renderVistaCompacta() {
-    const año = mesActual.getFullYear();
-    const mes = mesActual.getMonth();
-    const dias7 = diasParaVistaCompacta(año, mes);
+    const dias7 = sieteDiasVentanaCompacta();
     const hoy = hoyISO();
     const rango = etiquetaRangoDias(dias7);
 
@@ -222,7 +222,7 @@ function renderVistaCompacta() {
     return `
         <div class="flex flex-col gap-1 border-b border-gray-100 pb-3">
             <h3 class="text-base font-semibold text-gray-900">Vista semanal</h3>
-            <p class="text-xs text-gray-500">Usa <strong>‹ ›</strong> arriba para cambiar el mes. ${rango}</p>
+            <p class="text-xs text-gray-500"><strong>‹ ›</strong> en el teléfono mueven esta semana de 7 días. En pantalla grande (≥1024px) cambian el mes del gráfico. <span class="text-gray-600">${rango}</span></p>
         </div>
         <div class="flex flex-col gap-4">${tarjetas}</div>`;
 }
@@ -400,20 +400,49 @@ export async function afterRender() {
         // Insertar label de mes en nav
         const nav = document.getElementById('cal-nav-wrap');
         if (nav) {
+            const labelMes = () => {
+                const el = document.getElementById('cal-mes-label');
+                if (el) el.textContent = nombreMes(mesActual);
+            };
             nav.querySelector('#cal-prev').addEventListener('click', () => {
-                mesActual.setMonth(mesActual.getMonth() - 1);
-                document.getElementById('cal-mes-label').textContent = nombreMes(mesActual);
+                if (esViewportCalendarioDesktop()) {
+                    mesActual.setMonth(mesActual.getMonth() - 1);
+                    inicioSemanaCompacta = fechaLocalMedianoche(
+                        new Date(mesActual.getFullYear(), mesActual.getMonth(), 1)
+                    );
+                } else {
+                    inicioSemanaCompacta = new Date(
+                        inicioSemanaCompacta.getFullYear(),
+                        inicioSemanaCompacta.getMonth(),
+                        inicioSemanaCompacta.getDate() - 7
+                    );
+                    syncMesActualDesdeInicioSemana();
+                }
+                labelMes();
                 actualizarGantt();
             });
             nav.querySelector('#cal-next').addEventListener('click', () => {
-                mesActual.setMonth(mesActual.getMonth() + 1);
-                document.getElementById('cal-mes-label').textContent = nombreMes(mesActual);
+                if (esViewportCalendarioDesktop()) {
+                    mesActual.setMonth(mesActual.getMonth() + 1);
+                    inicioSemanaCompacta = fechaLocalMedianoche(
+                        new Date(mesActual.getFullYear(), mesActual.getMonth(), 1)
+                    );
+                } else {
+                    inicioSemanaCompacta = new Date(
+                        inicioSemanaCompacta.getFullYear(),
+                        inicioSemanaCompacta.getMonth(),
+                        inicioSemanaCompacta.getDate() + 7
+                    );
+                    syncMesActualDesdeInicioSemana();
+                }
+                labelMes();
                 actualizarGantt();
             });
             nav.querySelector('#cal-hoy').addEventListener('click', () => {
-                mesActual = new Date();
-                mesActual.setDate(1);
-                document.getElementById('cal-mes-label').textContent = nombreMes(mesActual);
+                const t = new Date();
+                mesActual = new Date(t.getFullYear(), t.getMonth(), 1);
+                inicioSemanaCompacta = fechaLocalMedianoche(t);
+                labelMes();
                 actualizarGantt();
             });
         }
