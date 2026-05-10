@@ -2,6 +2,8 @@
 
 **Estado:** [`tablero.md`](../../tablero.md) (fila **`SM-venta-ia`**).
 
+**Último handoff (2026-05-10):** OpenAPI `servers` → `rezerva.cl`; modelo Gemini por defecto **2.5-flash** (`aiConfig` / `geminiProvider`); ver fila del tablero y `gemini-smoke-instrucciones.md`.
+
 ## Documento principal
 
 | Archivo | Rol |
