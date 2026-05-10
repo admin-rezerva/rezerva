@@ -2,6 +2,7 @@
 // Renderiza la grilla Gantt del calendario de ocupación.
 
 import { GANTT_STROKE_RGB } from '../../../shared/chartPaletteRgb.js';
+import { mismoRecursoCal, soloFecha } from './calendario.match.js';
 
 const COLORES = GANTT_STROKE_RGB;
 
@@ -63,16 +64,18 @@ export function renderGantt(recursos, eventos, colorMap, dias, hoy) {
         ].filter(Boolean).join(' · ');
 
         // Eventos de esta propiedad que tocan este mes
-        const eventosFila = eventos.filter(e => {
-            if (String(e.resourceId) !== String(rec.id)) return false;
-            const s = String(e.start).slice(0, 10);
-            const en = String(e.end).slice(0, 10);
+        const eventosFila = eventos.filter((e) => {
+            if (!mismoRecursoCal(e.resourceId, rec.id)) return false;
+            const s = soloFecha(e.start);
+            const en = soloFecha(e.end);
             return s < dias[dias.length - 1] && en > dias[0];
         });
 
-        const bloques = eventosFila.map(ev => {
-            const inicioVisible = ev.start < dias[0] ? dias[0] : ev.start;
-            const finVisible   = ev.end   > dias[totalDias - 1] ? dias[totalDias - 1] : ev.end;
+        const bloques = eventosFila.map((ev) => {
+            const s = soloFecha(ev.start);
+            const en = soloFecha(ev.end);
+            const inicioVisible = s < dias[0] ? dias[0] : s;
+            const finVisible = en > dias[totalDias - 1] ? dias[totalDias - 1] : en;
 
             const idxInicio = dias.indexOf(inicioVisible);
             const idxFin    = dias.indexOf(finVisible);

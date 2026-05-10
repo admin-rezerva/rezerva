@@ -2,6 +2,11 @@
 import { fetchAPI } from '../api.js';
 import { handleNavigation } from '../router.js';
 import { renderGantt, colorPropiedad, diasDelMes } from './components/calendario/calendario.gantt.js';
+import {
+    eventoCubreDiaCal,
+    mismoRecursoCal,
+    normalizarEventosCalendario,
+} from './components/calendario/calendario.match.js';
 
 const DIAS_SEMANA_CORTA = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
 
@@ -46,13 +51,6 @@ function hoyISO() {
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
-/** Comparación estable aunque el API devuelva ISO con hora o resourceId como string distinto al recurso. */
-function soloFecha(iso) {
-    if (iso == null || iso === '') return '';
-    const s = String(iso);
-    return s.length >= 10 ? s.slice(0, 10) : s;
-}
-
 function escHtml(s) {
     return String(s ?? '')
         .replace(/&/g, '&amp;')
@@ -69,13 +67,9 @@ function etiquetaCompactaCliente(nombre) {
 }
 
 function ocupacionEnDia(resourceId, iso, eventos) {
-    const rid = String(resourceId);
-    const matches = eventos.filter(e => {
-        if (String(e.resourceId) !== rid) return false;
-        const start = soloFecha(e.start);
-        const end = soloFecha(e.end);
-        return iso >= start && iso < end;
-    });
+    const matches = eventos.filter(
+        (e) => mismoRecursoCal(e.resourceId, resourceId) && eventoCubreDiaCal(e, iso)
+    );
     if (!matches.length) return null;
     const bloq = matches.find(e => e.extendedProps?.tipo === 'bloqueo');
     if (bloq) return { tipo: 'bloqueo', ev: bloq };
@@ -387,7 +381,7 @@ export async function render() {
 export async function afterRender() {
     try {
         const datos = await fetchAPI('/calendario');
-        todosEventos  = datos.eventos;
+        todosEventos = normalizarEventosCalendario(datos.eventos ?? datos.events ?? []);
         todosRecursos = datos.recursos;
         metricas      = datos.metricas || {};
 
