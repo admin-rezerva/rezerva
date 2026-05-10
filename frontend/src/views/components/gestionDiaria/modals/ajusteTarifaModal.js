@@ -211,22 +211,29 @@ export function renderAjusteTarifaModal(grupo, callback) {
 
     const contentContainer = document.getElementById('modal-content-container');
     contentContainer.innerHTML = `
-        <div class="border-b border-gray-200">
-            <nav id="modal-tabs" class="-mb-px flex space-x-6" aria-label="Tabs">
-                <button data-tab="simulador" class="modal-tab whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-primary-500 text-primary-600">Simulador de Rentabilidad</button>
-                <button data-tab="potencial" class="modal-tab whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Calcular Potencial (KPI)</button>
-                <button data-tab="ajuste" class="modal-tab whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Ajustar Cobro</button>
-            </nav>
+        <div class="min-w-0 border-b border-gray-200">
+            <div class="hide-scrollbar -mb-px overflow-x-auto overflow-y-hidden overscroll-x-contain [-webkit-overflow-scrolling:touch] touch-pan-x">
+                <nav id="modal-tabs" class="-mb-px flex w-max min-w-full flex-nowrap gap-6" aria-label="Tabs">
+                    <button type="button" data-tab="simulador" class="modal-tab flex-shrink-0 whitespace-nowrap border-b-2 border-primary-500 py-3 px-1 text-sm font-medium text-primary-600">Simulador de Rentabilidad</button>
+                    <button type="button" data-tab="potencial" class="modal-tab flex-shrink-0 whitespace-nowrap border-b-2 border-transparent py-3 px-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">Calcular Potencial (KPI)</button>
+                    <button type="button" data-tab="ajuste" class="modal-tab flex-shrink-0 whitespace-nowrap border-b-2 border-transparent py-3 px-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">Ajustar Cobro</button>
+                </nav>
+            </div>
         </div>
-        <div id="modal-tab-content" class="mt-5"></div>
+        <div id="modal-tab-content" class="mt-5 min-w-0"></div>
     `;
 
     const tabs = contentContainer.querySelectorAll('.modal-tab');
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            tabs.forEach(t => t.classList.remove('border-primary-500', 'text-primary-600'));
-            tab.classList.add('border-primary-500', 'text-primary-600');
-            renderTabContent(tab.dataset.tab);
+    tabs.forEach(tabEl => {
+        tabEl.addEventListener('click', () => {
+            tabs.forEach(t => {
+                t.classList.remove('border-primary-500', 'text-primary-600');
+                t.classList.add('border-transparent', 'text-gray-500');
+            });
+            tabEl.classList.remove('border-transparent', 'text-gray-500');
+            tabEl.classList.add('border-primary-500', 'text-primary-600');
+            renderTabContent(tabEl.dataset.tab);
+            tabEl.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
         });
     });
 

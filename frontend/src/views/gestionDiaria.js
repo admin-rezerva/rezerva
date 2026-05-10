@@ -40,7 +40,7 @@ export async function render() {
         <div id="gestion-modal" class="modal hidden">
             <div class="modal-content !max-w-3xl">
                 <h3 id="modal-title" class="text-xl font-semibold mb-4"></h3>
-                <div id="modal-content-container" class="space-y-4 max-h-[70vh] overflow-y-auto pr-4"></div>
+                <div id="modal-content-container" class="min-w-0 space-y-4 max-h-[70vh] overflow-y-auto overflow-x-hidden pr-4"></div>
                 <button type="button" id="modal-cancel-btn" class="btn-secondary w-full mt-4">Cerrar</button>
             </div>
         </div>
