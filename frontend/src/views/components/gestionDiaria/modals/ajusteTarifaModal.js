@@ -118,7 +118,7 @@ function renderSimuladorVentaDirecta() {
         contentContainer.innerHTML = `
         <p class="text-sm text-gray-600 mb-2">Analiza la rentabilidad real de esta reserva y compárala con una venta directa.</p>
         ${dolarInfoHtml}
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div class="p-3 bg-gray-50 border rounded-md">
                 <h4 class="font-semibold text-gray-800">Análisis Financiero</h4>
                 <dl class="mt-2 text-sm space-y-1">
@@ -144,7 +144,7 @@ function renderSimuladorVentaDirecta() {
 
         contentContainer.innerHTML = `
         <p class="text-sm text-gray-600 mb-2">Analiza la rentabilidad real de esta reserva y compárala con una venta directa.</p>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div class="p-3 bg-gray-50 border rounded-md">
                 <h4 class="font-semibold text-gray-800">Análisis Financiero</h4>
                 <dl class="mt-2 text-sm space-y-1">
