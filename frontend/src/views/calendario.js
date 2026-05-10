@@ -6,6 +6,8 @@ import {
     eventoCubreDiaCal,
     mismoRecursoCal,
     normalizarEventosCalendario,
+    normResourceId,
+    soloFecha,
 } from './components/calendario/calendario.match.js';
 
 const DIAS_SEMANA_CORTA = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
@@ -88,11 +90,79 @@ function nombreMes(fecha) {
     return fecha.toLocaleDateString('es-CL', { month: 'long', year: 'numeric' });
 }
 
-function renderMetricas() {
-    const ocupPct = metricas.totalPropiedades
-        ? Math.round((metricas.ocupados / metricas.totalPropiedades) * 100)
-        : 0;
+function reservasCalendarioNoBloqueo() {
+    return todosEventos.filter((e) => e.extendedProps?.tipo !== 'bloqueo');
+}
 
+/** Misma lógica que el backend pero con la fecha local del usuario (alinea con el header / dólar). */
+function metricasHoyLocal() {
+    const hoy = hoyISO();
+    const res = reservasCalendarioNoBloqueo();
+    const checkinHoy = res.filter((e) => soloFecha(e.start) === hoy).length;
+    const checkoutHoy = res.filter((e) => soloFecha(e.end) === hoy).length;
+    const ocupados = new Set(
+        res
+            .filter((e) => {
+                const s = soloFecha(e.start);
+                const en = soloFecha(e.end);
+                return s <= hoy && en > hoy;
+            })
+            .map((e) => normResourceId(e.resourceId))
+    ).size;
+    const total = metricas.totalPropiedades || todosRecursos.length || 0;
+    const ocupPct = total ? Math.round((ocupados / total) * 100) : 0;
+    return { checkinHoy, checkoutHoy, ocupPct };
+}
+
+/** En móvil las tarjetas reflejan la semana de 7 días que se está viendo (no el “hoy” absoluto). */
+function metricasSemanaVisible(dias7) {
+    const set7 = new Set(dias7);
+    const res = reservasCalendarioNoBloqueo();
+    let llegadas = 0;
+    let salidas = 0;
+    for (const e of res) {
+        if (set7.has(soloFecha(e.start))) llegadas++;
+        if (set7.has(soloFecha(e.end))) salidas++;
+    }
+    let maxOcup = 0;
+    const total = metricas.totalPropiedades || todosRecursos.length || 0;
+    for (const iso of dias7) {
+        let n = 0;
+        for (const rec of todosRecursos) {
+            if (ocupacionEnDia(rec.id, iso, todosEventos)) n++;
+        }
+        maxOcup = Math.max(maxOcup, n);
+    }
+    const ocupPct = total ? Math.round((maxOcup / total) * 100) : 0;
+    return { llegadas, salidas, ocupPct };
+}
+
+function renderMetricas() {
+    if (esViewportCalendarioDesktop()) {
+        const m = metricasHoyLocal();
+        return `
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <div class="bg-white border border-gray-200 rounded-xl py-3.5 px-5 text-center shadow-sm">
+                <p class="text-[1.75rem] font-bold text-slate-900 leading-none">${metricas.reservasActivas ?? 0}</p>
+                <p class="text-[0.72rem] text-slate-500 mt-1 uppercase tracking-wide">Reservas activas</p>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-xl py-3.5 px-5 text-center shadow-sm">
+                <p class="text-[1.75rem] font-bold text-success-600 leading-none">${m.ocupPct}%</p>
+                <p class="text-[0.72rem] text-slate-500 mt-1 uppercase tracking-wide">Ocupación hoy</p>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-xl py-3.5 px-5 text-center shadow-sm">
+                <p class="text-[1.75rem] font-bold text-warning-600 leading-none">${m.checkinHoy}</p>
+                <p class="text-[0.72rem] text-slate-500 mt-1 uppercase tracking-wide">Check-ins hoy</p>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-xl py-3.5 px-5 text-center shadow-sm">
+                <p class="text-[1.75rem] font-bold text-slate-900 leading-none">${m.checkoutHoy}</p>
+                <p class="text-[0.72rem] text-slate-500 mt-1 uppercase tracking-wide">Check-outs hoy</p>
+            </div>
+        </div>`;
+    }
+
+    const dias7 = sieteDiasVentanaCompacta();
+    const ms = metricasSemanaVisible(dias7);
     return `
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
             <div class="bg-white border border-gray-200 rounded-xl py-3.5 px-5 text-center shadow-sm">
@@ -100,16 +170,16 @@ function renderMetricas() {
                 <p class="text-[0.72rem] text-slate-500 mt-1 uppercase tracking-wide">Reservas activas</p>
             </div>
             <div class="bg-white border border-gray-200 rounded-xl py-3.5 px-5 text-center shadow-sm">
-                <p class="text-[1.75rem] font-bold text-success-600 leading-none">${ocupPct}%</p>
-                <p class="text-[0.72rem] text-slate-500 mt-1 uppercase tracking-wide">Ocupación hoy</p>
+                <p class="text-[1.75rem] font-bold text-success-600 leading-none">${ms.ocupPct}%</p>
+                <p class="text-[0.72rem] text-slate-500 mt-1 uppercase tracking-wide">Pico ocupación (semana)</p>
             </div>
             <div class="bg-white border border-gray-200 rounded-xl py-3.5 px-5 text-center shadow-sm">
-                <p class="text-[1.75rem] font-bold text-warning-600 leading-none">${metricas.checkinHoy ?? 0}</p>
-                <p class="text-[0.72rem] text-slate-500 mt-1 uppercase tracking-wide">Check-ins hoy</p>
+                <p class="text-[1.75rem] font-bold text-warning-600 leading-none">${ms.llegadas}</p>
+                <p class="text-[0.72rem] text-slate-500 mt-1 uppercase tracking-wide">Llegadas (esta semana)</p>
             </div>
             <div class="bg-white border border-gray-200 rounded-xl py-3.5 px-5 text-center shadow-sm">
-                <p class="text-[1.75rem] font-bold text-slate-900 leading-none">${metricas.checkoutHoy ?? 0}</p>
-                <p class="text-[0.72rem] text-slate-500 mt-1 uppercase tracking-wide">Check-outs hoy</p>
+                <p class="text-[1.75rem] font-bold text-slate-900 leading-none">${ms.salidas}</p>
+                <p class="text-[0.72rem] text-slate-500 mt-1 uppercase tracking-wide">Salidas (esta semana)</p>
             </div>
         </div>`;
 }
@@ -257,6 +327,9 @@ function actualizarGantt() {
     }
 
     adjuntarEventosGantt();
+
+    const metricasWrap = document.getElementById('cal-metricas-wrap');
+    if (metricasWrap) metricasWrap.innerHTML = renderMetricas();
 }
 
 function adjuntarEventosGantt() {
