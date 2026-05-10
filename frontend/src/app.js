@@ -9,6 +9,17 @@ import {
 
 let currentUser = null;
 
+function buildAuthInfoInnerHTML(dollarInfo) {
+    if (!currentUser) return '';
+    const dolarHtml = dollarInfo?.fecha
+        ? `<span class="max-w-full text-[11px] font-semibold leading-snug text-primary-600 sm:shrink-0 sm:whitespace-nowrap sm:text-sm">Dólar ${new Date(dollarInfo.fecha + 'T00:00:00Z').toLocaleDateString('es-CL', { timeZone: 'UTC' })}: $${(dollarInfo.valor || 0).toLocaleString('es-CL')}</span>`
+        : '';
+    return `
+        <span class="max-w-full truncate font-semibold text-gray-700">Empresa: ${currentUser.nombreEmpresa}</span>
+        <span class="max-w-full truncate text-[11px] leading-tight text-gray-500 sm:text-sm sm:text-gray-600">Usuario: ${currentUser.email}</span>
+        ${dolarHtml}`;
+}
+
 /**
  * Shell del panel: por debajo de `lg` el sidebar es fixed + off-canvas (translate), overlay y menú hamburguesa;
  * el scroll principal vive en #view-content (ver #app-root en source.css). A partir de `lg` el menú es estático.
@@ -52,12 +63,14 @@ export async function renderAppLayout(dollarInfo) {
             <div id="sidebar-overlay" class="fixed inset-0 z-40 bg-black/50 hidden lg:hidden"></div>
             <div id="main-content" class="main-content flex min-w-0 flex-1 flex-col overflow-hidden">
                 <header class="flex-shrink-0 border-b border-slate-200/80 bg-white shadow-sm">
-                    <div class="flex min-h-16 flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-2 sm:px-6 lg:px-8">
-                        <button id="mobile-menu-btn" type="button" class="rounded-md p-2 text-slate-500 hover:bg-slate-100 lg:hidden" aria-label="Abrir menú">
-                            <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                        </button>
-                        <div id="auth-info" class="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1 text-xs md:text-sm"></div>
-                        <button id="logout-btn" type="button" class="btn-danger flex-shrink-0 text-xs">Cerrar Sesión</button>
+                    <div class="flex flex-col gap-3 px-4 py-3 sm:min-h-14 sm:flex-row sm:items-center sm:justify-between sm:gap-x-4 sm:gap-y-2 sm:py-2.5 sm:px-6 lg:px-8">
+                        <div class="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
+                            <button id="mobile-menu-btn" type="button" class="mt-0.5 shrink-0 rounded-md p-2 text-slate-500 hover:bg-slate-100 lg:hidden" aria-label="Abrir menú">
+                                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                            </button>
+                            <div id="auth-info" class="flex min-w-0 flex-1 flex-col gap-1.5 text-xs sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-1 md:text-sm"></div>
+                        </div>
+                        <button id="logout-btn" type="button" class="btn-danger w-full shrink-0 px-3 py-2 text-xs sm:w-auto">Cerrar Sesión</button>
                     </div>
                 </header>
                 <main id="view-content" class="flex-1 overflow-y-auto p-4 md:p-6 lg:px-8"></main>
@@ -66,15 +79,7 @@ export async function renderAppLayout(dollarInfo) {
     `;
     
     const authInfo = document.getElementById('auth-info');
-    const dolarHtml = dollarInfo?.fecha
-        ? `<span class="font-semibold text-primary-600 flex-shrink-0">Dólar ${new Date(dollarInfo.fecha + 'T00:00:00Z').toLocaleDateString('es-CL', { timeZone: 'UTC' })}: $${(dollarInfo.valor || 0).toLocaleString('es-CL')}</span>`
-        : '';
-
-    authInfo.innerHTML = `
-        <span class="font-semibold text-gray-700 truncate">Empresa: ${currentUser.nombreEmpresa}</span>
-        <span class="text-gray-600 hidden sm:block">Usuario: ${currentUser.email}</span>
-        ${dolarHtml}
-    `;
+    authInfo.innerHTML = buildAuthInfoInnerHTML(dollarInfo);
     document.getElementById('logout-btn').addEventListener('click', () => {
         logout();
         handleNavigation('/login'); 
@@ -112,14 +117,7 @@ export async function checkAuthAndRender() {
         
         const authInfo = document.getElementById('auth-info');
         if (authInfo) {
-            const dolarHtml = dollarInfo?.fecha
-                ? `<span class="font-semibold text-primary-600 flex-shrink-0">Dólar ${new Date(dollarInfo.fecha + 'T00:00:00Z').toLocaleDateString('es-CL', { timeZone: 'UTC' })}: $${(dollarInfo.valor || 0).toLocaleString('es-CL')}</span>`
-                : '';
-            authInfo.innerHTML = `
-                <span class="font-semibold text-gray-700 truncate">Empresa: ${currentUser.nombreEmpresa}</span>
-                <span class="text-gray-600 hidden sm:block">Usuario: ${currentUser.email}</span>
-                ${dolarHtml}
-            `;
+            authInfo.innerHTML = buildAuthInfoInnerHTML(dollarInfo);
         } else {
             await renderAppLayout(dollarInfo);
         }
