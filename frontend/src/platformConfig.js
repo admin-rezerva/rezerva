@@ -3,6 +3,7 @@
 
 let _domain = '';
 let _productName = '';
+let _displayLabel = '';
 let _panelVersion = '';
 let _panelPublicOrigin = '';
 let _fetched = false;
@@ -30,6 +31,7 @@ export async function ensurePlatformConfig() {
             const data = await res.json();
             _domain = String(data.platformDomain || '').trim();
             _productName = String(data.platformProductName || '').trim();
+            _displayLabel = String(data.platformDisplayLabel || '').trim();
             _panelVersion = String(data.panelReleaseVersion || '').trim();
             _panelPublicOrigin = String(data.panelPublicOrigin || '').trim();
         }
@@ -49,7 +51,7 @@ export function getPanelReleaseVersion() {
     return _panelVersion;
 }
 
-/** Origen público del panel/API (OAuth), p. ej. https://rezerva.cl — viene del backend (env). */
+/** Origen público del panel/API (OAuth); viene del backend (`PANEL_PUBLIC_ORIGIN` / env relacionado). */
 export function getPanelPublicOrigin() {
     return _panelPublicOrigin;
 }
@@ -65,18 +67,17 @@ export function getPanelPublicHostnameForUi() {
     }
 }
 
-/** Etiqueta corta para UI: nombre de producto o dominio. */
+/** Etiqueta para UI: resuelta en servidor (`platformDisplayLabel`) o nombre/dominio del JSON. */
 export function getPlatformDisplayLabel() {
-    return getPlatformProductName() || getPlatformDomain() || '';
+    return _displayLabel || getPlatformProductName() || getPlatformDomain() || '';
 }
 
 /**
- * Copy en español cuando el texto necesita un nombre ("desde X", "X solo registra…").
- * Si aún no cargó la API o viene vacío, evita dejar el hueco sin sustantivo.
+ * Nombre para copy ("desde X", "X solo registra…"). Vacío si falló la API y no hay datos;
+ * la vista debe usar una frase genérica sin marca (ej. "desde el panel").
  */
-export function getPlatformDisplayLabelForUi(fallback = 'la plataforma') {
-    const l = getPlatformDisplayLabel().trim();
-    return l || fallback;
+export function getPlatformDisplayLabelForUi() {
+    return getPlatformDisplayLabel().trim();
 }
 
 export function getSidebarBrandInitials() {

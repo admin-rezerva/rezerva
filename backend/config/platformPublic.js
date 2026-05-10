@@ -97,7 +97,7 @@ function getMarketplaceBrandLabel() {
     if (fromProduct) return fromProduct;
     const fromDomain = defaultProductLabelFromDomain(getPlatformDomain());
     if (fromDomain) return fromDomain;
-    return 'Rezerva';
+    return String(process.env.PLATFORM_BRAND_LABEL_FALLBACK || '').trim();
 }
 
 /** Región o país opcional en hero/meta del marketplace (`MARKETPLACE_HERO_REGION_LABEL`). Vacío = sin mencionar lugar en títulos genéricos. */

@@ -197,6 +197,7 @@ try {
         res.json({
             platformDomain: platformPublic.getPlatformDomain(),
             platformProductName: platformPublic.getPlatformProductName(),
+            platformDisplayLabel: platformPublic.getMarketplaceBrandLabel(),
             panelReleaseVersion: platformPublic.getPanelReleaseVersion(),
             panelPublicOrigin: platformPublic.getPanelPublicOrigin(),
         });

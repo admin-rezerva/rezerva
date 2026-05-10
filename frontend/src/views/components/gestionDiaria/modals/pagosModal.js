@@ -24,9 +24,11 @@ function escHtml(s) {
         .replace(/"/g, '&quot;');
 }
 
-async function platformLabelForCopy() {
+/** HTML escapado del nombre de marca (vacío → la vista usa copy genérico sin nombre comercial). */
+async function platformBrandHtmlForCopy() {
     await ensurePlatformConfig();
-    return escHtml(getPlatformDisplayLabelForUi());
+    const raw = getPlatformDisplayLabelForUi();
+    return raw ? escHtml(raw) : '';
 }
 
 const DEFAULT_MEDIOS = [
@@ -301,7 +303,10 @@ async function showActionForm() {
     currentAction = 'pagos';
     const container = document.getElementById('pagos-form-container');
     const saldoPendiente = currentGrupo.valorTotalHuesped - currentGrupo.abonoTotal;
-    const brand = await platformLabelForCopy();
+    const brandHtml = await platformBrandHtmlForCopy();
+    const registroManualLine = brandHtml
+        ? `Registro manual: no se procesa cobro electrónico ni link de pago desde ${brandHtml}.`
+        : 'Registro manual: no se procesa cobro electrónico ni link de pago en este panel.';
 
     container.innerHTML = `
         <form id="modal-form-accion" class="border p-4 rounded-md">
@@ -311,7 +316,7 @@ async function showActionForm() {
                 <div><label class="block text-sm">Medio de Pago</label><select id="medio-pago-select" class="form-select"></select></div>
                 <div class="flex items-center"><input id="pago-final-checkbox" type="checkbox" class="h-4 w-4 rounded"><label for="pago-final-checkbox" class="ml-2 text-sm">¿Es el pago final?</label></div>
                 <div class="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-md p-2">
-                    Registro manual: no se procesa cobro electrónico ni link de pago desde ${brand}.
+                    ${registroManualLine}
                     Solo se documenta el pago recibido por canal presencial/externo.
                 </div>
             </div>
@@ -416,12 +421,15 @@ async function renderPagosList() {
 export async function renderPagosModal(grupo, callback) {
     currentGrupo = grupo;
     onActionComplete = callback;
-    const brand = await platformLabelForCopy();
+    const brandHtml = await platformBrandHtmlForCopy();
+    const operacionLine = brandHtml
+        ? `Operación vigente: ${brandHtml} solo registra pagos ya recibidos (sin pasarela integrada, sin links de cobro).`
+        : 'Operación vigente: en este panel solo se registran pagos ya recibidos (sin pasarela integrada, sin links de cobro).';
     const contentContainer = document.getElementById('modal-content-container');
     const bloqueGarantia = buildGarantiaOperacionReadonlyHtml(grupo.garantiaOperacion);
     contentContainer.innerHTML = `
         <div class="mb-3 text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-md p-2">
-            Operación vigente: ${brand} solo registra pagos ya recibidos (sin pasarela integrada, sin links de cobro).
+            ${operacionLine}
         </div>
         ${bloqueGarantia ? `<div id="garantia-estado-readonly" class="mb-3">${bloqueGarantia}</div>` : ''}
         ${renderGarantiaEstadoForm(grupo)}

@@ -2,6 +2,7 @@ import { fetchAPI } from '../api.js';
 import {
     ensurePlatformConfig,
     getPlatformDisplayLabelForUi,
+    getPlatformDomain,
     getPanelPublicHostnameForUi,
 } from '../platformConfig.js';
 
@@ -15,16 +16,22 @@ function escHtml(s) {
 
 export async function render() {
     await ensurePlatformConfig();
-    const brand = escHtml(getPlatformDisplayLabelForUi());
+    const rawLabel = getPlatformDisplayLabelForUi();
+    const brand = rawLabel ? escHtml(rawLabel) : '';
+    const introAutorizar = brand
+        ? `Al autorizar, ${brand} podrá acceder a dos servicios de Google con un solo click:`
+        : 'Al autorizar, este panel podrá acceder a dos servicios de Google con un solo click:';
     const oauthHost = getPanelPublicHostnameForUi();
+    const domain = getPlatformDomain();
+    const originHint = domain ? `https://${domain}` : '';
     const oauthNote = oauthHost
         ? `<p class="text-gray-600 text-sm mt-2">La pantalla de Google mostrará el acceso asociado al dominio del panel: <strong class="text-gray-900">${escHtml(oauthHost)}</strong> (configuración del servidor). Si ves otro dominio, revisa <code class="text-xs bg-gray-100 px-1 rounded">PANEL_PUBLIC_ORIGIN</code> / consola Google Cloud.</p>`
-        : '<p class="text-gray-500 text-sm mt-2">Si Google muestra un dominio antiguo, en Render define <code class="text-xs bg-gray-100 px-1 rounded">PANEL_PUBLIC_ORIGIN</code> con la URL pública del panel (p. ej. <code class="text-xs bg-gray-100 px-1 rounded">https://rezerva.cl</code>) y alinea el cliente OAuth en Google Cloud.</p>';
+        : `<p class="text-gray-500 text-sm mt-2">Si Google muestra un dominio antiguo, en Render define <code class="text-xs bg-gray-100 px-1 rounded">PANEL_PUBLIC_ORIGIN</code> con la URL pública del panel${originHint ? ` (p. ej. <code class="text-xs bg-gray-100 px-1 rounded">${escHtml(originHint)}</code>)` : ''} y alinea el cliente OAuth en Google Cloud.</p>`;
     return `
         <div class="bg-white p-8 rounded-lg shadow max-w-2xl mx-auto">
             <h2 class="text-2xl font-semibold text-gray-900 mb-2">Autorizar Conexión con Google</h2>
             <p class="text-gray-600 mt-4">
-                Al autorizar, ${brand} podrá acceder a dos servicios de Google con un solo click:
+                ${introAutorizar}
             </p>
             ${oauthNote}
             <ul class="mt-3 space-y-1 text-gray-600 text-sm list-disc list-inside">
