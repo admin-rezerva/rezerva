@@ -184,6 +184,27 @@
     .table-container {
         @apply overflow-auto max-h-[60vh] border rounded-lg;
     }
+
+    /*
+     * Lista de espera disponibilidad: tabla vs tarjetas (mismo breakpoint que Tailwind `md`: 768px).
+     * Clases dedicadas evitan depender solo de `hidden` + `md:block` si el bundle CSS viejo o el orden de capas no aplica bien en el cliente.
+     */
+    .espera-disponibilidad-table-host {
+        display: none;
+    }
+    @media (min-width: 768px) {
+        .espera-disponibilidad-table-host {
+            display: block;
+        }
+    }
+    .espera-disponibilidad-cards-host {
+        display: block;
+    }
+    @media (min-width: 768px) {
+        .espera-disponibilidad-cards-host {
+            display: none;
+        }
+    }
 }
 
 /* --- Estilos de Layout y Menú --- */
