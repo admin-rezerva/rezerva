@@ -184,13 +184,14 @@
 }
 
 /* --- Estilos de Layout y Menú --- */
+/* transform y z-index del drawer móvil los controla app.js (Tailwind: -translate-x-full / translate-x-0 y z-50).
+   No fijar transform aquí: sobrescribía las utilidades y el menú quedaba fuera de pantalla con el overlay visible. */
 .sidebar {
     background-color: #111827; color: white; width: 260px; position: fixed; top: 0; left: 0;
-    bottom: 0; z-index: 40; display: flex; flex-direction: column; transform: translateX(-100%);
+    bottom: 0; display: flex; flex-direction: column;
     transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
     border-right: 1px solid rgba(255,255,255,0.04);
 }
-.sidebar.open { transform: translateX(0); }
 .sidebar-header {
     padding: 1rem 1rem;
     border-bottom: 1px solid rgba(255,255,255,0.06);
