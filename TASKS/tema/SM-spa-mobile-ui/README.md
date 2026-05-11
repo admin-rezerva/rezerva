@@ -1,10 +1,16 @@
-# SM-spa-mobile-ui — SPA responsive (móvil)
+# SM-spa-mobile-ui — SPA responsive (móvil + estándar tabla PC)
 
-Ajustes de layout en el panel admin para pantallas estrechas: modales, gestión diaria y vistas relacionadas.
+Ajustes de layout en el panel admin: **móvil** (tarjetas, modales, gestión diaria) y **formato de tablas de listado en escritorio** alineado al producto.
+
+## Estándar global (obligatorio para agentes)
+
+- **Móvil:** regla **§6.1** — `spa-md-table-wrap` / `spa-md-cards-wrap`, misma data en tabla + tarjetas. Archivo: `.cursor/rules/20-frontend-design-system.mdc`.
+- **PC (vista `≥md`):** regla **§6.2** — contenedor con borde, `.th`, patrones de columna (entidad con avatar + sublínea, fechas con icono y mes en español, bloque detalles, pills semánticos, acción con `form-select`). **Referencia canónica en código:** `frontend/src/views/gestionarEsperaDisponibilidad.js`.
+- Resumen también en **`LEER-PRIMERO.md`** (tabla Estándares → CSS/UI) y **`CLAUDE.md`** (párrafo tablas SPA).
 
 ## Estado
 
-- **2026-05-11 — Lista de espera de disponibilidad (`/gestion-diaria/espera-disponibilidad`):**
+- **2026-05-11 — Lista de espera de disponibilidad (`/gestion-diaria/espera-disponibilidad`)** — implementación de referencia del **§6.2**:
   - **PC (`md`+):** tabla dentro de `spa-md-table-wrap`, card blanca con borde suave y **scroll horizontal** si no cabe. Columnas estándar (orden y contenido alineados a referencia de producto):
     1. **Cliente** — círculo con iniciales (color suave derivado del nombre) + **nombre** en negrita + **email** debajo en gris pequeño.
     2. **Teléfono**

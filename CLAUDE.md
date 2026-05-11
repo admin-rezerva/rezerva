@@ -89,7 +89,7 @@ El proyecto usa un sistema de tokens de color centralizado en `backend/tailwind.
 
 **Design system completo (layout shell, sidebar, responsive, calendario, pipeline CSS):** `.cursor/rules/20-frontend-design-system.mdc`.
 
-**Tablas de listado en la SPA:** en móvil usar **tarjetas** (render dual), no solo scroll horizontal; clases **`spa-md-table-wrap`** / **`spa-md-cards-wrap`** en `source.css`; detalle y excepciones en la misma regla **§6.1**. Referencia: `frontend/src/views/gestionarEsperaDisponibilidad.js`.
+**Tablas de listado en la SPA:** en móvil usar **tarjetas** (render dual), no solo scroll horizontal; clases **`spa-md-table-wrap`** / **`spa-md-cards-wrap`** en `source.css` (**§6.1**). En **PC** (`≥md`), seguir el **estándar visual de columnas** (entidad con avatar + líneas, fechas localizadas con icono, detalles en bloque, pills de estado con tokens, acción con `form-select`) — **§6.2** en `.cursor/rules/20-frontend-design-system.mdc`. Referencia canónica: `frontend/src/views/gestionarEsperaDisponibilidad.js`.
 
 **Al terminar cualquier tarea que toque el frontend, ejecutar siempre:**
 ```bash

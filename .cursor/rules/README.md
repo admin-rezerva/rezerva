@@ -38,7 +38,7 @@ Este directorio contiene **reglas para el agente de Cursor** (archivos `.mdc` co
 | `06-producto-generico-sin-tenant-demo.mdc` | siempre | Demo no hardcodeada; **IDs en lógica/datos**, nombres solo UI (`audit-identificadores-vs-nombres-ui.md`) |
 | `07-artifact-placement-repo-layout.mdc` | siempre | Dónde crear archivos: sin basura en raíz; `backend/`, `frontend/src/`, `backend/openapi/`, `backend/ai/`, `scripts/tooling|legacy`, `TASKS/tema/<id>/` |
 | `10-backend-modo-dual.mdc` | `backend/**/*.js` | PostgreSQL + Firestore, `empresa_id`, mapeos |
-| `20-frontend-design-system.mdc` | SPA + EJS + `source.css` | Design system admin: tokens, pipeline CSS, shell/scroll, sidebar, botones, **tablas listado → tarjetas móvil (§6.1)**, responsive, calendario, auditoría UI |
+| `20-frontend-design-system.mdc` | SPA + EJS + `source.css` | Design system admin: tokens, pipeline CSS, shell/scroll, sidebar, botones, **tablas listado: tarjetas móvil (§6.1), formato tabla PC (§6.2)**, responsive, calendario, auditoría UI |
 | `30-ssr-ai-commerce.mdc` | rutas/vistas SSR | SEO, JSON-LD, tenant, IA-readability |
 | `40-cursor-backlog-coordinacion.mdc` | siempre | Backlog producto, coordinación IA venta, locks |
 | `45-canales-venta-solo-cursor.mdc` | openapi/MCP/carril venta | Solo Cursor en este carril; enlaza `TASKS/tema/SM-venta-ia/venta-ia.md` |

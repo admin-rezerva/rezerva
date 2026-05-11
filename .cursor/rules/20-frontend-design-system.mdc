@@ -100,9 +100,38 @@ Referencia operativa para cualquier cambio de UI. Detalle de negocio y arquitect
 - Tablas **dentro de modales** con pocas columnas y sin listado largo: scroll horizontal puntual es tolerable; al agrandar el modal en móvil, preferir migrar a §6.1.
 - Tablas puramente **clave-valor** de 2 columnas: puede reemplazarse por lista / grid en todos los anchos sin duplicar tabla+cards.
 
-**Referencia implementada:** `frontend/src/views/gestionarEsperaDisponibilidad.js`.
+**Referencia implementada (móvil + PC):** `frontend/src/views/gestionarEsperaDisponibilidad.js`.
 
 En **desktop** (`≥768px`), la tabla puede seguir usando **`overflow-x-auto hide-scrollbar`** si el contenido es ancho; en móvil el wrap de tabla queda oculto por **`spa-md-table-wrap`**.
+
+### 6.2 Estándar visual de tabla en PC (listados homogéneos)
+
+**Objetivo:** en `≥ md`, las tablas de **lista de registros** del panel deben verse **consistentes** con el patrón de producto ya validado (lista de espera de disponibilidad): legibles, con jerarquía clara y sin “hoja de cálculo” plana.
+
+**Cuándo aplica:** mismos casos que **§6.1** (listado homogéneo). Al **añadir** una vista nueva o **refactorizar** una tabla de listado existente, converger a este estándar salvo **excepción §6.1** documentada en código.
+
+**Contenedor y tabla**
+
+- Wrapper: **`spa-md-table-wrap`** (hereda visibilidad solo en desktop de §6.1).
+- Caja scroll: `w-full overflow-x-auto rounded-lg border border-gray-200 bg-white` + **`hide-scrollbar`** si se desea barra discreta.
+- `<table class="min-w-full bg-white">` — sin forzar `whitespace-nowrap` en toda la tabla; usar solo donde evite saltos indeseados (p. ej. teléfono, rango de fechas).
+- **`<thead>`:** celdas con clase **`.th`** (`source.css`: mayúsculas, gris, borde inferior).
+- **`<tbody>`:** filas `border-b border-gray-100` (u horizontal rules equivalentes); **sin** bordes verticales entre columnas salvo necesidad excepcional.
+
+**Tipos de columna (patrones reutilizables)**
+
+| Patrón | Uso típico | Contenido sugerido |
+|--------|------------|-------------------|
+| **Entidad / persona** | Cliente, usuario, contacto | Círculo con **iniciales** (color pastel estable por clave, p. ej. hash del nombre) + **línea 1** `font-semibold text-gray-900` + **línea 2** `text-xs text-gray-500` (email, ID corto, etc.). `min-w-[220px]` razonable. |
+| **Teléfono / identificador corto** | Móvil, documento | `text-sm text-gray-700`, `whitespace-nowrap` si aplica. |
+| **Estadía / fechas** | Rango de estadía, período | Icono **`fa-calendar-days`** en `text-gray-400` + rango **`DD Mes YYYY → DD Mes YYYY`** (mes abreviado **español**), `whitespace-nowrap`. |
+| **Detalles compuestos** | Pax + preferencia, meta fila | Bloque en **varias líneas** con iconos (`fa-users`, `fa-location-dot`, etc.) en `text-gray-400`, texto `text-sm text-gray-600`; `truncate` + `title` si hay overflow. |
+| **Estado** | Workflow, etiqueta | **Pill** `rounded-full border px-2.5 py-1 text-xs font-semibold`: preferir tokens **`success-*` / `warning-*`** cuando el significado del estado lo permita (p. ej. nombre contiene “activa”, “espera”); si el color viene de API, **pill neutro** `border-gray-200 bg-gray-50` + **punto** de color seguro (`safeCssColor`), sin `blue-*`/`red-*` sueltos. |
+| **Acción** | Cambio de estado, menú | Etiqueta pequeña **«Cambiar a»** (`text-xs text-gray-500`) + **`form-select`**; primera `<option>` disabled hidden **«Cambiar a…»** si encaja el producto; `aria-label` en el select. |
+
+**Columnas que se desaconsejan en PC** para listados “contacto + reserva” (sustituir por los patrones anteriores): separar **email** en columna propia si ya va bajo el nombre; columnas sueltas **Pax** y **Propiedad** si pueden fusionarse en **Detalles**; **Fechas** en ISO crudo sin icono ni formato localizado.
+
+**Referencia canónica:** `frontend/src/views/gestionarEsperaDisponibilidad.js` (`render()` + `renderRows()` tabla).
 
 ---
 
@@ -116,7 +145,7 @@ En **desktop** (`≥768px`), la tabla puede seguir usando **`overflow-x-auto hid
 
 Aplicar de forma consistente en vistas nuevas o refactors:
 
-- **Tablas de listado:** cumplir **§6.1** (tarjetas en móvil con `spa-md-table-wrap` / `spa-md-cards-wrap`).
+- **Tablas de listado:** cumplir **§6.1** (tarjetas en móvil) y **§6.2** (formato PC estándar) salvo excepción documentada.
 - **Contenedores flex:** `min-w-0` en hijos que puedan desbordar texto largo.
 - **Cabeceras de página:** `flex-col` / `sm:flex-row`, `gap-*`, `flex-wrap` para que filtros y títulos no se recorten (`overflow-x-hidden` del shell).
 - **CRM Kanban:** móvil en columna; desde `md` scroll horizontal + snap y paneles con `min-w-0`.
