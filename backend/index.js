@@ -1,21 +1,55 @@
 require('dotenv').config();
+const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 
-/** Query `?v=` en `adminBootstrap.js` para romper caché agresiva (CDN/navegador) tras cada deploy. */
-function computeAdminBootstrapCacheKey() {
-    const g = String(process.env.RENDER_GIT_COMMIT || '').trim().slice(0, 12);
-    if (g) return g;
-    const p = String(process.env.PANEL_ASSET_VERSION || '').trim();
-    if (p) return p.slice(0, 24);
-    try {
-        const st = fs.statSync(path.join(__dirname, '..', 'frontend', 'src', 'adminBootstrap.js'));
-        return `m${Math.floor(st.mtimeMs)}`;
-    } catch {
-        return 'dev';
+/**
+ * Huella del panel admin (CSS compilado + rutas críticas) para `?v=` en index y assets.
+ * Incluye `style.css` generado por Tailwind: si Render arranca sin `npm run build`, el hash cambia
+ * al corregir el start/build y despliega de nuevo.
+ */
+function panelAdminCacheFingerprint() {
+    const parts = [
+        path.join(__dirname, '..', 'frontend', 'public', 'css', 'style.css'),
+        path.join(__dirname, '..', 'frontend', 'src', 'adminBootstrap.js'),
+        path.join(__dirname, '..', 'frontend', 'src', 'router.js'),
+        path.join(__dirname, '..', 'frontend', 'src', 'views', 'components', 'agregarPropuesta', 'propuesta.ui.js'),
+        path.join(__dirname, '..', 'frontend', 'src', 'views', 'generadorPresupuestos.js'),
+    ];
+    const h = crypto.createHash('sha256');
+    for (const p of parts) {
+        try {
+            h.update(fs.readFileSync(p));
+        } catch (_) {
+            h.update(String(p));
+        }
     }
+    return h.digest('hex').slice(0, 12);
+}
+
+/** Query `?v=` en `adminBootstrap.js` para romper caché agresiva (CDN/navegador) tras cada deploy. */
+let _cachedAdminBootstrapCacheKey = null;
+function computeAdminBootstrapCacheKey() {
+    if (_cachedAdminBootstrapCacheKey !== null) return _cachedAdminBootstrapCacheKey;
+    try {
+        const fp = panelAdminCacheFingerprint();
+        const manual = String(process.env.PANEL_ASSET_VERSION || '').trim().slice(0, 24);
+        const envCommit = String(
+            process.env.RENDER_GIT_COMMIT
+            || process.env.COMMIT_REF
+            || process.env.SOURCE_VERSION
+            || process.env.VERCEL_GIT_COMMIT_SHA
+            || ''
+        ).trim().slice(0, 12);
+        if (manual) _cachedAdminBootstrapCacheKey = `${manual}-${fp}`;
+        else if (envCommit) _cachedAdminBootstrapCacheKey = `${envCommit}-${fp}`;
+        else _cachedAdminBootstrapCacheKey = fp;
+    } catch {
+        _cachedAdminBootstrapCacheKey = 'dev';
+    }
+    return _cachedAdminBootstrapCacheKey;
 }
 const admin = require('firebase-admin');
 const sharp = require('sharp');
@@ -452,6 +486,7 @@ try {
             ? `0.0.0.0:${PORT} (URL pública la define Render, no esta dirección)`
             : `http://localhost:${PORT}`;
         console.log(`[Startup] Servidor de StayManager escuchando en ${bindHint}`);
+        console.log(`[Startup] Panel admin asset key (cache-bust): ${computeAdminBootstrapCacheKey().slice(0, 36)}…`);
         require('./jobs/expirarPropuestasIA').iniciar();
     });
 

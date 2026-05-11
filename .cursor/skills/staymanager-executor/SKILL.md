@@ -25,11 +25,13 @@ Aplicar cambios de forma segura y consistente con la arquitectura del proyecto.
 4. Clasificar el cambio: `SPA`, `SSR`, `backend core`, `migracion`, o mixto.
 5. Implementar con alcance minimo y alta cohesion.
 6. Validar reglas de tenant y modo dual (`pool` vs fallback).
-7. Ejecutar auditorias:
-   - `node scripts/tooling/audit-complexity-monitored.js` (incluye **`backend/scripts/test-repo-root-scripts-paths-doc.js`**: rutas `scripts/tooling/*.js` y `scripts/legacy/*.js` en `.md` / `.mdc`)
-   - `node scripts/tooling/audit-ui-monitored.js` (si toca frontend/UI)
-   - Solo complejidad corre el chequeo de rutas en docs, para no duplicarlo si corres UI + complejidad. Si solo tocaste UI y quieres ese chequeo: `node backend/scripts/test-repo-root-scripts-paths-doc.js`.
-8. Entregar resultado con:
+7. Vistas con **formulario multipaso** en el panel: seguir **§6.3** (`.cursor/rules/20-frontend-design-system.mdc`) — clases `spa-form-page`, `spa-form-section`, `spa-form-summary-*` en `frontend/public/css/source.css`; no dejar un único bloque gris que mezcle pasos y resumen.
+8. **Ejecutar** en esta sesión (terminal del agente) la verificación que corresponda al alcance; no basta con listar comandos al usuario:
+   - `node scripts/tooling/audit-complexity-monitored.js` si hubo lógica/servicios/rutas/scripts de app (incluye **`backend/scripts/test-repo-root-scripts-paths-doc.js`**: rutas `scripts/tooling/*.js` y `scripts/legacy/*.js` en `.md` / `.mdc`).
+   - `node scripts/tooling/audit-ui-monitored.js` si hubo frontend/UI/markup/CSS.
+   - `npm run build:css` en `backend/` si cambió **`frontend/public/css/source.css`**, tokens Tailwind o clases nuevas en vistas.
+   - Si el bloque mezcla ámbitos: **todos** los anteriores que apliquen. Solo complejidad corre el chequeo de rutas en docs; si solo tocaste UI y quieres ese chequeo: `node backend/scripts/test-repo-root-scripts-paths-doc.js`.
+9. Entregar resultado con:
    - cambios realizados
    - riesgos residuales
    - pruebas ejecutadas o pendientes
@@ -42,4 +44,4 @@ Aplicar cambios de forma segura y consistente con la arquitectura del proyecto.
 - [ ] Querys con filtro de empresa.
 - [ ] Mapeo `snake_case -> camelCase` aplicado.
 - [ ] Sin secretos ni hardcodeo sensible.
-- [ ] Auditorias corridas segun alcance.
+- [ ] Auditorías y build CSS **ejecutados** según alcance (paso 8), con resultado indicado en la respuesta.

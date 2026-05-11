@@ -18,6 +18,11 @@ Estas instrucciones son para sesiones de trabajo en **Cursor** sobre este reposi
 2. **Tablero por tema:** si la sesión trabaja una iniciativa con ID `SM-*`, mantener **`TASKS/tablero.md`** al día (columna, **Última nota** con fecha al crear/modificar/eliminar trabajo del tema). Flujo y detalle en **`LEER-PRIMERO.md`** § *Flujo al iniciar o retomar* y regla **`50-tasks-tablero-y-temas.mdc`**.
 3. No sustituir el backlog por el archivo de coordinación: el backlog define **qué** construye el producto; la coordinación define **avisos cruzados** con Claude Code en la dimensión IA venta.
 4. Tras cambios que impacten a Claude Code en IA venta: dejar handoff en `TASKS/coordinacion-cursor-claude-ia-venta.md` (plantilla §4.1) y, si aplica, una línea en §6.
+5. **Verificación obligatoria al cerrar un bloque de cambios de código:** ejecutar en terminal (no limitarse a indicar comandos al usuario) los que correspondan al alcance, desde la raíz del repo salvo donde se indica:
+   - Cambios en **`frontend/`**, **`frontend/public/css/source.css`**, clases Tailwind en vistas o tokens en `backend/tailwind.config.js`: **`npm run build:css`** en `backend/` (o el build admin que use el flujo actual del proyecto).
+   - Cambios de UI/markup/CSS en panel o sitio público: **`node scripts/tooling/audit-ui-monitored.js`** (criterios en `CLAUDE.md`).
+   - Cambios de lógica, servicios, rutas o scripts de aplicación: **`node scripts/tooling/audit-complexity-monitored.js`**.
+   - Si el bloque mezcla ámbitos: **todos** los que apliquen (p. ej. UI + lógica → ambos audits + build CSS si hubo `source.css`/clases nuevas).
 
 ## 3. Relación entre los dos archivos TASKS
 

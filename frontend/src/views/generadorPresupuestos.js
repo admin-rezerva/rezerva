@@ -14,6 +14,26 @@ let editId = null;
 
 function formatCurrency(value) { return `$${(Math.round(value) || 0).toLocaleString('es-CL')}`; }
 
+function _gpSection(innerHtml) {
+    return `<section class="spa-form-section">${innerHtml}</section>`;
+}
+
+function _gpHeading(num, iconClass, title) {
+    return `<h3 class="spa-form-section-title"><span class="spa-form-section-badge">${num}</span><i class="fa-solid ${iconClass} text-primary-500" aria-hidden="true"></i><span>${title}</span></h3>`;
+}
+
+function _setResultsContainerVisible(visible) {
+    const el = document.getElementById('results-container');
+    if (!el) return;
+    if (visible) {
+        el.classList.remove('hidden');
+        el.classList.add('flex', 'flex-col', 'gap-8');
+    } else {
+        el.classList.add('hidden');
+        el.classList.remove('flex', 'flex-col', 'gap-8');
+    }
+}
+
 async function loadInitialData() {
     try {
         [allClients, allCanales] = await Promise.all([
@@ -80,11 +100,14 @@ function clearClientSelection() {
 }
 
 function createPropertyCheckbox(prop, isSuggested) {
+    const box = isSuggested
+        ? 'border-primary-200 bg-primary-50/90'
+        : 'border-gray-200 bg-white';
     return `
-    <div class="p-2 border rounded-md flex items-center justify-between bg-white">
-        <div>
-            <input type="checkbox" id="cb-${prop.id}" data-id="${prop.id}" class="propiedad-checkbox h-4 w-4 text-primary-600 border-gray-300 rounded" ${isSuggested ? 'checked' : ''}>
-            <label for="cb-${prop.id}" class="ml-2 font-medium">${prop.nombre}</label>
+    <div class="flex items-center justify-between rounded-lg border p-3 ${box}">
+        <div class="min-w-0">
+            <input type="checkbox" id="cb-${prop.id}" data-id="${prop.id}" class="propiedad-checkbox h-4 w-4 shrink-0 align-middle text-primary-600 border-gray-300 rounded" ${isSuggested ? 'checked' : ''}>
+            <label for="cb-${prop.id}" class="ml-2 font-medium text-gray-900">${prop.nombre}</label>
             <span class="ml-2 text-sm text-gray-500">(Cap: ${prop.capacidad})</span>
         </div>
     </div>`;
@@ -101,8 +124,17 @@ async function renderSelectionUI() {
     selectedProperties = [...availabilityData.suggestion.propiedades];
 
     const suggestedIds = new Set(availabilityData.suggestion.propiedades.map(p => p.id));
-    suggestionList.innerHTML = `<h4 class="font-medium text-gray-700">Propiedades Sugeridas</h4>` + availabilityData.suggestion.propiedades.map(p => createPropertyCheckbox(p, true)).join('');
-    availableList.innerHTML = availabilityData.availableProperties.filter(p => !suggestedIds.has(p.id)).map(p => createPropertyCheckbox(p, false)).join('');
+    const sugeridasHtml = availabilityData.suggestion.propiedades.map((p) => createPropertyCheckbox(p, true)).join('');
+    suggestionList.innerHTML = `
+        <div class="rounded-xl border border-primary-200 bg-primary-50/60 p-3 md:p-4">
+          <h4 class="mb-2 text-sm font-semibold text-primary-900">Propiedades Sugeridas</h4>
+          <div class="space-y-2">${sugeridasHtml}</div>
+        </div>`;
+    const otros = (availabilityData.availableProperties || []).filter((p) => !suggestedIds.has(p.id));
+    availableList.innerHTML = otros.length
+        ? `<h4 class="mb-2 mt-4 font-medium text-gray-800 md:mt-5">Otras Cabañas Disponibles</h4>
+           <div class="grid max-h-60 grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2">${otros.map((p) => createPropertyCheckbox(p, false)).join('')}</div>`
+        : '';
 
     document.querySelectorAll('.propiedad-checkbox').forEach(cb => cb.addEventListener('change', handleSelectionChange));
 
@@ -181,82 +213,85 @@ async function generateBudgetText() {
 
 export function render() {
     return `
-        <div class="bg-white p-8 rounded-lg shadow space-y-6">
-            <h2 class="text-2xl font-semibold text-gray-900">Generador de Presupuestos</h2>
+        <div class="spa-form-page generador-presupuestos-view">
+            <h2 class="text-2xl font-semibold text-gray-900 md:text-3xl">Generador de Presupuestos</h2>
 
-            <fieldset class="p-4 border rounded-md">
-                <legend class="px-2 font-semibold">1. Datos del Cliente</legend>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="client-search" class="block text-sm font-medium">Buscar cliente existente</label>
-                        <input type="text" id="client-search" placeholder="Escribe para buscar..." class="form-input mt-1">
-                        <div id="client-results-list" class="hidden mt-1 border rounded-md max-h-32 overflow-y-auto bg-white z-10 absolute w-full max-w-sm"></div>
-                        <div id="cliente-bloqueo-alert" class="hidden mt-2 p-3 rounded-lg border border-danger-300 bg-danger-50 text-xs">
-                            <p class="font-semibold text-danger-800 mb-1">🚫 Cliente Bloqueado</p>
-                            <p id="cliente-bloqueo-motivo" class="text-danger-700 mb-2"></p>
-                            <p class="text-danger-600 mb-2">Para poder generar un presupuesto, primero debes desbloquear al cliente desde su ficha.</p>
-                            <button id="ir-editar-cliente-btn" class="btn-outline text-xs py-1 px-2 border-danger-400 text-danger-700 hover:bg-danger-100">Ir a Editar Cliente →</button>
+            ${_gpSection(`
+                ${_gpHeading(1, 'fa-user', 'Datos del Cliente')}
+                <div class="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-x-10 lg:gap-y-6">
+                    <div class="relative">
+                        <label for="client-search" class="block text-sm font-medium text-gray-700">Buscar cliente existente</label>
+                        <input type="text" id="client-search" placeholder="Escribe para buscar..." autocomplete="off" class="form-input mt-1 w-full">
+                        <div id="client-results-list" class="absolute z-20 mt-1 hidden max-h-32 w-full overflow-y-auto rounded-md border border-gray-200 bg-white shadow-sm"></div>
+                        <div id="cliente-bloqueo-alert" class="mt-2 hidden rounded-lg border border-danger-300 bg-danger-50 p-3 text-xs">
+                            <p class="mb-1 flex items-center gap-1.5 font-semibold text-danger-800"><i class="fa-solid fa-ban"></i> Cliente bloqueado</p>
+                            <p id="cliente-bloqueo-motivo" class="mb-2 text-danger-700"></p>
+                            <p class="mb-2 text-danger-600">Para poder generar un presupuesto, primero debes desbloquear al cliente desde su ficha.</p>
+                            <button id="ir-editar-cliente-btn" type="button" class="btn-outline border-danger-400 px-2 py-1 text-xs text-danger-700 hover:bg-danger-100">Ir a Editar Cliente <i class="fa-solid fa-arrow-right text-[10px]"></i></button>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium">... o añade/actualiza los datos del cliente</label>
-                        <div class="grid grid-cols-2 gap-4 mt-1">
-                            <input type="text" id="new-client-name" placeholder="Nombre completo" class="form-input col-span-2">
-                            <input type="text" id="new-client-company" placeholder="Empresa (Opcional)" class="form-input">
-                            <input type="tel" id="new-client-phone" placeholder="Teléfono (Opcional)" class="form-input">
-                            <input type="email" id="new-client-email" placeholder="Email(s) separados por ;" class="form-input col-span-2">
+                        <span class="mb-1 block text-sm font-medium text-gray-700">O añade / actualiza los datos del cliente</span>
+                        <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <input type="text" id="new-client-name" placeholder="Nombre completo" class="form-input sm:col-span-2">
+                            <input type="text" id="new-client-company" placeholder="Empresa (opcional)" class="form-input">
+                            <input type="tel" id="new-client-phone" placeholder="Teléfono (opcional)" class="form-input">
+                            <input type="email" id="new-client-email" placeholder="Email(s) separados por ;" class="form-input sm:col-span-2">
                         </div>
                     </div>
                 </div>
-            </fieldset>
+            `)}
 
-            <fieldset class="p-4 border rounded-md">
-                <legend class="px-2 font-semibold">2. Fechas y Personas</legend>
-                <div class="flex flex-wrap items-end gap-4">
-                    <div>
-                        <label for="fecha-llegada" class="block text-sm font-medium">Fecha de Llegada</label>
-                        <input type="date" id="fecha-llegada" class="form-input mt-1">
+            ${_gpSection(`
+                ${_gpHeading(2, 'fa-calendar-days', 'Fechas y Personas')}
+                <div class="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end">
+                  <div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
+                    <div class="min-w-[9.5rem]">
+                        <label for="fecha-llegada" class="block text-sm font-medium text-gray-700">Fecha de llegada</label>
+                        <input type="date" id="fecha-llegada" class="form-input mt-1 w-full sm:w-auto">
                     </div>
-                    <div>
-                        <label for="fecha-salida" class="block text-sm font-medium">Fecha de Salida</label>
-                        <input type="date" id="fecha-salida" class="form-input mt-1">
+                    <div class="min-w-[9.5rem]">
+                        <label for="fecha-salida" class="block text-sm font-medium text-gray-700">Fecha de salida</label>
+                        <input type="date" id="fecha-salida" class="form-input mt-1 w-full sm:w-auto">
                     </div>
-                    <div>
-                        <label for="personas" class="block text-sm font-medium">N° de Personas</label>
-                        <input type="number" id="personas" min="1" class="form-input mt-1">
+                    <div class="w-full min-w-[6rem] sm:w-28">
+                        <label for="personas" class="block text-sm font-medium text-gray-700">Nº Personas</label>
+                        <input type="number" id="personas" min="1" class="form-input mt-1 w-full">
                     </div>
-                    <div class="flex items-center">
-                        <input id="sin-camarotes" type="checkbox" class="h-4 w-4 text-primary-600 border-gray-300 rounded">
-                        <label for="sin-camarotes" class="ml-2 block text-sm font-medium">Sin Camarotes</label>
-                    </div>
-                    <button id="generar-propuesta-btn" class="btn-primary">Generar Propuesta</button>
+                  </div>
+                  <div class="flex flex-col gap-3 border-t border-gray-100 pt-3 sm:flex-row sm:flex-wrap sm:items-center sm:border-0 sm:pt-0 lg:ml-auto lg:flex-1 lg:justify-end">
+                    <label class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
+                      <input id="sin-camarotes" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-primary-600">
+                      <span>Excluir camarotes</span>
+                    </label>
+                    <button id="generar-propuesta-btn" type="button" class="btn-primary w-full shrink-0 sm:w-auto lg:min-w-[11rem]">Generar propuesta</button>
+                  </div>
                 </div>
-            </fieldset>
+            `)}
 
-            <div id="status-container" class="text-center text-gray-500 hidden p-4"></div>
+            <div id="status-container" class="hidden rounded-lg border border-gray-200 bg-white p-4 text-center text-gray-500"></div>
 
-            <div id="results-container" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
-                <fieldset class="p-4 border rounded-md">
-                    <legend class="px-2 font-semibold">3. Propuesta y Modificación de Cabañas</legend>
-                    <div id="suggestion-list" class="space-y-2"></div>
-                    <h4 class="font-medium text-gray-700 mt-4 border-t pt-4">Otras Cabañas Disponibles</h4>
-                    <div id="available-list" class="mt-2 space-y-2 max-h-60 overflow-y-auto"></div>
-                </fieldset>
-                <fieldset class="p-4 border rounded-md flex flex-col">
-                    <legend class="px-2 font-semibold">4. Presupuesto Final</legend>
-                    <div class="flex-grow flex flex-col">
-                        <div class="p-2 bg-gray-800 text-white rounded-t-md flex justify-between items-center">
-                            <span class="font-semibold">Resumen de Precios</span>
-                            <span id="summary-precio-final" class="text-lg font-bold">$0</span>
-                        </div>
-                        <textarea id="presupuesto-preview" class="form-input w-full flex-grow rounded-b-md rounded-t-none"></textarea>
+            <div id="results-container" class="hidden">
+                ${_gpSection(`
+                    ${_gpHeading(3, 'fa-house-chimney', 'Propuesta y cabañas')}
+                    <div id="suggestion-list"></div>
+                    <div id="available-list" class="mt-2"></div>
+                `)}
+                <section class="presupuesto-summary-panel spa-form-summary flex min-h-0 w-full flex-col lg:min-h-[28rem]">
+                    <div class="spa-form-summary-bar flex flex-wrap items-center justify-between gap-3">
+                        <span class="text-base md:text-lg">Presupuesto final</span>
+                        <span id="summary-precio-final" class="text-xl font-bold tabular-nums md:text-2xl">$0</span>
                     </div>
-                    <div class="flex justify-end gap-2 mt-2">
-                        <button id="guardar-presupuesto-btn" class="btn-secondary">Guardar Borrador</button>
-                        <button id="copy-btn" class="btn-secondary">Copiar</button>
-                        <button id="email-btn" class="btn-primary" disabled>Enviar por Email</button>
+                    <div class="spa-form-summary-body flex min-h-0 flex-1 flex-col">
+                        <label for="presupuesto-preview" class="sr-only">Texto del presupuesto</label>
+                        <textarea id="presupuesto-preview" rows="22" class="form-input min-h-[320px] w-full flex-1 resize-y font-mono text-sm md:min-h-[420px] lg:min-h-[480px]"></textarea>
                     </div>
-                </fieldset>
+                    <div class="flex flex-wrap justify-end gap-2 border-t border-gray-200 px-5 py-4 md:gap-3">
+                        <button id="guardar-presupuesto-btn" type="button" class="btn-secondary">Guardar borrador</button>
+                        <button id="copy-btn" type="button" class="btn-secondary">Copiar</button>
+                        <button id="email-btn" type="button" class="btn-primary" disabled>Enviar por email</button>
+                    </div>
+                </section>
             </div>
         </div>
     `;
@@ -280,14 +315,14 @@ function _crearRunSearch(generarBtn) {
         generarBtn.textContent = 'Generando...';
         statusContainer.textContent = 'Buscando disponibilidad y sugerencias...';
         statusContainer.classList.remove('hidden');
-        document.getElementById('results-container').classList.add('hidden');
+        _setResultsContainerVisible(false);
 
         try {
             availabilityData = await fetchAPI('/propuestas/generar', { method: 'POST', body: payload });
             allProperties = availabilityData.allProperties;
             if (availabilityData.suggestion) {
                 statusContainer.classList.add('hidden');
-                document.getElementById('results-container').classList.remove('hidden');
+                _setResultsContainerVisible(true);
                 await renderSelectionUI();
                 return true;
             } else {

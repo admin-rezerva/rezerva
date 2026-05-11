@@ -91,6 +91,8 @@ El proyecto usa un sistema de tokens de color centralizado en `backend/tailwind.
 
 **Tablas de listado en la SPA:** en móvil usar **tarjetas** (render dual), no solo scroll horizontal; clases **`spa-md-table-wrap`** / **`spa-md-cards-wrap`** en `source.css` (**§6.1**). En **PC** (`≥md`), seguir el **estándar visual de columnas** (entidad con avatar + líneas, fechas localizadas con icono, detalles en bloque, pills de estado con tokens, acción con `form-select`) — **§6.2** en `.cursor/rules/20-frontend-design-system.mdc`. Referencia canónica: `frontend/src/views/gestionarEsperaDisponibilidad.js`.
 
+**Formularios largos / multipaso (panel):** contenedor **`spa-form-page`**, bloques **`spa-form-section`** + **`spa-form-section-title`** / **`spa-form-section-badge`**, resumen/CTA **`spa-form-summary`** / **`spa-form-summary-bar`** — **§6.3** en `.cursor/rules/20-frontend-design-system.mdc`. Referencias: `frontend/src/views/components/agregarPropuesta/propuesta.ui.js`, `frontend/src/views/generadorPresupuestos.js`; tras tocar `source.css`: `cd backend && npm run build:css`.
+
 **Al terminar cualquier tarea que toque el frontend, ejecutar siempre:**
 ```bash
 node scripts/tooling/audit-ui-monitored.js
@@ -147,6 +149,7 @@ node scripts/tooling/hooks-creditos.js [comando]
 - Todo el código backend reside en `backend/`.
 - Frontend SPA reside en `frontend/src/` (arquitectura de componentes de vistas).
 - Scripts de ejecución y testing: `npm run dev` en el directorio backend, o deploy mediante push a `main` para Render.
+- **Render / producción (panel SPA):** desde la **raíz del repo** usar **`npm start`**, que ejecuta el build de Tailwind (`prestart` → `backend`). Si el servicio en Render usa solo `node backend/index.js` sin build previo, **`frontend/public/css/style.css`** puede no reflejar las clases nuevas y el formato del panel se verá viejo. Detalle: **`LEER-PRIMERO.md`** (Referencias de entorno → Panel admin en Render).
 - Usa EJS para SSR y TailwindCSS (`npm run build:css` o `npm run build:website-css`) para estilos.
 - Base de datos: Pool PostgreSQL en `backend/db/postgres.js` (null si DATABASE_URL no está). Firestore vía `firebase-admin` (legacy, siempre disponible para autenticación y colecciones no migradas).
 - Estado de migración y tablas creadas: ver `SHARED_CONTEXT.md` sección 2.

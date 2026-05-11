@@ -7,7 +7,49 @@ let todosLosCanales = [];
 let listenerAgregado = false;
 
 function formatCurrency(value) { return `$${(Math.round(value) || 0).toLocaleString('es-CL')}`; }
-function formatDate(dateString) { return new Date(dateString + 'T00:00:00Z').toLocaleDateString('es-CL', { timeZone: 'UTC' }); }
+
+const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+function escHtml(s) {
+    return String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/"/g, '&quot;');
+}
+
+function hashHue(str) {
+    let h = 0;
+    for (let i = 0; i < str.length; i += 1) {
+        h = ((h << 5) - h) + str.charCodeAt(i);
+    }
+    return Math.abs(h) % 360;
+}
+
+/** Avatar compacto PC — mismo criterio que lista de espera §6.2 */
+function avatarClientePropuesta(nombreMostrado, stableKey) {
+    const name = String(nombreMostrado || '—').trim();
+    const parts = name.split(/\s+/).filter(Boolean);
+    let initials = '?';
+    if (parts.length >= 2) initials = `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
+    else if (parts.length === 1 && parts[0].length >= 2) initials = parts[0].slice(0, 2).toUpperCase();
+    else if (parts.length === 1) initials = `${parts[0][0] || '?'}`.toUpperCase();
+    const key = stableKey || name;
+    const hue = hashHue(String(key));
+    const style = `background-color:hsl(${hue} 42% 90%);color:hsl(${hue} 38% 22%)`;
+    return `<div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold" style="${style}" aria-hidden="true">${initials}</div>`;
+}
+
+function formatFechaEstadiaCorta(iso) {
+    if (!iso || !/^\d{4}-\d{2}-\d{2}/.test(String(iso))) return '—';
+    const [y, m, d] = String(iso).slice(0, 10).split('-');
+    const mi = parseInt(m, 10) - 1;
+    const mes = MESES_CORTO[mi] || m;
+    return `${parseInt(d, 10)} ${mes} ${y}`;
+}
+
+function formatRangoEstadiaPC(inicio, fin) {
+    return `${formatFechaEstadiaCorta(inicio)} → ${formatFechaEstadiaCorta(fin)}`;
+}
 
 /** Misma lógica de filtros y orden que antes de renderizar filas/tarjetas. */
 function getPropuestasFiltradasOrdenadas() {
@@ -34,7 +76,9 @@ function getPropuestasFiltradasOrdenadas() {
 
 function camposFilaPropuesta(item) {
     const isIncomplete = !item.clienteId || item.monto === 0 || (item.origen === 'ical' && !item.clienteId);
-    const icalIndicator = item.origen === 'ical' ? '<span title="Generado desde iCal" class="mr-2">🗓️</span>' : '';
+    const icalIndicator = item.origen === 'ical'
+        ? '<i class="fa-solid fa-calendar-week mr-1.5 shrink-0 text-primary-600" title="Origen iCal" aria-hidden="true"></i>'
+        : '';
     const tipoTexto = item.tipo === 'propuesta' ? 'Reserva Tentativa' : 'Presupuesto Formal';
     const clienteNombre = item.origen === 'ical' && isIncomplete ? (item.idReservaCanal || item.id) : (item.clienteNombre || 'N/A');
     const montoTexto = (isIncomplete && item.monto === 0) ? 'Por completar' : formatCurrency(item.monto);
@@ -60,82 +104,65 @@ function botonesAccionHtml(item, isIncomplete) {
                 <button type="button" data-id="${item.id}" data-tipo="${item.tipo}" data-ids-reservas="${idsReservas}" class="reject-btn btn-danger text-xs w-full min-h-[2.5rem]">Rechazar</button>`;
 }
 
-function renderTabla() {
-    const tbody = document.getElementById('propuestas-tbody');
+/** Vista única en tarjetas (móvil y escritorio). El patrón spa-md-* muestra tabla en PC y oculta tarjetas; aquí no lo usamos. */
+function renderPropuestas() {
     const cardsRoot = document.getElementById('propuestas-cards');
-    if (!tbody || !cardsRoot) return;
+    if (!cardsRoot) return;
 
     const propuestasFiltradas = getPropuestasFiltradasOrdenadas();
 
     if (propuestasFiltradas.length === 0) {
-        const empty = '<tr><td colspan="10" class="text-center text-gray-500 py-4">No hay propuestas que coincidan con los filtros.</td></tr>';
-        tbody.innerHTML = empty;
-        cardsRoot.innerHTML = '<p class="text-center text-sm text-gray-500 py-8">No hay propuestas que coincidan con los filtros.</p>';
+        cardsRoot.innerHTML = '<p class="rounded-lg border border-gray-200 bg-white py-12 text-center text-sm text-gray-500">No hay propuestas que coincidan con los filtros.</p>';
         return;
     }
-
-    tbody.innerHTML = propuestasFiltradas.map((item, index) => {
-        const {
-            isIncomplete, icalIndicator, tipoTexto, clienteNombre, montoTexto, personasTexto, noches,
-        } = camposFilaPropuesta(item);
-
-        return `
-        <tr class="border-b text-sm hover:bg-gray-50 ${isIncomplete ? 'bg-warning-50' : ''}">
-            <td class="p-2 text-center font-medium text-gray-500">${index + 1}</td>
-            <td class="p-2">${icalIndicator}${tipoTexto} ${isIncomplete ? '<span class="text-danger-600 font-medium">(Incompleta)</span>' : ''}</td>
-            <td class="p-2 font-medium">${item.canalNombre || 'N/A'}</td>
-            <td class="p-2 font-medium truncate" style="max-width: 200px;" title="${clienteNombre}">${clienteNombre}</td>
-            <td class="p-2">${formatDate(item.fechaLlegada)} al ${formatDate(item.fechaSalida)}</td>
-            <td class="p-2 text-center">${noches}</td>
-            <td class="p-2 text-center font-bold">${personasTexto}</td>
-            <td class="p-2">${item.propiedadesNombres}</td>
-            <td class="p-2 font-semibold text-right">${montoTexto}</td>
-            <td class="p-2 text-center space-x-2 whitespace-nowrap">
-                <button type="button" data-id="${item.id}" data-tipo="${item.tipo}" class="edit-btn btn-table-copy">Editar/Completar</button>
-                <button type="button" data-id="${item.id}" data-tipo="${item.tipo}" data-ids-reservas="${item.idsReservas?.join(',')}" data-cliente-id="${item.clienteId || ''}" class="approve-btn btn-table-edit" ${isIncomplete ? 'disabled' : ''}>Aprobar</button>
-                <button type="button" data-id="${item.id}" data-tipo="${item.tipo}" data-ids-reservas="${item.idsReservas?.join(',')}" class="reject-btn btn-table-delete">Rechazar</button>
-            </td>
-        </tr>
-    `;
-    }).join('');
 
     cardsRoot.innerHTML = propuestasFiltradas.map((item, index) => {
         const {
             isIncomplete, icalIndicator, tipoTexto, clienteNombre, montoTexto, personasTexto, noches,
         } = camposFilaPropuesta(item);
+        const stableKey = item.clienteId || item.idReservaCanal || item.id;
+        const propsTitle = escHtml(item.propiedadesNombres || '');
+        const canalNombre = escHtml(item.canalNombre || 'N/A');
 
         return `
-        <div class="rounded-xl border border-gray-200 p-4 shadow-sm ${isIncomplete ? 'bg-warning-50' : 'bg-white'}">
-            <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                    <div class="text-xs font-medium text-gray-500">#${index + 1}</div>
-                    <div class="mt-0.5 text-sm font-semibold text-gray-900">${icalIndicator}${tipoTexto}${isIncomplete ? ' <span class="text-danger-600">(Incompleta)</span>' : ''}</div>
+        <article class="overflow-hidden rounded-xl border border-gray-200 shadow-sm ${isIncomplete ? 'bg-warning-50/90' : 'bg-white'}" aria-labelledby="prop-card-title-${index}">
+            <div class="flex flex-wrap items-start justify-between gap-3 border-b border-primary-100 bg-primary-50 px-4 py-3 md:items-center">
+                <div class="flex min-w-0 flex-1 items-start gap-3 md:items-center">
+                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-600 text-sm font-bold text-white" aria-hidden="true">${index + 1}</span>
+                    <div class="min-w-0">
+                        <div id="prop-card-title-${index}" class="text-sm font-semibold text-gray-900">${icalIndicator}<span>${tipoTexto}</span>${isIncomplete ? ' <span class="text-danger-600">(Incompleta)</span>' : ''}</div>
+                        <div class="mt-0.5 text-xs font-medium text-gray-600">${canalNombre}</div>
+                    </div>
                 </div>
-                <span class="shrink-0 rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800">${item.canalNombre || 'N/A'}</span>
+                <div class="w-full shrink-0 text-right sm:w-auto">
+                    <div class="text-xl font-bold tabular-nums text-primary-800">${montoTexto}</div>
+                </div>
             </div>
-            <div class="mt-3 space-y-2 text-sm text-gray-600">
-                <div class="flex min-w-0 items-start gap-2">
-                    <i class="fa-solid fa-user mt-0.5 w-4 shrink-0 text-center text-gray-400" aria-hidden="true"></i>
-                    <span class="min-w-0 break-words font-medium text-gray-800">${clienteNombre}</span>
+            <div class="space-y-3 p-4 text-sm text-gray-600">
+                <div class="flex min-w-0 items-start gap-3">
+                    ${avatarClientePropuesta(clienteNombre, stableKey)}
+                    <div class="min-w-0 flex-1">
+                        <div class="font-semibold text-gray-900">${escHtml(clienteNombre)}</div>
+                        ${isIncomplete ? '<div class="mt-0.5 text-xs font-medium text-warning-800">Pendiente de completar</div>' : ''}
+                    </div>
                 </div>
                 <div class="flex min-w-0 items-center gap-2">
                     <i class="fa-solid fa-calendar-days w-4 shrink-0 text-center text-gray-400" aria-hidden="true"></i>
-                    <span>${formatDate(item.fechaLlegada)} → ${formatDate(item.fechaSalida)}</span>
+                    <span class="text-gray-800">${formatRangoEstadiaPC(item.fechaLlegada, item.fechaSalida)}</span>
                 </div>
-                <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600">
-                    <span><span class="font-medium text-gray-500">Noches:</span> ${noches}</span>
-                    <span><span class="font-medium text-gray-500">Pers.:</span> ${personasTexto}</span>
+                <div class="flex flex-wrap gap-x-6 gap-y-1 text-xs">
+                    <span><span class="font-medium text-gray-500">Noches:</span> <span class="tabular-nums text-gray-800">${noches}</span></span>
+                    <span><span class="font-medium text-gray-500">Pers.:</span> <span class="font-semibold tabular-nums text-gray-900">${personasTexto}</span></span>
                 </div>
                 <div class="flex min-w-0 items-start gap-2">
                     <i class="fa-solid fa-house mt-0.5 w-4 shrink-0 text-center text-gray-400" aria-hidden="true"></i>
-                    <span class="min-w-0 break-words">${item.propiedadesNombres || '—'}</span>
+                    <span class="min-w-0 break-words text-gray-700" title="${propsTitle}">${escHtml(item.propiedadesNombres || '—')}</span>
                 </div>
-                <div class="border-t border-gray-100 pt-2 text-base font-semibold text-gray-900">${montoTexto}</div>
             </div>
-            <div class="mt-3 flex flex-col gap-2 border-t border-gray-200 pt-3">
+            <div class="flex flex-col gap-2 border-t border-gray-200 bg-gray-50/90 px-4 py-4">
                 ${botonesAccionHtml(item, isIncomplete)}
             </div>
-        </div>`;
+        </article>`;
     }).join('');
 }
 
@@ -152,14 +179,11 @@ async function fetchAndRender() {
             canalFilter.add(new Option(canal.nombre, canal.nombre));
         });
 
-        renderTabla();
+        renderPropuestas();
     } catch (error) {
-        const msg = `<tr><td colspan="10" class="text-center text-danger-500 py-4">Error al cargar: ${error.message}</td></tr>`;
-        const tbody = document.getElementById('propuestas-tbody');
         const cardsRoot = document.getElementById('propuestas-cards');
-        if (tbody) tbody.innerHTML = msg;
         if (cardsRoot) {
-            cardsRoot.innerHTML = `<p class="text-center text-sm text-danger-600 py-8">Error al cargar: ${error.message}</p>`;
+            cardsRoot.innerHTML = `<p class="rounded-lg border border-danger-200 bg-danger-50 px-4 py-8 text-center text-sm text-danger-700">Error al cargar: ${escHtml(error.message)}</p>`;
         }
     }
 }
@@ -337,26 +361,7 @@ export async function render() {
                 </div>
             </div>
 
-            <div class="spa-md-table-wrap">
-                <div class="table-container hide-scrollbar">
-                    <table class="min-w-full bg-white">
-                        <thead><tr>
-                            <th class="th w-12">#</th>
-                            <th class="th">Tipo</th>
-                            <th class="th">Canal</th>
-                            <th class="th">Cliente / ID iCal</th>
-                            <th class="th">Fechas</th>
-                            <th class="th text-center">Noches</th>
-                            <th class="th text-center">Pers.</th>
-                            <th class="th">Propiedades</th>
-                            <th class="th text-right">Monto</th>
-                            <th class="th text-center">Acciones</th>
-                        </tr></thead>
-                        <tbody id="propuestas-tbody"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div id="propuestas-cards" class="spa-md-cards-wrap space-y-4" aria-label="Propuestas y presupuestos (vista móvil)"></div>
+            <div id="propuestas-cards" class="mx-auto max-w-5xl space-y-4" aria-label="Propuestas y presupuestos"></div>
         </div>
     `;
 }
@@ -364,9 +369,9 @@ export async function render() {
 export async function afterRender() {
     await fetchAndRender();
 
-    document.getElementById('canal-filter').addEventListener('change', renderTabla);
-    document.getElementById('fecha-inicio-filter').addEventListener('input', renderTabla);
-    document.getElementById('fecha-fin-filter').addEventListener('input', renderTabla);
+    document.getElementById('canal-filter').addEventListener('change', renderPropuestas);
+    document.getElementById('fecha-inicio-filter').addEventListener('input', renderPropuestas);
+    document.getElementById('fecha-fin-filter').addEventListener('input', renderPropuestas);
 
     const panel = document.getElementById('gestionar-propuestas-panel');
     if (!listenerAgregado && panel) {

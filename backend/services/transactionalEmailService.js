@@ -14,6 +14,7 @@ const { enmascararDocumentoParaUiPublica } = require('./reservaWebCheckinIdentid
 const { esEstadoPrincipalCancelacionSync } = require('./estadosService');
 const { generarTokenParaReserva } = require('./resenasService');
 const { resolveDepositoReservaWeb } = require('./depositoReservaWebService');
+const { getPanelPublicOrigin } = require('../config/platformPublic');
 
 const PLATFORM_DOMAIN = process.env.PLATFORM_DOMAIN || 'rezerva.cl';
 
@@ -38,6 +39,8 @@ function _permiteCorreoAutomaticoHuesped(ctx, disparadorKey) {
         const off = ctx.configuracion?.emailAutomations?.digestOperacionDiario === false;
         return !off;
     }
+    /** Copia al equipo: no depende del interruptor de correos al huésped */
+    if (disparadorKey === 'notificacion_interna') return true;
     if (!_correosAutomaticosHuespedActivos(ctx)) return false;
     if (disparadorKey === 'consulta_contacto') {
         const cats0 = ctx.configuracion?.websiteSettings?.email?.correosAutomaticosCategorias;
@@ -421,10 +424,45 @@ async function construirVariablesDesdeReserva(empresaId, row, extras = {}) {
             clienteNombre = c?.nombre || '';
         } catch (_) { /* ignore */ }
     }
+    let clienteEmailFmt = extras.clienteEmail != null ? String(extras.clienteEmail).trim() : '';
+    let clienteTelefonoFmt = extras.clienteTelefono != null ? String(extras.clienteTelefono).trim() : '';
+    if ((!clienteEmailFmt || !clienteTelefonoFmt) && row.cliente_id) {
+        try {
+            const cx = await obtenerClientePorId(null, empresaId, row.cliente_id);
+            if (!clienteEmailFmt) clienteEmailFmt = (cx?.email || '').trim();
+            if (!clienteTelefonoFmt) clienteTelefonoFmt = (cx?.telefono || '').trim();
+        } catch (_) { /* ignore */ }
+    }
+    let valoresRow = row.valores;
+    if (typeof valoresRow === 'string') {
+        try {
+            valoresRow = JSON.parse(valoresRow);
+        } catch {
+            valoresRow = {};
+        }
+    }
+    if (!valoresRow || typeof valoresRow !== 'object') valoresRow = {};
+
     const fechaLlegada = _formatearFechaReserva(row.fecha_llegada, localeFecha);
     const fechaSalida = _formatearFechaReserva(row.fecha_salida, localeFecha);
     const noches = row.total_noches != null ? String(row.total_noches) : '';
-    const totalNum = Number(row.valores?.valorHuesped || 0);
+    const totalNum = Number(valoresRow.valorHuesped || 0);
+    const descCuponNum = Number(valoresRow.descuentoCupon || 0);
+    const precioListaNum = descCuponNum > 0 && totalNum > 0 ? totalNum + descCuponNum : totalNum;
+    const precioListaFmt = precioListaNum > 0 ? _fmtMonedaCLP(precioListaNum, localeFecha) : '';
+    const descuentoCuponFmt = descCuponNum > 0 ? _fmtMonedaCLP(descCuponNum, localeFecha) : '';
+    const lineaDescuentoCupon = descCuponNum > 0
+        ? (idiomaPorDefecto === 'en'
+            ? `Discount (coupon): −${descuentoCuponFmt}`
+            : `Descuento (cupón): −${descuentoCuponFmt}`)
+        : '';
+    const canalNombre = extras.canalNombre != null ? String(extras.canalNombre).trim()
+        : (row.canal_nombre != null ? String(row.canal_nombre).trim() : '');
+    const panelOrigin = getPanelPublicOrigin();
+    const idReservaInterno = row.id != null ? String(row.id) : '';
+    const linkGestionReserva = panelOrigin && idReservaInterno
+        ? `${String(panelOrigin).replace(/\/$/, '')}/gestionar-reservas?reservaId=${encodeURIComponent(idReservaInterno)}`
+        : '';
     const precio = totalNum > 0 ? _fmtMonedaCLP(totalNum, localeFecha) : '';
     const baseUrl = await obtenerBaseUrlPublica(empresaId);
     const linkResena = extras.linkResena || (extras.tokenResena ? `${baseUrl}/r/${extras.tokenResena}` : '');
@@ -602,6 +640,21 @@ async function construirVariablesDesdeReserva(empresaId, row, extras = {}) {
         MENSAJE_CONSULTA: extras.mensajeConsulta || '',
         asuntoConsultaUsuario: extras.asuntoConsultaUsuario || '',
         CONSULTA_ASUNTO_USUARIO: extras.asuntoConsultaUsuario || '',
+        clienteEmail: clienteEmailFmt,
+        CLIENTE_EMAIL: clienteEmailFmt,
+        clienteTelefono: clienteTelefonoFmt,
+        CLIENTE_TELEFONO: clienteTelefonoFmt,
+        canalNombre,
+        CANAL_NOMBRE: canalNombre,
+        precioLista: precioListaFmt,
+        PRECIO_LISTA: precioListaFmt,
+        descuentoCupon: descuentoCuponFmt,
+        DESCUENTO_CUPON: descuentoCuponFmt,
+        lineaDescuentoCupon,
+        LINEA_DESCUENTO_CUPON: lineaDescuentoCupon,
+        linkGestionReserva,
+        LINK_GESTION_RESERVA: linkGestionReserva,
+        COMENTARIOS_HUESPED: comentariosHuesped,
     };
 }
 

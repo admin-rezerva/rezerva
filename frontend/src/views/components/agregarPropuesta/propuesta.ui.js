@@ -4,11 +4,14 @@
  * Genera el HTML de un checkbox para una propiedad.
  */
 export function createPropertyCheckbox(prop, isSuggested) {
+    const box = isSuggested
+        ? 'border-primary-200 bg-primary-50/90'
+        : 'border-gray-200 bg-white';
     return `
-      <div class="p-2 border rounded-md flex items-center justify-between bg-white">
-        <div>
-          <input type="checkbox" id="cb-${prop.id}" data-id="${prop.id}" class="propiedad-checkbox h-4 w-4 text-primary-600 border-gray-300 rounded" ${isSuggested ? 'checked' : ''}>
-          <label for="cb-${prop.id}" class="ml-2 font-medium">${prop.nombre}</label>
+      <div class="flex items-center justify-between rounded-lg border p-3 ${box}">
+        <div class="min-w-0">
+          <input type="checkbox" id="cb-${prop.id}" data-id="${prop.id}" class="propiedad-checkbox h-4 w-4 shrink-0 text-primary-600 border-gray-300 rounded align-middle" ${isSuggested ? 'checked' : ''}>
+          <label for="cb-${prop.id}" class="ml-2 font-medium text-gray-900">${prop.nombre}</label>
           <span class="ml-2 text-sm text-gray-500">(Cap: ${prop.capacidad})</span>
         </div>
       </div>`;
@@ -53,142 +56,195 @@ export function renderSelectionWidgets(containerSuggestion, containerAvailable, 
     } else {
         const suggestedIds = new Set(selectedProperties.map(p => p.id));
         
-        containerSuggestion.innerHTML = `<h4 class="font-medium text-gray-700">Propiedades Sugeridas</h4>` + 
-        selectedProperties.map(p => createPropertyCheckbox(p, true)).join('');
+        containerSuggestion.innerHTML = `
+        <div class="rounded-xl border border-primary-200 bg-primary-50/60 p-3 md:p-4">
+          <h4 class="mb-2 text-sm font-semibold text-primary-900">Propiedades Sugeridas</h4>
+          <div class="space-y-2">${selectedProperties.map((p) => createPropertyCheckbox(p, true)).join('')}</div>
+        </div>`;
 
         const availableWithId = availabilityData.allValidProperties || [];
         
-        containerAvailable.innerHTML = availableWithId
-        .filter(p => !suggestedIds.has(p.id))
-        .map(p => createPropertyCheckbox(p, false))
-        .join('');
+        const otros = availableWithId
+            .filter((p) => !suggestedIds.has(p.id))
+            .map((p) => createPropertyCheckbox(p, false))
+            .join('');
+        containerAvailable.innerHTML = otros
+            ? `<h4 class="mb-2 mt-4 font-medium text-gray-800 md:mt-5">Otras Disponibles</h4>
+               <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">${otros}</div>`
+            : '';
     }
     
     document.querySelectorAll('.propiedad-checkbox').forEach(cb => cb.addEventListener('change', onSelectionChange));
 }
 
-function _renderPanelBusqueda() {
+/** Tarjeta sección — estándar panel §6.3 (`spa-form-section`). */
+function _propuestaSectionCard(inner) {
     return `
-        <div class="p-4 border rounded-md bg-gray-50 mb-6">
-          <h3 class="font-semibold text-gray-800 mb-2">1. Fechas, Personas y Disponibilidad</h3>
-          <div class="flex flex-col md:flex-row items-end space-y-4 md:space-y-0 md:space-x-4">
-            <div>
+        <section class="spa-form-section">
+          ${inner}
+        </section>`;
+}
+
+function _sectionHeading(number, iconClass, title) {
+    return `
+        <h3 class="spa-form-section-title">
+          <span class="spa-form-section-badge">${number}</span>
+          <i class="fa-solid ${iconClass} text-primary-500" aria-hidden="true"></i>
+          <span>${title}</span>
+        </h3>`;
+}
+
+function _renderPanelBusqueda() {
+    return _propuestaSectionCard(`
+        ${_sectionHeading(1, 'fa-calendar-days', 'Fechas, Personas y Disponibilidad')}
+        <div class="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end">
+          <div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
+            <div class="min-w-[9.5rem]">
               <label for="fecha-llegada" class="block text-sm font-medium text-gray-700">Llegada</label>
-              <input type="date" id="fecha-llegada" class="form-input mt-1">
+              <input type="date" id="fecha-llegada" class="form-input mt-1 w-full sm:w-auto">
             </div>
-            <div>
+            <div class="min-w-[9.5rem]">
               <label for="fecha-salida" class="block text-sm font-medium text-gray-700">Salida</label>
-              <input type="date" id="fecha-salida" class="form-input mt-1">
+              <input type="date" id="fecha-salida" class="form-input mt-1 w-full sm:w-auto">
             </div>
-            <div>
-              <label for="personas" class="block text-sm font-medium text-gray-700">N° Personas</label>
-              <input type="number" id="personas" min="1" class="form-input mt-1">
+            <div class="w-full min-w-[6rem] sm:w-28">
+              <label for="personas" class="block text-sm font-medium text-gray-700">Nº Personas</label>
+              <input type="number" id="personas" min="1" class="form-input mt-1 w-full">
             </div>
-            <div class="flex items-center pt-6">
-              <input id="sin-camarotes" type="checkbox" class="h-4 w-4 text-primary-600 border-gray-300 rounded">
-              <label for="sin-camarotes" class="ml-2 block text-sm font-medium text-gray-700">Excluir Camarotes</label>
-            </div>
-            <div class="flex items-center pt-6">
-              <input id="permitir-cambios" type="checkbox" class="h-4 w-4 text-primary-600 border-gray-300 rounded">
-              <label for="permitir-cambios" class="ml-2 block text-sm font-medium text-gray-700">Permitir cambios de cabaña</label>
-            </div>
-            <button id="buscar-btn" class="btn-primary w-full md:w-auto">Buscar Disponibilidad</button>
           </div>
-        </div>`;
+          <div class="flex flex-col gap-3 border-t border-gray-100 pt-3 sm:flex-row sm:flex-wrap sm:items-center sm:border-0 sm:pt-0 lg:ml-auto lg:flex-1 lg:justify-end">
+            <label class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
+              <input id="sin-camarotes" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-primary-600">
+              <span>Excluir Camarotes</span>
+            </label>
+            <label class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
+              <input id="permitir-cambios" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-primary-600">
+              <span>Permitir cambios de cabaña</span>
+            </label>
+            <button id="buscar-btn" type="button" class="btn-primary w-full shrink-0 sm:w-auto lg:min-w-[11rem]">Buscar Disponibilidad</button>
+          </div>
+        </div>`);
 }
 
 function _renderPanelPropiedades() {
-    return `
-          <div id="propiedades-section" class="p-4 border rounded-md bg-gray-50 mb-6">
-            <h3 class="font-semibold text-gray-800">2. Selección de Propiedades</h3>
-            <div id="suggestion-list" class="mt-2 space-y-2"></div>
-            <h4 class="font-medium text-gray-700 mt-4">Otras Disponibles</h4>
-            <div id="available-list" class="mt-2 space-y-2"></div>
-          </div>`;
+    return _propuestaSectionCard(`
+            ${_sectionHeading(2, 'fa-house-chimney', 'Selección de Propiedades')}
+            <p id="propiedades-placeholder" class="mb-3 text-sm text-gray-600">Busca disponibilidad para cargar propiedades sugeridas y alternativas.</p>
+            <div id="suggestion-list" class="mt-1"></div>
+            <div id="available-list" class="mt-1"></div>`);
 }
 
 function _renderPanelCliente() {
-    return `
-          <div id="cliente-section" class="p-4 border rounded-md bg-gray-50 mb-6">
-            <h3 class="font-semibold text-gray-800 mb-2">3. Cliente y Canal de Venta</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="relative">
-                <label id="client-form-title" class="block text-sm font-medium text-gray-700">Buscar o Crear Cliente</label>
-                <input type="text" id="client-search" placeholder="Buscar por nombre o teléfono..." class="form-input mt-1">
-                <div id="client-results-list" class="hidden mt-1 border rounded-md max-h-32 overflow-y-auto bg-white z-10 absolute w-full max-w-sm"></div>
-                <div id="cliente-bloqueo-alert" class="hidden mt-2 p-3 rounded-lg border border-danger-300 bg-danger-50 text-xs">
-                    <p class="font-semibold text-danger-800 mb-1 flex items-center gap-1.5"><i class="fa-solid fa-ban"></i> Cliente Bloqueado</p>
-                    <p id="cliente-bloqueo-motivo" class="text-danger-700 mb-2"></p>
-                    <p class="text-danger-600 mb-2">Para poder crear una reserva, primero debes desbloquear al cliente desde su ficha.</p>
-                    <button id="ir-editar-cliente-btn" class="btn-outline text-xs py-1 px-2 border-danger-400 text-danger-700 hover:bg-danger-100 flex items-center gap-1">Ir a Editar Cliente <i class="fa-solid fa-arrow-right text-[10px]"></i></button>
+    return _propuestaSectionCard(`
+            ${_sectionHeading(3, 'fa-user-tag', 'Cliente y Canal de Venta')}
+            <div class="flex flex-col gap-5">
+              <div class="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-x-5 lg:items-start">
+                <div class="relative lg:col-span-7">
+                  <label id="client-form-title" for="client-search" class="block text-sm font-medium text-gray-700">Buscar o Crear Cliente</label>
+                  <input type="text" id="client-search" placeholder="Buscar por nombre o teléfono..." autocomplete="off" class="form-input mt-1 w-full">
+                  <div id="client-results-list" class="absolute z-20 mt-1 hidden max-h-32 w-full overflow-y-auto rounded-md border bg-white shadow-sm lg:max-w-xl"></div>
+                  <div id="cliente-bloqueo-alert" class="mt-2 hidden rounded-lg border border-danger-300 bg-danger-50 p-3 text-xs">
+                    <p class="mb-1 flex items-center gap-1.5 font-semibold text-danger-800"><i class="fa-solid fa-ban"></i> Cliente Bloqueado</p>
+                    <p id="cliente-bloqueo-motivo" class="mb-2 text-danger-700"></p>
+                    <p class="mb-2 text-danger-600">Para poder crear una reserva, primero debes desbloquear al cliente desde su ficha.</p>
+                    <button id="ir-editar-cliente-btn" type="button" class="btn-outline flex items-center gap-1 border-danger-400 px-2 py-1 text-xs text-danger-700 hover:bg-danger-100">Ir a Editar Cliente <i class="fa-solid fa-arrow-right text-[10px]"></i></button>
+                  </div>
                 </div>
-                <input type="text" id="new-client-name" placeholder="Nombre completo" class="form-input mt-2">
-                <input type="text" id="new-client-lastname" placeholder="Apellido" class="form-input mt-2">
-                <input type="tel" id="new-client-phone" placeholder="Teléfono" class="form-input mt-2">
-                <input type="email" id="new-client-email" placeholder="Email (opcional)" class="form-input mt-2">
+                <div class="lg:col-span-5">
+                  <label for="canal-select" class="block text-sm font-medium text-gray-700">Canal de Venta</label>
+                  <select id="canal-select" class="form-select mt-1 w-full"></select>
+                </div>
               </div>
-              <div>
-                <label for="canal-select" class="block text-sm font-medium text-gray-700">Canal de Venta</label>
-                <select id="canal-select" class="form-select mt-1"></select>
-                <div class="mt-2">
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div>
+                  <label for="new-client-name" class="block text-sm font-medium text-gray-700">Nombre</label>
+                  <input type="text" id="new-client-name" placeholder="Nombre" class="form-input mt-1 w-full">
+                </div>
+                <div>
+                  <label for="new-client-lastname" class="block text-sm font-medium text-gray-700">Apellido</label>
+                  <input type="text" id="new-client-lastname" placeholder="Apellido" class="form-input mt-1 w-full">
+                </div>
+                <div>
                   <label for="id-reserva-canal-input" class="block text-sm font-medium text-gray-700">ID Reserva Canal</label>
-                  <input type="text" id="id-reserva-canal-input" class="form-input mt-1">
+                  <input type="text" id="id-reserva-canal-input" class="form-input mt-1 w-full">
                 </div>
-                <div id="ical-uid-container" class="mt-2 hidden">
-                  <label for="ical-uid-input" class="block text-sm font-medium text-gray-500">iCal UID (Referencia)</label>
-                  <input type="text" id="ical-uid-input" class="form-input mt-1 bg-gray-100" readonly>
-                </div>
-                <div class="mt-2">
-                  <label for="plantilla-select" class="block text-sm font-medium text-gray-700">Plantilla de Mensaje</label>
-                  <select id="plantilla-select" class="form-select mt-1"></select>
-                </div>
-                <div class="mt-3 flex items-center">
-                  <input id="enviar-email-checkbox" type="checkbox" class="h-4 w-4 text-primary-600 border-gray-300 rounded" checked>
-                  <label for="enviar-email-checkbox" class="ml-2 block text-sm font-medium text-gray-700">Enviar propuesta por correo</label>
-                </div>
-                <p id="email-warning" class="text-xs text-amber-600 mt-1 hidden flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation"></i> El cliente no tiene email registrado</p>
               </div>
-            </div>
-          </div>`;
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div>
+                  <label for="new-client-phone" class="block text-sm font-medium text-gray-700">Teléfono</label>
+                  <input type="tel" id="new-client-phone" placeholder="+56..." class="form-input mt-1 w-full">
+                </div>
+                <div>
+                  <label for="new-client-email" class="block text-sm font-medium text-gray-700">Email</label>
+                  <input type="email" id="new-client-email" placeholder="correo@..." class="form-input mt-1 w-full">
+                </div>
+                <div>
+                  <label for="plantilla-select" class="block text-sm font-medium text-gray-700">Plantilla de Mensaje</label>
+                  <select id="plantilla-select" class="form-select mt-1 w-full"></select>
+                </div>
+              </div>
+              <div id="ical-uid-container" class="hidden">
+                <label for="ical-uid-input" class="block text-sm font-medium text-gray-500">iCal UID (Referencia)</label>
+                <input type="text" id="ical-uid-input" class="form-input mt-1 w-full bg-gray-100" readonly>
+              </div>
+              <div class="flex flex-col gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-end">
+                <label class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
+                  <input id="enviar-email-checkbox" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-primary-600" checked>
+                  <span>Enviar propuesta por correo</span>
+                </label>
+              </div>
+              <p id="email-warning" class="hidden text-xs text-amber-600 sm:text-end"><i class="fa-solid fa-triangle-exclamation mr-1"></i> El cliente no tiene email registrado</p>
+            </div>`);
 }
 
 function _renderPanelResumen() {
     return `
-          <div id="pricing-section" class="p-4 border rounded-md bg-gray-50">
-            <h3 class="font-semibold text-gray-800 mb-4">4. Descuentos y Resumen Final</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-              <div class="space-y-4 md:col-span-1">
-                <div id="valor-dolar-container" class="hidden"><p id="valor-dolar-info" class="text-sm font-semibold text-primary-600"></p></div>
-
+          <section id="descuentos-section" class="spa-form-section mb-4 md:mb-5">
+            <h3 class="spa-form-section-title">
+              <span class="spa-form-section-badge">4</span>
+              <i class="fa-solid fa-tags text-primary-500" aria-hidden="true"></i>
+              <span>Descuentos y Ajustes</span>
+            </h3>
+            <div id="valor-dolar-container" class="mb-4 hidden"><p id="valor-dolar-info" class="text-sm font-semibold text-primary-600"></p></div>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <div>
-                  <label for="valor-final-fijo" class="block text-sm font-medium text-gray-900">1. Valor Final Fijo (Prioritario)</label>
-                  <input type="number" id="valor-final-fijo" placeholder="Ej: 300000" class="form-input mt-1">
-                </div>
-                <hr>
-                <div>
-                  <label for="cupon-input" class="block text-sm font-medium text-gray-700">2. Código de Descuento</label>
-                  <input type="text" id="cupon-input" class="form-input mt-1 discount-input">
-                  <div id="cupon-status" class="text-xs mt-1"></div>
+                  <label for="valor-final-fijo" class="block text-sm font-medium text-gray-900">Valor Final Fijo (Prioritario)</label>
+                  <input type="number" id="valor-final-fijo" placeholder="Ej: 300000" class="form-input mt-1 w-full">
                 </div>
                 <div>
-                  <label for="descuento-pct" class="block text-sm font-medium text-gray-700">3. Descuento Manual (%)</label>
-                  <input type="number" id="descuento-pct" placeholder="Ej: 15" class="form-input mt-1 discount-input">
+                  <label for="cupon-input" class="block text-sm font-medium text-gray-700">Código de Descuento</label>
+                  <input type="text" id="cupon-input" class="form-input discount-input mt-1 w-full">
+                  <div id="cupon-status" class="mt-1 text-xs"></div>
                 </div>
                 <div>
-                  <label id="descuento-fijo-label" for="descuento-fijo-total" class="block text-sm font-medium text-gray-700">4. Descuento Fijo Manual</label>
-                  <input type="number" id="descuento-fijo-total" placeholder="Ej: 20000" class="form-input mt-1 discount-input">
+                  <label for="descuento-pct" class="block text-sm font-medium text-gray-700">Descuento Manual (%)</label>
+                  <input type="number" id="descuento-pct" placeholder="Ej: 15" class="form-input discount-input mt-1 w-full">
                 </div>
+                <div>
+                  <label id="descuento-fijo-label" for="descuento-fijo-total" class="block text-sm font-medium text-gray-700">Descuento Fijo Manual</label>
+                  <input type="number" id="descuento-fijo-total" placeholder="Ej: 20000" class="form-input discount-input mt-1 w-full">
                 </div>
-
-              <div id="summary-original-currency-container" class="p-4 bg-primary-50 border border-primary-200 rounded-md space-y-2 md:col-span-1 hidden"></div>
-              <div id="summary-clp-container" class="p-4 bg-white rounded-md border space-y-2 md:col-span-1"></div>
             </div>
-          </div>
+          </section>
 
-          <div class="text-right pt-6 border-t mt-8">
-            <button id="guardar-propuesta-btn" class="btn-primary btn-lg">Crear Reserva Tentativa</button>
-          </div>`;
+          <section id="pricing-resumen-section" class="spa-form-summary">
+            <div class="spa-form-summary-bar text-center">
+              Resumen de Reserva
+            </div>
+            <div class="spa-form-summary-body">
+              <div id="summary-blocks-row" class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div id="summary-original-currency-container" class="hidden space-y-2 rounded-lg border border-primary-200 bg-primary-50/90 p-4"></div>
+                <div id="summary-clp-container" class="space-y-2 rounded-lg border border-gray-200 bg-gray-50/90 p-4"></div>
+              </div>
+              <div class="border-t border-gray-200 pt-4">
+                <button id="guardar-propuesta-btn" type="button" class="btn-primary btn-lg flex w-full items-center justify-center gap-2 py-3">
+                  <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                  <span id="guardar-propuesta-label">Crear Reserva Tentativa</span>
+                </button>
+                <p class="mt-3 text-center text-xs text-gray-500">Se enviará una notificación según la configuración del canal.</p>
+              </div>
+            </div>
+          </section>`;
 }
 
 function _renderModalPropuestaGuardada() {
@@ -249,17 +305,15 @@ function _renderModalListaEspera() {
  */
 export function renderPropuestaLayout() {
     return `
-    <div class="bg-white p-8 rounded-lg shadow space-y-8">
-      <div>
-        <h2 class="text-2xl font-semibold text-gray-900 mb-6">Crear/Editar Propuesta de Reserva</h2>
+    <div class="propuesta-agregar-view spa-form-page">
+        <h2 class="text-2xl font-semibold text-gray-900 md:text-3xl">Crear/Editar Propuesta de Reserva</h2>
         ${_renderPanelBusqueda()}
-        <div id="status-container" class="text-center text-gray-500 hidden p-4"></div>
-        <div id="results-container" class="hidden">
+        <div id="status-container" class="hidden rounded-lg border border-gray-200 bg-white p-4 text-center text-gray-500"></div>
+        <div id="results-container" class="space-y-4 md:space-y-5">
           ${_renderPanelPropiedades()}
-          ${_renderPanelCliente()}
-          ${_renderPanelResumen()}
         </div>
-      </div>
+        ${_renderPanelCliente()}
+        ${_renderPanelResumen()}
     </div>
     ${_renderModalPropuestaGuardada()}
     ${_renderModalListaEspera()}

@@ -1,5 +1,7 @@
 {
   "scripts": {
+    "prestart": "npm run build --prefix backend",
+    "build": "npm run build --prefix backend",
     "start": "node backend/index.js",
     "create-agent": "node backend/ai/scripts/create-agent.js",
     "mcp": "node backend/ai/openai/mcp-server/index.js",

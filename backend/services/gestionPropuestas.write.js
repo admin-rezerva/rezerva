@@ -103,7 +103,10 @@ const guardarOActualizarPropuesta = async (db, empresaId, usuarioEmail, datos, i
         await client.query('COMMIT');
     } catch (e) { await client.query('ROLLBACK'); throw e; } finally { client.release(); }
 
-    if (enviarEmail && plantillaId && clienteData?.email) {
+    // Solo enviar propuesta por correo al **crear** (POST). En PUT (actualizar) no reenviar:
+    // si el usuario guarda y en seguida aprueba, evita dos correos al cliente (propuesta + confirmación).
+    const esCreacionPropuesta = !idPropuestaExistente;
+    if (enviarEmail && plantillaId && clienteData?.email && esCreacionPropuesta) {
         try {
             await enviarEmailPropuesta(db, empresaId, { plantillaId, cliente: clienteData, propiedades, fechaLlegada: datos.fechaLlegada, fechaSalida: datos.fechaSalida, noches, personas, precioFinal: fin.actual_TotalCliente_USD * (valorDolarDia || 1), propuestaId: idGrupo, linkPago: datos.linkPago });
         } catch (e) { console.error('❌ Error enviando email de propuesta:', e.message); }

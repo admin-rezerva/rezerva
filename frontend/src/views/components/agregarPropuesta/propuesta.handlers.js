@@ -14,6 +14,15 @@ import { updateSummary } from './propuesta.precios.js';
 // Re-exportamos las funciones de clientes para que agregarPropuesta.js las use en los listeners
 export { filterClients, selectClient, clearClientSelection, updateSummary };
 
+function setGuardarPropuestaButtonLabel(text) {
+  const label = document.getElementById('guardar-propuesta-label');
+  if (label) label.textContent = text;
+  else {
+    const btn = document.getElementById('guardar-propuesta-btn');
+    if (btn) btn.textContent = text;
+  }
+}
+
 // --- Inicialización ---
 
 export async function initializeView() {
@@ -38,6 +47,16 @@ export async function initializeView() {
     }
 
     handleCanalChange();
+
+    const canalId = document.getElementById('canal-select')?.value;
+    const canal = state.allCanales.find((c) => c.id === canalId);
+    updateSummary({
+        totalPriceOriginal: 0,
+        totalPriceCLP: 0,
+        nights: 0,
+        currencyOriginal: canal?.moneda || 'CLP',
+        details: [],
+    });
 }
 
 // --- Lógica de Propuesta ---
@@ -81,6 +100,8 @@ export function renderSelectionUI() {
         state.selectedProperties,
         handleSelectionChange
     );
+
+    document.getElementById('propiedades-placeholder')?.classList.add('hidden');
     
     updateSummary(state.availabilityData.suggestion.pricing);
 }
@@ -141,7 +162,7 @@ export async function runSearch() {
     buscarBtn.textContent = 'Buscando...';
     statusContainer.textContent = 'Buscando disponibilidad y sugerencias...';
     statusContainer.classList.remove('hidden');
-    document.getElementById('results-container').classList.add('hidden');
+    document.getElementById('propiedades-placeholder')?.classList.remove('hidden');
     document.getElementById('suggestion-list').innerHTML = '';
     document.getElementById('available-list').innerHTML = '';
   
@@ -178,7 +199,6 @@ export async function runSearch() {
   
       if (state.availabilityData.suggestion) {
         statusContainer.classList.add('hidden');
-        document.getElementById('results-container').classList.remove('hidden');
         renderSelectionUI(); 
         return true;
       } else {
@@ -424,9 +444,10 @@ export async function handleGuardarPropuesta() {
     const precioFinalCalculado = parseFloat(document.getElementById('summary-precio-final')?.textContent.replace(/[$.]/g, '')) || 0;
     const nochesCalculadas = parseInt(document.getElementById('summary-noches')?.textContent) || 0;
     
-    const summaryContainer = document.getElementById('summary-clp-container');
-    const precioListaElement = summaryContainer.querySelector('div:nth-child(2) > span:nth-child(2)');
-    const precioListaCLPCalculado = precioListaElement ? parseFloat(precioListaElement.textContent.replace(/[$.]/g, '')) : (state.currentPricing.totalPriceCLP || 0);
+    const precioListaEl = document.getElementById('summary-precio-lista-clp');
+    const precioListaCLPCalculado = precioListaEl
+      ? parseFloat(precioListaEl.textContent.replace(/[$.]/g, ''))
+      : (state.currentPricing.totalPriceCLP || 0);
     
     const descuentoCLPCalculado = precioListaCLPCalculado - precioFinalCalculado;
   
@@ -466,7 +487,7 @@ export async function handleGuardarPropuesta() {
     const guardarBtn = document.getElementById('guardar-propuesta-btn');
     try {
       guardarBtn.disabled = true;
-      guardarBtn.textContent = state.editId ? 'Actualizando...' : 'Guardando...';
+      setGuardarPropuestaButtonLabel(state.editId ? 'Actualizando...' : 'Guardando...');
   
       let propuestaGuardada;
       if (state.editId) {
@@ -503,7 +524,7 @@ export async function handleGuardarPropuesta() {
       alert(`Error al guardar: ${error.message}`);
     } finally {
       guardarBtn.disabled = false;
-      guardarBtn.textContent = state.editId ? 'Actualizar Propuesta' : 'Crear Reserva Tentativa';
+      setGuardarPropuestaButtonLabel(state.editId ? 'Actualizar Propuesta' : 'Crear Reserva Tentativa');
     }
 }
 
@@ -575,7 +596,7 @@ export async function handleCargarPropuesta(loadDocId, editIdGrupo, propIdsQuery
         document.getElementById('ical-uid-input').value = propuesta.icalUid;
         document.getElementById('ical-uid-container').classList.remove('hidden');
       }
-      document.getElementById('guardar-propuesta-btn').textContent = 'Actualizar Propuesta';
+      setGuardarPropuestaButtonLabel('Actualizar Propuesta');
       if (propuesta.plantillaId) {
         document.getElementById('plantilla-select').value = propuesta.plantillaId;
       }

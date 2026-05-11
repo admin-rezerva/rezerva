@@ -70,25 +70,23 @@ export function updateSummary(pricing) {
     if (currencyOriginal !== 'CLP') {
       summaryOriginalContainer.classList.remove('hidden');
       summaryOriginalContainer.innerHTML = `
-        <h4 class="font-bold text-primary-800 text-center mb-1">Valores en ${currencyOriginal}</h4>
+        <h4 class="mb-2 text-center text-sm font-bold text-primary-800">Valores en ${currencyOriginal}</h4>
         <div class="flex justify-between text-sm"><span class="text-gray-600">Precio de Lista:</span><span class="font-medium">${formatCurrency(precioLista, currencyOriginal)}</span></div>
         <div class="flex justify-between text-sm text-danger-600"><span class="font-medium">Descuento Total:</span><span class="font-medium">-${formatCurrency(descuentoTotalEnMonedaOriginal, currencyOriginal)}</span></div>
-        <div class="flex justify-between text-base font-bold border-t pt-2 mt-2"><span>Total (${currencyOriginal}):</span><span class="text-primary-600">${formatCurrency(precioFinalEnMonedaOriginal, currencyOriginal)}</span></div>
+        <div class="mt-3 flex justify-between border-t border-primary-200 pt-3 text-base font-bold text-gray-900"><span>Total (${currencyOriginal})</span><span class="text-primary-600">${formatCurrency(precioFinalEnMonedaOriginal, currencyOriginal)}</span></div>
       `;
-      summaryCLPContainer.classList.add('md:col-span-1');
       summaryCLPContainer.classList.remove('md:col-span-2');
     } else {
       summaryOriginalContainer.classList.add('hidden');
       summaryOriginalContainer.innerHTML = '';
-      summaryCLPContainer.classList.remove('md:col-span-1');
       summaryCLPContainer.classList.add('md:col-span-2');
     }
     
     summaryCLPContainer.innerHTML = `
-      <h4 class="font-bold text-gray-800 text-center mb-1">Totales en CLP</h4>
-      <div class="flex justify-between text-sm"><span class="text-gray-600">Noches Totales:</span><span id="summary-noches" class="font-medium">${nights || 0}</span></div>
-      <div class="flex justify-between text-sm"><span class="text-gray-600">Precio Lista (CLP):</span><span class="font-medium">${formatCurrency(totalPriceCLP)}</span></div>
-      <div class="flex justify-between text-sm text-danger-600"><span class="font-medium">Descuento Total (CLP):</span><span class="font-medium">-${formatCurrency(descuentoTotalCLP)}</span></div>
-      <div class="flex justify-between text-lg font-bold border-t pt-2 mt-2"><span>Precio Final a Cobrar:</span><span id="summary-precio-final" class="text-primary-600">${formatCurrency(precioFinalCLP)}</span></div>
+      <h4 class="mb-2 text-center text-sm font-bold text-gray-800">Totales en CLP</h4>
+      <div class="flex justify-between text-sm"><span class="text-gray-600">Noches Totales:</span><span id="summary-noches" class="font-medium text-gray-900">${nights || 0}</span></div>
+      <div class="flex justify-between text-sm"><span class="text-gray-600">Precio Lista (CLP):</span><span id="summary-precio-lista-clp" class="font-medium text-gray-900">${formatCurrency(totalPriceCLP)}</span></div>
+      <div class="flex justify-between text-sm text-danger-600"><span class="font-medium">Descuento Total (CLP):</span><span id="summary-descuento-total-clp" class="font-medium">-${formatCurrency(descuentoTotalCLP)}</span></div>
+      <div class="mt-4 flex justify-between border-t border-gray-200 pt-3 text-xl font-bold text-gray-900"><span>Precio Final</span><span id="summary-precio-final" class="text-primary-600">${formatCurrency(precioFinalCLP)}</span></div>
     `;
 }

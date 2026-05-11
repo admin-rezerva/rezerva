@@ -1,7 +1,7 @@
 # Reporte de Auditoría UI
-**Generado:** 2026-05-09 02:18
-**Archivos analizados:** 190
-**Problemas encontrados:** 95 (alta: 0 / media: 5 / baja: 90)
+**Generado:** 2026-05-11 01:35
+**Archivos analizados:** 192
+**Problemas encontrados:** 96 (alta: 0 / media: 5 / baja: 91)
 
 ---
 
@@ -10,7 +10,7 @@
 | Categoría | Severidad | Ocurrencias |
 |-----------|-----------|-------------|
 | Botón con clases Tailwind directas (sin .btn-*) | media | 5 |
-| Color hexadecimal hardcodeado | baja | 90 |
+| Color hexadecimal hardcodeado | baja | 91 |
 
 ---
 
@@ -28,26 +28,27 @@
 | `frontend/src/views/normasAlojamiento.js` | 300 | `class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-600 text-white font-medium hover:bg-primary-700 disabled:opacity-50"` |
 | `backend/views/propiedad.ejs` | 1190 | `class="lg:hidden text-sm font-semibold text-primary-700 border border-primary-200 bg-primary-50 px-3 py-2 rounded-xl hover:bg-primary-100 transition-colors"` |
 
-### Color hexadecimal hardcodeado (90 ocurrencias)
+### Color hexadecimal hardcodeado (91 ocurrencias)
 **Sugerencia:** Usar tokens de color de Tailwind config  
 **Severidad:** baja
 
 | Archivo | Línea | Clase detectada |
 |---------|-------|-----------------|
+| `frontend/src/views/gestionarEsperaDisponibilidad.js` | 79 | `#6b7280` |
 | `backend/views/marketplace/google-hotels-catalog.ejs` | 104 | `#222222` |
 | `backend/views/marketplace/google-hotels-catalog.ejs` | 107 | `#717171` |
 | `backend/views/marketplace/google-hotels-catalog.ejs` | 119 | `#DDDDDD` |
 | `backend/views/marketplace/google-hotels-catalog.ejs` | 120 | `#717171` |
 | `backend/views/marketplace/google-hotels-catalog.ejs` | 121 | `#222222` |
-| `backend/views/marketplace/index.ejs` | 195 | `#717171` |
-| `backend/views/marketplace/index.ejs` | 197 | `#DDDDDD` |
-| `backend/views/marketplace/index.ejs` | 197 | `#222222` |
-| `backend/views/marketplace/index.ejs` | 197 | `#222222` |
-| `backend/views/marketplace/index.ejs` | 313 | `#717171` |
-| `backend/views/marketplace/index.ejs` | 314 | `#222222` |
-| `backend/views/marketplace/index.ejs` | 321 | `#DDDDDD` |
-| `backend/views/marketplace/index.ejs` | 322 | `#717171` |
-| `backend/views/marketplace/index.ejs` | 323 | `#222222` |
+| `backend/views/marketplace/index.ejs` | 197 | `#717171` |
+| `backend/views/marketplace/index.ejs` | 199 | `#DDDDDD` |
+| `backend/views/marketplace/index.ejs` | 199 | `#222222` |
+| `backend/views/marketplace/index.ejs` | 199 | `#222222` |
+| `backend/views/marketplace/index.ejs` | 325 | `#717171` |
+| `backend/views/marketplace/index.ejs` | 326 | `#222222` |
+| `backend/views/marketplace/index.ejs` | 333 | `#DDDDDD` |
+| `backend/views/marketplace/index.ejs` | 334 | `#717171` |
+| `backend/views/marketplace/index.ejs` | 335 | `#222222` |
 | `backend/views/partials/marketplace-brand-logo.ejs` | 9 | `#222222` |
 | `backend/views/partials/marketplace-common-styles.ejs` | 4 | `#FFFFFF` |
 | `backend/views/partials/marketplace-common-styles.ejs` | 4 | `#222222` |
@@ -137,6 +138,7 @@
 | `backend/views/propiedad.ejs` | 4 |
 | `frontend/src/views/components/gestionarReservas/reservas.modals.view.js` | 2 |
 | `frontend/src/views/comunicaciones.js` | 1 |
+| `frontend/src/views/gestionarEsperaDisponibilidad.js` | 1 |
 | `frontend/src/views/normasAlojamiento.js` | 1 |
 | `backend/views/partials/marketplace-brand-logo.ejs` | 1 |
 | `backend/views/partials/marketplace-theme-color.ejs` | 1 |

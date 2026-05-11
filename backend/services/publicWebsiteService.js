@@ -25,6 +25,7 @@ const {
 const { obtenerNombreEstadoGestionInicialReservaConfirmada } = require('./estadosService');
 const {
     enviarPorDisparador,
+    enviarNotificacionInterna,
     construirVariablesDesdeReserva,
     resolverLinkResenaOutbound,
 } = require('./transactionalEmailService');
@@ -1226,6 +1227,7 @@ const crearReservaPublica = async (db, empresaId, datosFormulario) => {
             cantidad_huespedes: Math.max(1, parseInt(String(personas ?? '1'), 10) || 1),
             valores: valoresFila,
             propiedad_id: propiedadIdInsert,
+            canal_nombre: canal.nombre || '',
         };
         const linkResena = await resolverLinkResenaOutbound(empresaId, {
             reservaRef: idReservaCanal,
@@ -1249,19 +1251,18 @@ const crearReservaPublica = async (db, empresaId, datosFormulario) => {
             console.log('[crearReservaPublica] Correo de confirmación enviado:', envio.messageId || '(sin messageId)');
         }
         const adminEmail = String(variablesCorreo.contactoEmail || '').trim().toLowerCase();
-        const clienteEmail = String(email || '').trim().toLowerCase();
-        if (adminEmail && adminEmail !== clienteEmail) {
-            const envioAdmin = await enviarPorDisparador(null, empresaId, 'reserva_confirmada', {
-                clienteId: null,
-                destinatarioOverride: adminEmail,
-                variables: {
-                    ...variablesCorreo,
-                    clienteNombre: String(nombre || '').trim() || variablesCorreo.clienteNombre || 'Huésped',
-                    nombreCliente: String(nombre || '').trim() || variablesCorreo.nombreCliente || 'Huésped',
-                },
-                relacionadoCon: { tipo: 'reserva', id: idReservaCanal },
-                eventoComunicacion: 'reserva-confirmada-admin',
-                skipRegistro: true,
+        const clienteEmailLower = String(email || '').trim().toLowerCase();
+        if (adminEmail && adminEmail !== clienteEmailLower) {
+            const variablesAdmin = await construirVariablesDesdeReserva(empresaId, rowForEmail, {
+                clienteNombre: String(nombre || '').trim() || variablesCorreo.clienteNombre || 'Huésped',
+                linkResena,
+                clienteEmail: String(email || '').trim(),
+                clienteTelefono: telefonoNormalizado,
+                canalNombre: canal.nombre || '',
+            });
+            const envioAdmin = await enviarNotificacionInterna(null, empresaId, variablesAdmin, {
+                tipo: 'reserva',
+                id: idReservaCanal,
             });
             if (!envioAdmin.sent) {
                 console.warn('[crearReservaPublica] Correo admin no enviado:', envioAdmin.reason || 'sin motivo');

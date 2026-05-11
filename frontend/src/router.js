@@ -21,8 +21,16 @@ const views = {
     '/calendario': () => import('./views/calendario.js'),
     '/clientes': () => import('./views/gestionarClientes.js'),
     '/cliente/:id': () => import('./views/perfilCliente.js'),
-    '/agregar-propuesta': () => import('./views/agregarPropuesta.js'),
-    '/generar-presupuesto': () => import('./views/generadorPresupuestos.js'),
+    '/agregar-propuesta': () => {
+        const v = typeof window !== 'undefined' ? window.__SPA_IMPORT_V__ : '';
+        const q = v ? `?v=${encodeURIComponent(v)}` : '';
+        return import(`./views/agregarPropuesta.js${q}`);
+    },
+    '/generar-presupuesto': () => {
+        const v = typeof window !== 'undefined' ? window.__SPA_IMPORT_V__ : '';
+        const q = v ? `?v=${encodeURIComponent(v)}` : '';
+        return import(`./views/generadorPresupuestos.js${q}`);
+    },
     '/gestionar-alojamientos': () => import('./views/gestionarAlojamientos.js'),
     '/gestionar-canales': () => import('./views/gestionarCanales.js'),
     '/canales-ia': () => import('./views/canalesIa.js'),

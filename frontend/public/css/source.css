@@ -73,6 +73,47 @@
         cursor: pointer;
         filter: invert(50%) sepia(10%) saturate(300%) hue-rotate(180deg);
     }
+
+    /**
+     * Formularios largos / multipaso en panel SPA — estándar §6.3
+     * `.cursor/rules/20-frontend-design-system.mdc`
+     * Referencia: `frontend/src/views/components/agregarPropuesta/propuesta.ui.js`
+     */
+    .spa-form-page {
+        @apply mx-auto max-w-5xl space-y-4 pb-6 md:space-y-5;
+    }
+    .spa-form-section {
+        @apply rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6;
+    }
+    .spa-form-section-title {
+        @apply mb-4 flex flex-wrap items-center gap-2 text-lg font-semibold text-gray-900;
+    }
+    .spa-form-section-badge {
+        @apply inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-sm font-bold text-primary-700;
+    }
+    .spa-form-summary {
+        @apply overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm;
+    }
+    .spa-form-summary-bar {
+        @apply bg-primary-600 px-4 py-3 text-base font-semibold text-white;
+    }
+    .spa-form-summary-body {
+        @apply space-y-5 p-5 md:p-6;
+    }
+
+    /** Generador de presupuestos: una columna, más aire bajo títulos y resumen amplio */
+    .generador-presupuestos-view.spa-form-page {
+        @apply max-w-6xl space-y-6 pb-8 md:space-y-8 md:pb-10;
+    }
+    .generador-presupuestos-view .spa-form-section-title {
+        @apply mb-6 md:mb-8;
+    }
+    .generador-presupuestos-view .spa-form-section {
+        @apply md:p-8;
+    }
+    .generador-presupuestos-view .presupuesto-summary-panel .spa-form-summary-body {
+        @apply p-6 md:p-8;
+    }
 }
 
 /* --- Botones --- */

@@ -133,6 +133,48 @@ En **desktop** (`≥768px`), la tabla puede seguir usando **`overflow-x-auto hid
 
 **Referencia canónica:** `frontend/src/views/gestionarEsperaDisponibilidad.js` (`render()` + `renderRows()` tabla).
 
+### 6.3 Formularios largos / multipaso (panel SPA)
+
+**Objetivo:** pantallas de **flujo con varios bloques** (fechas + selección + datos de contacto + descuentos + resumen/CTA), no confundir con un único “sheet” gris ni mezclar resumen y campos en una sola caja.
+
+**Cuándo aplica:** crear/editar propuesta, generador de presupuestos, asistentes por pasos, configuraciones extensas que no son listados tabulares (**§6.1–6.2**).
+
+**Contenedor de página**
+
+- Wrapper único dentro de `#view-content`: clase **`spa-form-page`** (`source.css`) → `mx-auto max-w-5xl space-y-4 pb-6 md:space-y-5`.
+- Título de página: `text-2xl font-semibold text-gray-900 md:text-3xl` (sin envolver todo en un solo `bg-white p-8 shadow`; el fondo del área es el del shell **`bg-slate-50`**, las piezas son tarjetas).
+
+**Sección numerada (“paso”)**
+
+- Tarjeta: **`spa-form-section`** → borde suave, fondo blanco, esquinas `rounded-xl`, sombra ligera, padding responsive.
+- Cabecera de bloque: **`spa-form-section-title`** en un `<h3>` + **`spa-form-section-badge`** para el número (`1`, `2`, …) + icono Font Awesome en **`text-primary-500`** + texto del título.
+- Campos: grids **`lg:grid-cols-12`** para filas asimétricas (campo ancho + lateral); filas de igual ancho **`sm:grid-cols-3`** / **`lg:grid-cols-4`** según densidad; **`gap-3`** / **`gap-4`** coherentes; **`form-input`** / **`form-select`**.
+- Acción destacada en el mismo bloque (p. ej. “Buscar disponibilidad”): **`btn-primary`**, en desktop alineación **`lg:justify-end`** o **`lg:ml-auto`** según el mock del flujo.
+
+**Bloque resumen + acción principal**
+
+- Contenedor: **`spa-form-summary`**.
+- Franja de título del resumen: **`spa-form-summary-bar`** (`bg-primary-600`, texto blanco centrado) — no sustituir por `bg-blue-*`.
+- Cuerpo: **`spa-form-summary-body`**; dentro, totales en subcajas `rounded-lg border` si hace falta contraste (p. ej. CLP vs moneda original).
+- CTA final: **`btn-primary btn-lg w-full`** (o ancho completo en la tarjeta), opcional ícono + **`<span>`** para el texto si el handler cambia el label durante guardado.
+- Texto legal o aclaración debajo del botón: `text-xs text-gray-500 text-center`.
+
+**Responsive**
+
+- En **`sm`/`lg`**, pasar de una columna a filas alineadas como en desktop; no romper **§6.1** en vistas que mezclen tabla + formulario (tabla sigue su wrap).
+
+**Implementación de referencia**
+
+- `frontend/src/views/components/agregarPropuesta/propuesta.ui.js` (`_propuestaSectionCard`, `_sectionHeading`, `_renderPanelResumen`).
+- `frontend/src/views/generadorPresupuestos.js` (flujo en dos columnas `lg`: cabañas + tarjeta `spa-form-summary` con precio en la barra).
+
+**Checklist al crear o refactorizar una vista similar**
+
+1. Usar **`spa-form-page`** + una **`spa-form-section`** por bloque lógico.
+2. Numeración visible en badge + icono + título.
+3. Resumen y botón principal en **`spa-form-summary`** / **`spa-form-summary-bar`**, no incrustados en la misma tarjeta que los inputs de descuento.
+4. Tras cambiar `source.css`: **`cd backend && npm run build:css`**.
+
 ---
 
 ## 7. Utilidades
@@ -146,6 +188,7 @@ En **desktop** (`≥768px`), la tabla puede seguir usando **`overflow-x-auto hid
 Aplicar de forma consistente en vistas nuevas o refactors:
 
 - **Tablas de listado:** cumplir **§6.1** (tarjetas en móvil) y **§6.2** (formato PC estándar) salvo excepción documentada.
+- **Formularios largos / multipaso:** cumplir **§6.3** (`spa-form-page`, `spa-form-section`, `spa-form-summary-*`) salvo excepción documentada en la vista.
 - **Contenedores flex:** `min-w-0` en hijos que puedan desbordar texto largo.
 - **Cabeceras de página:** `flex-col` / `sm:flex-row`, `gap-*`, `flex-wrap` para que filtros y títulos no se recorten (`overflow-x-hidden` del shell).
 - **CRM Kanban:** móvil en columna; desde `md` scroll horizontal + snap y paneles con `min-w-0`.

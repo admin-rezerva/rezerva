@@ -55,6 +55,8 @@ function normalizeEmailConfig(input) {
     return {
         permitirEnvioCorreo: input && input.permitirEnvioCorreo === false ? false : true,
         disparadores,
+        /** Si true, el cuerpo de la plantilla ya es HTML (sin conversion texto→HTML). */
+        cuerpoEsHtml: !!(input && input.cuerpoEsHtml === true),
     };
 }
 
@@ -142,6 +144,8 @@ function _normalizarTextoPlantillaRender(texto) {
     return String(texto || '').replace(/%%/g, '%');
 }
 
+const HTML_EMAIL_MARKER = '[[HTML_EMAIL]]';
+
 const textoAHtml = (texto) => {
     if (!texto) return '';
     let html = texto.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -152,12 +156,32 @@ const textoAHtml = (texto) => {
     return `<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">${html}</div>`;
 };
 
+/**
+ * Cuerpo ya en HTML (plantilla panel / IA): sin escapar etiquetas angulares.
+ * Marcador opcional [[HTML_EMAIL]] al inicio (se elimina al renderizar).
+ */
+function renderCuerpoPlantillaHtml(textoConEtiquetas, emailConfig) {
+    const ec = emailConfig || {};
+    const raw = String(textoConEtiquetas || '');
+    const trimmedLeft = raw.replace(/^\uFEFF?\s*/, '');
+    const useMarker = trimmedLeft.toUpperCase().startsWith(HTML_EMAIL_MARKER.toUpperCase());
+    if (ec.cuerpoEsHtml === true || useMarker) {
+        let body = raw;
+        if (useMarker) {
+            body = body.replace(/^\s*\[\[HTML_EMAIL\]\]\s*/i, '');
+        }
+        return body.trim();
+    }
+    return textoAHtml(raw);
+}
+
 const procesarPlantilla = async (db, empresaId, plantillaId, datos) => {
     const plantilla = await obtenerPlantilla(db, empresaId, plantillaId);
     const textoConEtiquetas = _normalizarTextoPlantillaRender(reemplazarEtiquetas(plantilla.texto, datos));
     const asuntoBase = (plantilla.asunto && String(plantilla.asunto).trim()) ? plantilla.asunto : plantilla.nombre;
     const asuntoFinal = _normalizarTextoPlantillaRender(reemplazarEtiquetas(asuntoBase, datos));
-    return { plantilla, contenido: textoAHtml(textoConEtiquetas), contenidoTexto: textoConEtiquetas, asunto: asuntoFinal };
+    const contenido = renderCuerpoPlantillaHtml(textoConEtiquetas, plantilla.emailConfig);
+    return { plantilla, contenido, contenidoTexto: textoConEtiquetas, asunto: asuntoFinal };
 };
 
 const verificarEnvioAutomatico = async (_db, _empresaId, _plantillaId) => {
@@ -204,7 +228,7 @@ const generarPlantillaConIa = async (db, empresaId, body = {}) => {
     const asunto = String(raw.asunto ?? raw.subject ?? '').trim().slice(0, 220);
     const texto = String(
         raw.texto ?? raw.cuerpo ?? raw.contenido ?? raw.body ?? raw.html ?? ''
-    ).trim().slice(0, 12000);
+    ).trim().slice(0, 16000);
 
     if (!texto) throw new Error('La IA devolvió el cuerpo vacío.');
 
@@ -219,4 +243,6 @@ module.exports = {
     obtenerPlantilla, reemplazarEtiquetas, textoAHtml, procesarPlantilla, verificarEnvioAutomatico,
     generarPlantillaConIa,
     DISPARADOR_KEYS, normalizeEmailConfig,
+    HTML_EMAIL_MARKER,
+    renderCuerpoPlantillaHtml,
 };

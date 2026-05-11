@@ -61,7 +61,9 @@ const aprobarPropuesta = async (db, empresaId, idsReservas) => {
     const precioTotal   = rows.reduce((s, r) => s + (r.valores?.valorHuesped || 0), 0);
     const totalPersonas = rows.reduce((s, r) => s + (r.cantidad_huespedes || 0), 0);
     const datosParaEmail = {
-        clienteId: primera.cliente_id, reservaId: primera.id_reserva_canal,
+        clienteId: primera.cliente_id,
+        reservaId: primera.id_reserva_canal,
+        reservaInternaId: primera.id,
         propiedades: rows.map(r => ({ nombre: r.alojamiento_nombre })),
         fechaLlegada: new Date(primera.fecha_llegada), fechaSalida: new Date(primera.fecha_salida),
         noches: primera.total_noches, personas: totalPersonas, precioFinal: precioTotal
@@ -136,6 +138,7 @@ const aprobarPresupuesto = async (db, empresaId, presupuestoId) => {
         const datosParaEmail = {
             clienteId: presupuesto.clienteId,
             reservaId: String(presupuestoId),
+            reservaInternaId: primera.id,
             propiedades: resNuevas.map((r) => ({ nombre: r.alojamiento_nombre })),
             fechaLlegada: new Date(primera.fecha_llegada),
             fechaSalida: new Date(primera.fecha_salida),
