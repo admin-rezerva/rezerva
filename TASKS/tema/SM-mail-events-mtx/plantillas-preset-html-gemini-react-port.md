@@ -111,8 +111,9 @@ Los correos transaccionales de SuiteManager aceptan **HTML con prefijo** `[[HTML
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
               <td valign="top" style="width:55%;padding-right:12px;">
                 <span style="font-size:11px;font-weight:bold;color:#6366f1;text-transform:uppercase;">Tu alojamiento</span>
-                <p style="margin:8px 0 4px;font-size:22px;font-weight:bold;color:#312e81;">&#127968; [ALOJAMIENTO_NOMBRE]</p>
+                <p style="margin:8px 0 4px;font-size:22px;font-weight:bold;">&#127968; <a href="[LINK_FOTOS_ALOJAMIENTO]" style="color:#312e81;text-decoration:underline;">[ALOJAMIENTO_NOMBRE]</a></p>
                 <span style="font-size:13px;color:#4f46e5;">Reserva Nº [RESERVA_ID_CANAL]</span>
+                [ENLACES_FOTOS_ALOJAMIENTOS_HTML]
               </td>
               <td valign="top" style="width:45%;font-size:13px;">
                 <p style="margin:0 0 8px;"><span style="color:#6366f1;">Llegada</span><br><strong style="color:#1e1b4b;">[FECHA_LLEGADA]</strong></p>
@@ -135,6 +136,8 @@ Los correos transaccionales de SuiteManager aceptan **HTML con prefijo** `[[HTML
           </td>
         </tr></table>
 
+        [DESGLOSE_PRECIO_HTML]
+
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;border:1px solid #fed7aa;border-radius:12px;background:#fffbeb;">
           <tr><td style="padding:18px;">
             <p style="margin:0 0 12px;font-weight:bold;font-size:16px;color:#0f172a;">&#128705; Información de servicios</p>
@@ -153,10 +156,10 @@ Los correos transaccionales de SuiteManager aceptan **HTML con prefijo** `[[HTML
 
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:22px;padding-top:20px;border-top:1px solid #e2e8f0;"><tr>
           <td width="50%" align="center" style="padding:6px;">
-            <a href="[EMPRESA_WEBSITE]" style="display:block;border:1px solid #cbd5e1;color:#334155;text-decoration:none;font-size:13px;font-weight:600;padding:12px;border-radius:12px;">&#128279; Sitio web</a>
+            <a href="[EMPRESA_WEBSITE]" style="display:block;border:1px solid #cbd5e1;color:#334155;text-decoration:none;font-size:13px;font-weight:600;padding:12px;border-radius:12px;">&#128196; Términos y condiciones</a>
           </td>
           <td width="50%" align="center" style="padding:6px;">
-            <a href="[LINK_CONFIRMACION_PUBLICA]" style="display:block;border:1px solid #cbd5e1;color:#334155;text-decoration:none;font-size:13px;font-weight:600;padding:12px;border-radius:12px;">&#128196; Ver confirmación</a>
+            <a href="[LINK_CONFIRMACION_PUBLICA]" style="display:block;border:1px solid #cbd5e1;color:#334155;text-decoration:none;font-size:13px;font-weight:600;padding:12px;border-radius:12px;">&#128279; Ver confirmación</a>
           </td>
         </tr></table>
 
@@ -175,6 +178,10 @@ Los correos transaccionales de SuiteManager aceptan **HTML con prefijo** `[[HTML
 
 **Notas**
 
-- Si `[EMPRESA_GOOGLE_MAPS_LINK]` está vacío, el botón “Maps” quedará vacío: borre la fila del botón o ponga una URL fija solo en **esa** plantilla de esa empresa.
+- `[DESGLOSE_PRECIO_HTML]`: tabla generada por el motor (por alojamiento si hay snapshot checkout multipropiedad, cupón, total). No duplicar montos en texto fijo.
+- `[LINK_FOTOS_ALOJAMIENTO]`: URL `/propiedad/{id}` del sitio público (primera propiedad de la fila). Si queda vacío (sin `propiedad_id`), quite el `<a>` y deje solo el nombre.
+- `[ENLACES_FOTOS_ALOJAMIENTOS_HTML]`: solo rellena en reservas grupo; si no aplica, queda vacío.
+- Botón **Maps** debe usar solo `[EMPRESA_GOOGLE_MAPS_LINK]` (Maps declarado en empresa). Si está vacío, borre el botón o sustituya por texto sin inventar URL.
+- No se incluye “Qué hacer cerca” en el pie de acciones (opcional por empresa); sitio web queda como enlace de términos si aplica.
 - En móvil, Outlook puede apilar mal dos columnas; es aceptable en la mayoría de clientes con tablas al 48 % / 48 %.
 - Para copiar el texto **literal** de tinaja/WiFi del ejemplo Gemini (Cabaña 10, claves, etc.), sustituya los comentarios `<!-- EDITAR -->` por ese HTML **solo en la plantilla de ese tenant** — no conviene versionarlo en código compartido multiempresa.

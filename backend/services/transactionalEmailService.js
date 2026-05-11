@@ -96,13 +96,17 @@ const EVENTO_POR_DISPARADOR = {
 
 async function _obtenerEmpresaEmailContext(empresaId) {
     const { rows } = await pool.query(
-        `SELECT nombre, email, configuracion
+        `SELECT nombre, email, configuracion, google_maps_url
          FROM empresas WHERE id = $1`,
         [empresaId]
     );
     const r = rows[0];
     if (!r) return { nombre: '', contactoEmail: null, contactoNombre: '', contactoTelefono: '', website: '', configuracion: {} };
-    const cfg = r.configuracion || {};
+    const cfg = { ...(r.configuracion || {}) };
+    const colMaps = r.google_maps_url != null ? String(r.google_maps_url).trim() : '';
+    if (colMaps && !String(cfg.google_maps_url || '').trim()) {
+        cfg.google_maps_url = colMaps;
+    }
     return {
         nombre: r.nombre || '',
         contactoEmail: cfg.contactoEmail || r.email || null,
@@ -431,6 +435,174 @@ function _htmlToTextLite(html) {
         .trim();
 }
 
+function _escapeHtmlAttr(s) {
+    return String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function _escapeHtmlText(s) {
+    return String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function _parseReservaMetadata(raw) {
+    if (raw == null) return {};
+    if (typeof raw === 'object' && !Array.isArray(raw)) return raw;
+    if (typeof raw === 'string') {
+        try {
+            const o = JSON.parse(raw);
+            return o && typeof o === 'object' ? o : {};
+        } catch {
+            return {};
+        }
+    }
+    return {};
+}
+
+function _buildPublicPropiedadPageUrl(baseUrl, propiedadId) {
+    const b = String(baseUrl || '').replace(/\/$/, '');
+    const pid = propiedadId != null ? String(propiedadId).trim() : '';
+    if (!b || !pid) return '';
+    return `${b}/propiedad/${encodeURIComponent(pid)}`;
+}
+
+/**
+ * Tarjeta email-safe: tabla 2 columnas (concepto | monto) con desglose por alojamiento si existe snapshot checkout.
+ */
+function _buildDesglosePrecioEmailCard({
+    idiomaEn,
+    localeFecha,
+    valoresRow,
+    pv,
+    totalFmt,
+    precioListaFmt,
+    lineaDescuentoCupon,
+    descCuponNum,
+}) {
+    const en = idiomaEn === 'en';
+    const title = en ? 'Price breakdown' : 'Desglose del precio';
+    const lblMinor = en ? 'Children / extra beds' : 'Menores o camas extra';
+    const lblCoupon = en ? 'Coupon discount' : 'Descuento (cupón)';
+    const lblBefore = en ? 'Subtotal before discount' : 'Subtotal antes de descuentos';
+    const lblNet = en ? 'Net (reference)' : 'Neto (referencia)';
+    const lblTax = en ? 'VAT (reference)' : 'IVA (referencia)';
+    const lblTotal = en ? 'Total' : 'Total a pagar';
+    const chunks = [];
+
+    chunks.push(
+        `<tr><td colspan="2" style="padding:12px 14px;font-size:12px;font-weight:700;color:#0f172a;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #e2e8f0;">${_escapeHtmlText(title)}</td></tr>`
+    );
+
+    const pushRow = (labelHtml, valueHtml, { strong = false, valueColor } = {}) => {
+        if (valueHtml == null || valueHtml === '') return;
+        const ls = `padding:10px 14px;font-size:14px;color:#334155;${strong ? 'font-weight:700;color:#0f172a;' : ''}`;
+        const vs = `padding:10px 14px;font-size:14px;text-align:right;white-space:nowrap;${strong ? 'font-weight:800;color:#047857;' : ''}${valueColor ? `color:${valueColor};` : ''}`;
+        chunks.push(
+            `<tr><td style="${ls}">${labelHtml}</td><td style="${vs}">${valueHtml}</td></tr>`
+        );
+    };
+
+    if (pv && Array.isArray(pv.porPropiedad) && pv.porPropiedad.length > 0) {
+        pv.porPropiedad.forEach((p) => {
+            const name = _escapeHtmlText(p.nombre || p.propiedadId || (en ? 'Property' : 'Alojamiento'));
+            const amt = _fmtMonedaCLP(Number(p.totalCLP) || 0, localeFecha);
+            pushRow(name, amt);
+        });
+        const rec = Number(pv.recargoMenoresCamasCLP) || 0;
+        if (rec > 0) {
+            pushRow(_escapeHtmlText(lblMinor), _fmtMonedaCLP(rec, localeFecha));
+        }
+        const subLista = Number(pv.subtotalListaCLP) || 0;
+        if (descCuponNum > 0 && subLista > 0) {
+            pushRow(_escapeHtmlText(lblBefore), _fmtMonedaCLP(subLista, localeFecha));
+        }
+    } else {
+        if (descCuponNum > 0 && precioListaFmt) {
+            pushRow(_escapeHtmlText(en ? 'List price' : 'Precio lista'), precioListaFmt);
+        }
+        if (lineaDescuentoCupon && descCuponNum > 0) {
+            pushRow(_escapeHtmlText(lblCoupon), `−${_fmtMonedaCLP(descCuponNum, localeFecha)}`, { valueColor: '#b91c1c' });
+        }
+    }
+
+    if (valoresRow.valorTotal != null && Number(valoresRow.valorTotal) > 0) {
+        pushRow(_escapeHtmlText(lblNet), _fmtMonedaCLP(Number(valoresRow.valorTotal), localeFecha));
+    }
+    if (valoresRow.iva != null && Number(valoresRow.iva) > 0) {
+        pushRow(_escapeHtmlText(lblTax), _fmtMonedaCLP(Number(valoresRow.iva), localeFecha));
+    }
+
+    if (totalFmt) {
+        pushRow(_escapeHtmlText(lblTotal), totalFmt, { strong: true });
+    }
+
+    if (chunks.length <= 1) return '';
+
+    return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:18px 0 12px;border:1px solid #e2e8f0;border-radius:12px;background:#ffffff;">${chunks.join('')}</table>`;
+}
+
+function _buildDesglosePrecioTexto({
+    idiomaEn,
+    localeFecha,
+    valoresRow,
+    pv,
+    totalFmt,
+    precioListaFmt,
+    lineaDescuentoCupon,
+    descCuponNum,
+}) {
+    const en = idiomaEn === 'en';
+    const lines = [en ? 'Price breakdown' : 'Desglose del precio', ''];
+    if (pv && Array.isArray(pv.porPropiedad) && pv.porPropiedad.length > 0) {
+        pv.porPropiedad.forEach((p) => {
+            const name = p.nombre || p.propiedadId || '';
+            lines.push(`${name}: ${_fmtMonedaCLP(Number(p.totalCLP) || 0, localeFecha)}`);
+        });
+        const rec = Number(pv.recargoMenoresCamasCLP) || 0;
+        if (rec > 0) lines.push(`${en ? 'Children/extra beds' : 'Menores o camas extra'}: ${_fmtMonedaCLP(rec, localeFecha)}`);
+        const subLista = Number(pv.subtotalListaCLP) || 0;
+        if (descCuponNum > 0 && subLista > 0) {
+            lines.push(`${en ? 'Subtotal before discount' : 'Subtotal antes de descuentos'}: ${_fmtMonedaCLP(subLista, localeFecha)}`);
+        }
+    } else {
+        if (descCuponNum > 0 && precioListaFmt) {
+            lines.push(`${en ? 'List price' : 'Precio lista'}: ${precioListaFmt}`);
+        }
+        if (lineaDescuentoCupon) lines.push(lineaDescuentoCupon);
+    }
+    if (valoresRow.valorTotal != null && Number(valoresRow.valorTotal) > 0) {
+        lines.push(`${en ? 'Net' : 'Neto'}: ${_fmtMonedaCLP(Number(valoresRow.valorTotal), localeFecha)}`);
+    }
+    if (valoresRow.iva != null && Number(valoresRow.iva) > 0) {
+        lines.push(`${en ? 'VAT' : 'IVA'}: ${_fmtMonedaCLP(Number(valoresRow.iva), localeFecha)}`);
+    }
+    if (totalFmt) lines.push(`${en ? 'Total' : 'Total a pagar'}: ${totalFmt}`);
+    return lines.filter((l, i) => i < 2 || l !== '').join('\n');
+}
+
+function _buildEnlacesFotosAlojamientosHtml(baseUrl, metaParsed) {
+    const rg = metaParsed.reservaWebGrupo;
+    const ids = Array.isArray(rg?.propiedadIds) ? rg.propiedadIds : [];
+    const names = Array.isArray(rg?.alojamientosNombres) ? rg.alojamientosNombres : [];
+    if (ids.length < 2) return '';
+    const parts = [];
+    for (let i = 0; i < ids.length; i++) {
+        const url = _buildPublicPropiedadPageUrl(baseUrl, ids[i]);
+        const nom = names[i] != null ? String(names[i]).trim() : String(ids[i]);
+        if (url && nom) {
+            parts.push(`<a href="${_escapeHtmlAttr(url)}" style="color:#4f46e5;font-weight:600;text-decoration:underline;">${_escapeHtmlText(nom)}</a>`);
+        }
+    }
+    if (!parts.length) return '';
+    const intro = 'Ver fotos: ';
+    return `<p style="margin:10px 0 0;font-size:13px;color:#475569;line-height:1.65;">${intro}${parts.join(' · ')}</p>`;
+}
+
 /**
  * Construye variables de plantilla a partir de una fila mínima de reserva + cliente.
  */
@@ -495,6 +667,52 @@ async function construirVariablesDesdeReserva(empresaId, row, extras = {}) {
     const linkConfirmacionPublica = baseUrl && refCanalPublico
         ? `${String(baseUrl).replace(/\/$/, '')}/confirmacion?reservaId=${encodeURIComponent(refCanalPublico)}`
         : '';
+
+    const metaParsed = _parseReservaMetadata(row.metadata);
+    const pv = metaParsed.precioCheckoutVerificado && typeof metaParsed.precioCheckoutVerificado === 'object'
+        ? metaParsed.precioCheckoutVerificado
+        : null;
+
+    let detallePropiedades = row.alojamiento_nombre ? `• ${row.alojamiento_nombre}` : '';
+    const rgGrupo = metaParsed.reservaWebGrupo;
+    if (rgGrupo && Array.isArray(rgGrupo.alojamientosNombres) && rgGrupo.alojamientosNombres.length) {
+        detallePropiedades = rgGrupo.alojamientosNombres
+            .filter(Boolean)
+            .map((n) => `• ${String(n).trim()}`)
+            .join('\n');
+    } else if (row.alojamiento_nombre && String(row.alojamiento_nombre).includes(' + ')) {
+        detallePropiedades = String(row.alojamiento_nombre)
+            .split(/\s*\+\s*/)
+            .filter(Boolean)
+            .map((n) => `• ${n.trim()}`)
+            .join('\n');
+    }
+
+    const propiedadIdRow = row.propiedad_id != null ? String(row.propiedad_id).trim() : '';
+    const linkFotosAlojamiento = _buildPublicPropiedadPageUrl(baseUrl, propiedadIdRow);
+    const enlacesFotosAlojamientosHtml = _buildEnlacesFotosAlojamientosHtml(baseUrl, metaParsed);
+
+    const desglosePrecioHtml = _buildDesglosePrecioEmailCard({
+        idiomaEn: idiomaPorDefecto === 'en',
+        localeFecha,
+        valoresRow,
+        pv,
+        totalFmt: precio,
+        precioListaFmt,
+        lineaDescuentoCupon,
+        descCuponNum,
+    });
+    const desglosePrecioTexto = _buildDesglosePrecioTexto({
+        idiomaEn: idiomaPorDefecto === 'en',
+        localeFecha,
+        valoresRow,
+        pv,
+        totalFmt: precio,
+        precioListaFmt,
+        lineaDescuentoCupon,
+        descCuponNum,
+    });
+
     const linkResena = extras.linkResena || (extras.tokenResena ? `${baseUrl}/r/${extras.tokenResena}` : '');
     const depositoCfg = resolveDepositoReservaWeb(ctx.configuracion?.websiteSettings?.booking, totalNum);
     const porcentajeAbonoNum = (depositoCfg.tipo === 'monto_fijo' && totalNum > 0)
@@ -595,7 +813,7 @@ async function construirVariablesDesdeReserva(empresaId, row, extras = {}) {
         numeroHuespedes: String(row.cantidad_huespedes || ''),
         nombrePropiedad: row.alojamiento_nombre || '',
         propiedadesNombres: row.alojamiento_nombre || '',
-        detallePropiedades: row.alojamiento_nombre ? `• ${row.alojamiento_nombre}` : '',
+        detallePropiedades,
         precioFinal: precio,
         montoTotal: precio,
         saldoPendiente: saldoPendiente || precio,
@@ -688,6 +906,14 @@ async function construirVariablesDesdeReserva(empresaId, row, extras = {}) {
         linkConfirmacionPublica,
         LINK_CONFIRMACION_PUBLICA: linkConfirmacionPublica,
         COMENTARIOS_HUESPED: comentariosHuesped,
+        linkFotosAlojamiento,
+        LINK_FOTOS_ALOJAMIENTO: linkFotosAlojamiento,
+        enlacesFotosAlojamientosHtml,
+        ENLACES_FOTOS_ALOJAMIENTOS_HTML: enlacesFotosAlojamientosHtml,
+        desglosePrecioHtml,
+        DESGLOSE_PRECIO_HTML: desglosePrecioHtml,
+        desglosePrecioTexto,
+        DESGLOSE_PRECIO_TEXTO: desglosePrecioTexto,
     };
 }
 

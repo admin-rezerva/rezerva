@@ -53,31 +53,32 @@ Réplica fiel de referencia SuiteManager: hero oscuro + saludo + tarjeta lavanda
    - “Hola [CLIENTE_NOMBRE],” (nombre en <strong>)
    - Un párrafo corto de bienvenida (tono cordial, sin datos inventados del lugar).
 3) Tarjeta principal ancha (lavanda/azul muy claro #eef2ff, borde #c7d2fe, border-radius 14–16px):
-   - Columna izq.: etiqueta pequeña morada “TU ALOJAMIENTO”, emoji casa + [ALOJAMIENTO_NOMBRE] destacado, línea “Reserva Nº [RESERVA_ID_CANAL]”.
+   - Columna izq.: etiqueta pequeña morada “TU ALOJAMIENTO”; el nombre [ALOJAMIENTO_NOMBRE] debe ser enlace <a href="[LINK_FOTOS_ALOJAMIENTO]">…</a> si [LINK_FOTOS_ALOJAMIENTO] no está vacío (página pública del alojamiento con galería); si el enlace está vacío, texto sin enlace. Inmediatamente debajo, si [ENLACES_FOTOS_ALOJAMIENTOS_HTML] no está vacío, insértelo (reservas con varios alojamientos: enlaces a fotos por unidad).
+   - Línea “Reserva Nº [RESERVA_ID_CANAL]”.
    - Columna der. (tabla): Llegada [FECHA_LLEGADA], Salida [FECHA_SALIDA], Duración [TOTAL_NOCHES] noches (tipografía jerárquica como diseño referencia).
 4) Fila dos columnas (~48% / 48%) en tabla:
    - Izquierda tarjeta blanca borde gris claro: título “Ingreso y Salida” con emoji reloj naranja; filas tipo tabla para horarios (texto neutro si no hay datos en etiquetas: “Horarios según confirmación” o similar; NO inventes nombre comercial de complejo).
-   - Derecha tarjeta blanca: título “Cómo llegar” con emoji pin; breve línea de texto (si no hay instrucciones en módulo central, texto genérico “Indicaciones detalladas en tu correo o sitio web.”); botón oscuro “Abrir en Google Maps” con href=[EMPRESA_GOOGLE_MAPS_LINK] solo si el valor puede ser URL; si no hay Maps, botón secundario o enlace a [EMPRESA_WEBSITE].
+   - Derecha tarjeta blanca: título “Cómo llegar” con emoji pin; breve línea de texto genérico si no hay copy en módulo central; botón “Abrir en Google Maps” con href **exclusivamente** [EMPRESA_GOOGLE_MAPS_LINK] (dirección/Maps declarados en la empresa). Si [EMPRESA_GOOGLE_MAPS_LINK] está vacío, no inventes URL: muestra solo texto o enlace genérico a [EMPRESA_WEBSITE] como “Sitio web” (sin rotular como Maps).
+5) **Obligatorio** justo debajo de la fila anterior, ancho completo: inserta el marcador exacto [DESGLOSE_PRECIO_HTML] (el motor reemplaza por tabla detallada: por alojamiento si hubo reserva múltiple, recargos, cupón, neto/IVA si aplica, total). No dupliques montos en texto libre alrededor de ese bloque.
 
 ══════════════════════════════════════════════════════════════════
 PARTE B — MÓDULO CENTRAL (solo lo que el usuario describió en “Tarjetas personalizadas” / instrucciones de contenido)
 ══════════════════════════════════════════════════════════════════
 - Aquí van únicamente tarjetas apiladas estilo captura “imagen 3”: fondo blanco, borde #e2e8f0, iconos emoji (tinaja, wifi, info, mascotas…), listas con ✅ cuando corresponda, recuadros destacados amarillos opcionales.
 - NO inventes nombres de marcas, claves WiFi, direcciones largas ni políticas que el usuario NO haya escrito en el texto de tarjetas.
-- Si el texto de tarjetas está vacío o solo dice “ninguna”: NO llenes con datos ficticios; entre parte A y parte C puedes dejar solo un separador sutil o una única tarjeta mínima “¿Dudas?” con [USUARIO_EMAIL] y [USUARIO_TELEFONO].
+- Si el texto de tarjetas está vacío o solo dice “ninguna”: NO llenes con datos ficticios; no repitas desglose de precio (ya va [DESGLOSE_PRECIO_HTML] en PARTE A). Opcional: tarjeta mínima “¿Dudas?” con [USUARIO_EMAIL] y [USUARIO_TELEFONO].
 
 ══════════════════════════════════════════════════════════════════
 PARTE C — ESTÁNDAR DE PRODUCTO (obligatoria; pie como referencia “imagen 2”)
 ══════════════════════════════════════════════════════════════════
-1) Fila de dos botones lado a lado (estilo outline: fondo blanco, borde #e2e8f0, texto #334155, padding, border-radius 12px):
-   - Izquierda: icono enlace externo + texto “Qué hacer cerca” → href=[EMPRESA_WEBSITE]
-   - Derecha: icono documento + texto “Términos y Condiciones” → usa la misma [EMPRESA_WEBSITE] con sufijo /ruta solo si el usuario lo indicó en instrucciones generales; si no, [EMPRESA_WEBSITE] y el editor humano corregirá la URL después.
-2) Opcional: botón o enlace principal sólido “Ver confirmación en el sitio” → [LINK_CONFIRMACION_PUBLICA]
-3) Footer bloque oscuro (#0f172a): centrado
+1) **No** incluyas botón “Qué hacer cerca” (no todas las empresas lo usan).
+2) Si [EMPRESA_WEBSITE] no está vacío: un solo botón outline “Términos y Condiciones” → href=[EMPRESA_WEBSITE] (o la URL que el usuario indicó en instrucciones generales para términos). Si [EMPRESA_WEBSITE] está vacío, omite este botón.
+3) Botón o enlace principal sólido “Ver confirmación en el sitio” → [LINK_CONFIRMACION_PUBLICA]
+4) Footer bloque oscuro (#0f172a), centrado:
    - [EMPRESA_NOMBRE] en blanco negrita
    - Línea ubicación en gris claro SOLO si el usuario dio ciudad/región en instrucciones generales; si no, omite o una línea genérica sin inventar ciudad.
    - “Si tienes dudas, contáctanos a” + mailto:[USUARIO_EMAIL] en color acento legible (azul claro #93c5fd o similar).
-NO uses [LINK_GESTION_RESERVA] en correo huésped.`;
+NO uses [LINK_GESTION_RESERVA] en correo huésped. Incluye en el HTML al menos estas etiquetas además de otras del catálogo: [DESGLOSE_PRECIO_HTML], [LINK_FOTOS_ALOJAMIENTO], [EMPRESA_GOOGLE_MAPS_LINK], [LINK_CONFIRMACION_PUBLICA].`;
     }
     return `LAYOUT genérico profesional en HTML: cabecera de marca con [EMPRESA_NOMBRE], cuerpo con buen contraste, pie de contacto [USUARIO_EMAIL] / [USUARIO_TELEFONO]. Tablas + estilos inline.`;
 }
@@ -89,7 +90,7 @@ function bloqueModuloTarjetasConfirmacion(instruccionesTarjetas) {
     const t = String(instruccionesTarjetas || '').trim();
     if (!t) {
         return `TARJETAS PERSONALIZADAS (PARTE B): el usuario no proporcionó contenido para el módulo central.
-Genera PARTE A y PARTE C completas; entre ellas no insertes datos inventados de negocio. Opcional: una tarjeta mínima de contacto con [USUARIO_EMAIL] y [USUARIO_TELEFONO], o ninguna tarjeta intermedia.`;
+Genera PARTE A (con [DESGLOSE_PRECIO_HTML] en su sitio) y PARTE C completas; entre A y C no insertes datos inventados de negocio. Opcional: una tarjeta mínima de contacto con [USUARIO_EMAIL] y [USUARIO_TELEFONO], o ninguna tarjeta intermedia.`;
     }
     return `TARJETAS PERSONALIZADAS (PARTE B) — contenido a convertir en tarjetas HTML apiladas (única zona que cambia por empresa):
 """
