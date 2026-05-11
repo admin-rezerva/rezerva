@@ -104,6 +104,8 @@ function mapearEmpresa(row) {
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         ...(row.configuracion || {}),
+        /** Tras el spread: no exponer el token, solo bandera para UI (Contacts OAuth). */
+        googleContactsAutorizado: !!(row.google_refresh_token),
     });
 }
 

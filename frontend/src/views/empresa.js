@@ -188,7 +188,7 @@ function renderPresupuestos() {
 }
 
 function renderGoogleAuth() {
-    return empresaInfo.googleRefreshToken
+    return empresaInfo.googleContactsAutorizado
         ? `<div class="p-4 bg-success-100 border border-success-300 rounded-md">
                <p class="font-semibold text-success-800">Estado: Activa</p>
                <p class="text-sm text-success-700 mt-1">La sincronización con Google Contacts está configurada.</p>

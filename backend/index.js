@@ -20,7 +20,7 @@ const mapeosRoutes = require('./routes/mapeos.js');
 const calendarioRoutes = require('./routes/calendario.js');
 const reparacionRoutes = require('./routes/reparacion.js');
 const dolarRoutes = require('./routes/dolar.js');
-const authGoogleRoutes = require('./routes/authGoogle.js');
+const createAuthGoogle = require('./routes/authGoogle.js');
 const empresaRoutes = require('./routes/empresa.js');
 const usuariosRoutes = require('./routes/usuarios.js');
 const gestionRoutes = require('./routes/gestion.js');
@@ -226,10 +226,12 @@ try {
     apiRouter.use(cors({ origin: '*' }), apiRoutes);
 
     const authMiddleware = createAuthMiddleware(admin, db);
+    const authGoogle = createAuthGoogle(db);
 
     apiRouter.use('/auth', authRoutes(admin, db));
-    // Callback de Google OAuth — debe ir SIN authMiddleware (Google redirige sin JWT)
-    apiRouter.use('/auth/google', authGoogleRoutes(db));
+    // Callback OAuth sin JWT: /api/auth/google/callback (canónico) y /api/authGoogle/callback (legacy en muchas consolas).
+    apiRouter.use('/auth/google', authGoogle.publicRouter);
+    apiRouter.get('/authGoogle/callback', authGoogle.handleCallback);
     // [NEW] Importador Mágico (SIN authMiddleware — crea su propio usuario)
     apiRouter.use('/importer', importerRoutes(admin, db));
     apiRouter.use(authMiddleware);
@@ -267,7 +269,7 @@ try {
     apiRouter.use('/plantillas', plantillasRoutes(db));
     apiRouter.use('/website', websitePanelRoutes(db));
     apiRouter.use('/website', webImagesRepairApiRoutes(db));
-    apiRouter.use('/authGoogle', authGoogleRoutes(db));
+    apiRouter.use('/authGoogle', authGoogle.privateRouter);
     apiRouter.use('/historial-cargas', historialCargasRoutes(db));
     apiRouter.use('/propuestas', propuestasRoutes(db));
     apiRouter.use('/presupuestos', presupuestosRoutes(db));
@@ -427,5 +429,6 @@ try {
 } catch (error) {
     console.error("--- ¡ERROR CRÍTICO DURANTE LA INICIALIZACIÓN! ---");
     console.error("Detalle del error:", error.message);
+    if (error.stack) console.error(error.stack);
     process.exit(1);
 }
