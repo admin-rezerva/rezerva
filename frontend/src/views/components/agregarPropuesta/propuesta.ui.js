@@ -187,13 +187,12 @@ function _renderPanelCliente() {
                 <label for="ical-uid-input" class="block text-sm font-medium text-gray-500">iCal UID (Referencia)</label>
                 <input type="text" id="ical-uid-input" class="form-input mt-1 w-full bg-gray-100" readonly>
               </div>
-              <div class="flex flex-col gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-end">
-                <label class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
-                  <input id="enviar-email-checkbox" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-primary-600" checked>
-                  <span>Enviar propuesta por correo</span>
-                </label>
+              <div class="border-t border-gray-100 pt-4">
+                <p class="text-sm text-gray-600">
+                  Los correos al huésped y al equipo se envían al <strong class="text-gray-800">aprobar</strong> la propuesta en <strong class="text-gray-800">Gestionar propuestas</strong> (confirmación según plantillas configuradas).
+                </p>
               </div>
-              <p id="email-warning" class="hidden text-xs text-amber-600 sm:text-end"><i class="fa-solid fa-triangle-exclamation mr-1"></i> El cliente no tiene email registrado</p>
+              <p id="email-warning" class="hidden mt-2 text-xs text-amber-600"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Sin email del cliente no podrá recibir la confirmación al aprobar.</p>
             </div>`);
 }
 

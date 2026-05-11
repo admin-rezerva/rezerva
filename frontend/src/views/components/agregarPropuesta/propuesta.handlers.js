@@ -401,26 +401,14 @@ function _abrirModalCrearCupon(codigoIntentado, cliente) {
     });
 }
 
-/**
- * Actualiza el estado del checkbox de envío de email según si el cliente tiene email
- */
+/** Aviso si falta email del cliente (necesario para la confirmación al aprobar). */
 export function actualizarEstadoCheckboxEmail() {
     const emailInput = document.getElementById('new-client-email');
-    const checkbox = document.getElementById('enviar-email-checkbox');
     const warning = document.getElementById('email-warning');
-    
-    if (!checkbox || !warning) return;
-    
+    if (!warning) return;
     const tieneEmail = emailInput && emailInput.value.trim() !== '';
-    
-    if (tieneEmail) {
-        checkbox.disabled = false;
-        warning.classList.add('hidden');
-    } else {
-        checkbox.checked = false;
-        checkbox.disabled = true;
-        warning.classList.remove('hidden');
-    }
+    if (tieneEmail) warning.classList.add('hidden');
+    else warning.classList.remove('hidden');
 }
 
 export async function handleGuardarPropuesta() {
@@ -454,10 +442,6 @@ export async function handleGuardarPropuesta() {
     const valorFinalFijado = parseFloat(document.getElementById('valor-final-fijo').value) || 0;
     const cuponAplicado = getCuponAplicado();
     
-    // Leer estado del checkbox de envío de email
-    const enviarEmailCheckbox = document.getElementById('enviar-email-checkbox');
-    const enviarEmail = enviarEmailCheckbox ? enviarEmailCheckbox.checked : false;
-  
     const propuestaPayloadGuardar = {
       fechaLlegada: document.getElementById('fecha-llegada').value,
       fechaSalida: document.getElementById('fecha-salida').value,
@@ -481,7 +465,6 @@ export async function handleGuardarPropuesta() {
       descuentoFijo: parseFloat(document.getElementById('descuento-fijo-total').value) || 0,
       valorFinalFijado: valorFinalFijado,
       plantillaId: document.getElementById('plantilla-select').value || null,
-      enviarEmail: enviarEmail // <-- Agregado: enviar email si checkbox está marcado
     };
   
     const guardarBtn = document.getElementById('guardar-propuesta-btn');
