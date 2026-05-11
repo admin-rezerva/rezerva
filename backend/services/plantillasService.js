@@ -197,7 +197,7 @@ async function _obtenerNombreEmpresaPg(empresaId) {
  * Genera borrador de plantilla (nombre, asunto, texto) con IA según el tipo de plantilla y etiquetas del motor.
  * @param {FirebaseFirestore.Firestore|object} db
  * @param {string} empresaId
- * @param {{ tipoId: string, tipoNombre?: string, nombreBorrador?: string, instrucciones?: string }} body
+ * @param {{ tipoId: string, tipoNombre?: string, nombreBorrador?: string, instrucciones?: string, instruccionesTarjetas?: string }} body
  */
 const generarPlantillaConIa = async (db, empresaId, body = {}) => {
     const tipoId = String(body.tipoId || '').trim();
@@ -213,12 +213,14 @@ const generarPlantillaConIa = async (db, empresaId, body = {}) => {
     const nombreEmpresa = await _obtenerNombreEmpresaPg(empresaId);
     const nombreBorrador = sanitizeInput(body.nombreBorrador || '', AI_TASK.TEMPLATE_GENERATION, { empresaId, campo: 'nombrePlantillaIA' });
     const instrucciones = sanitizeInput(body.instrucciones || body.instruccionesExtra || '', AI_TASK.TEMPLATE_GENERATION, { empresaId, campo: 'instruccionesPlantillaIA' });
+    const instruccionesTarjetas = sanitizeInput(body.instruccionesTarjetas || '', AI_TASK.TEMPLATE_GENERATION, { empresaId, campo: 'instruccionesTarjetasIA' });
 
     const prompt = promptGenerarPlantillaMensaje({
         nombreEmpresa,
         tipoNombre,
         nombreBorrador,
         instrucciones,
+        instruccionesTarjetas,
     });
 
     const raw = await generateForTask(AI_TASK.TEMPLATE_GENERATION, prompt, { empresaId });

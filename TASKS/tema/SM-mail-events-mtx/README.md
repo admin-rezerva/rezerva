@@ -10,4 +10,6 @@
 
 **Presets listos para pegar (tablas + inline CSS, etiquetas motor):** [`plantillas-preset-html-gemini-react-port.md`](plantillas-preset-html-gemini-react-port.md) — portación desde diseño tipo React/Tailwind (no usar JSX en correo).
 
+**Modelo IA tres capas (cabecera estándar / tarjetas por empresa / pie estándar):** [`modelo-correo-tres-capas-ia.md`](modelo-correo-tres-capas-ia.md).
+
 **Puntos de entrada en código:** `transactionalEmailService.js`, `transactionalEmailHooks.js`, `transactionalEmailEventMatrix.js`, `emailService.js`, `plantillasService.js`, `publicWebsiteService.js` (`crearReservaPublica`), `comunicacionesRetryService.js`, `scheduledTransactionalEmails.js`.

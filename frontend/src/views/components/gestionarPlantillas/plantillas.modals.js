@@ -63,9 +63,15 @@ export const renderModalPlantilla = (catalogoEtiquetas = []) => {
                                 <input type="text" id="asunto" name="asunto" class="form-input mt-1" placeholder="Ej: Confirmación de Reserva en [ALOJAMIENTO_NOMBRE]">
                             </div>
 
+                            <div class="mb-3">
+                                <label for="plantilla-ia-instrucciones" class="block text-xs font-medium text-gray-600">Instrucciones generales para la IA</label>
+                                <p class="text-xs text-gray-500 mb-1">Tono, ciudad/región para el pie del correo, enlaces extra (términos), restricciones.</p>
+                                <textarea id="plantilla-ia-instrucciones" name="plantillaIaInstrucciones" rows="2" class="form-input mt-1 text-sm" placeholder="Ej.: tono cercano; pie: Pucón, Araucanía; términos en …/terminos"></textarea>
+                            </div>
                             <div class="mb-4">
-                                <label for="plantilla-ia-instrucciones" class="block text-xs font-medium text-gray-600">Instrucciones opcionales para la IA</label>
-                                <textarea id="plantilla-ia-instrucciones" name="plantillaIaInstrucciones" rows="2" class="form-input mt-1 text-sm" placeholder="Ej.: tono formal, mencionar política de cancelación, no usar emojis..."></textarea>
+                                <label for="plantilla-ia-tarjetas" class="block text-xs font-medium text-gray-600">Tarjetas centrales (solo confirmación huésped)</label>
+                                <p class="block text-xs text-gray-500 mb-1">Contenido único por empresa: WiFi, tinaja, mascotas, dirección larga, políticas. Si lo dejas vacío, la IA arma solo cabecera + pie estándar. Puedes <strong>describir con palabras</strong> una captura de referencia (layout, orden de bloques).</p>
+                                <textarea id="plantilla-ia-tarjetas" name="plantillaIaTarjetas" rows="5" class="form-input mt-1 text-sm font-sans" placeholder="Ej.: Tinaja: … WiFi cabaña Casa10 / clave … Mascotas: pequeñas con correa…"></textarea>
                             </div>
 
                             <div class="flex-grow flex flex-col mb-4 min-h-0">
@@ -127,6 +133,8 @@ export const abrirModalPlantilla = (plantilla = null, tipos = []) => {
     }
     const iaInstr = document.getElementById('plantilla-ia-instrucciones');
     if (iaInstr) iaInstr.value = '';
+    const iaTarjetas = document.getElementById('plantilla-ia-tarjetas');
+    if (iaTarjetas) iaTarjetas.value = '';
     
     modal.classList.remove('hidden');
 };
@@ -180,6 +188,7 @@ export const setupModalPlantilla = (callback) => {
                 const tipoOpt = newForm.tipoId.options[newForm.tipoId.selectedIndex];
                 const tipoNombre = tipoOpt ? tipoOpt.textContent.trim() : '';
                 const iaInstr = newForm.querySelector('#plantilla-ia-instrucciones');
+                const iaTarjetas = newForm.querySelector('#plantilla-ia-tarjetas');
                 const data = await fetchAPI('/plantillas/generar-ia', {
                     method: 'POST',
                     body: {
@@ -187,6 +196,7 @@ export const setupModalPlantilla = (callback) => {
                         tipoNombre,
                         nombreBorrador: newForm.nombre.value,
                         instrucciones: iaInstr?.value || '',
+                        instruccionesTarjetas: iaTarjetas?.value || '',
                     },
                 });
                 if (data.nombre) newForm.nombre.value = data.nombre;

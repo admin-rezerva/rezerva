@@ -77,7 +77,8 @@ const TASK_INPUT_LIMITS = {
     [AI_TASK.IMAGE_EVALUATION]:     3000,
     [AI_TASK.COMPANY_PROFILE]:      3800,
     [AI_TASK.PHOTO_PLAN]:           6800,
-    [AI_TASK.TEMPLATE_GENERATION]: 2400,
+    /** Plantilla correo: instrucciones + tarjetas centrales (dos campos) */
+    [AI_TASK.TEMPLATE_GENERATION]: 4500,
     [AI_TASK.BLOG_POST_DRAFT]: 4200,
 };
 

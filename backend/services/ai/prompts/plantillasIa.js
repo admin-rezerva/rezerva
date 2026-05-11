@@ -1,6 +1,9 @@
 /**
  * Prompts para generar plantillas de mensaje (correo/texto) con etiquetas del motor.
  * Lista de etiquetas: plantillasEtiquetasCatalog.js
+ *
+ * Confirmación huésped: modelo 3 capas — cabecera+resumen+ingreso/llegada (estándar producto),
+ * tarjetas centrales (solo contenido que indique la empresa), pie+botones (estándar producto).
  */
 
 const { bloqueEtiquetasParaPrompt } = require('../../plantillasEtiquetasCatalog');
@@ -37,19 +40,63 @@ function instruccionesLayoutPorModo(modo) {
 Tablas HTML, max-width ~600px, estilos inline.`;
     }
     if (modo === 'huesped_confirmacion') {
-        return `LAYOUT “confirmación cliente” (huésped; usa [LINK_CONFIRMACION_PUBLICA] como enlace principal al sitio; NO uses [LINK_GESTION_RESERVA] aquí):
-- Hero azul marino (#1e3a8a / #1a202c): “¡Tu reserva está confirmada!” + “Te esperamos en [EMPRESA_NOMBRE]”.
-- Saludo: Hola [CLIENTE_NOMBRE], párrafo corto de bienvenida.
-- Tarjeta grande lavanda/claro (#edf2ff): emoji casa + “TU ALOJAMIENTO”, [ALOJAMIENTO_NOMBRE], “Reserva [RESERVA_ID_CANAL]”; a la derecha en tabla mini: Llegada [FECHA_LLEGADA], Salida [FECHA_SALIDA], Duración [TOTAL_NOCHES] noches.
-- Fila dos columnas (tabla): izquierda tarjeta blanca “Ingreso y salida” con texto genérico de horarios (placeholder si no hay datos); derecha tarjeta blanca “Cómo llegar”: una línea de texto + botón “Abrir en Google Maps” solo si [EMPRESA_GOOGLE_MAPS_LINK] no está vacío (href esa URL); si vacío, solo [EMPRESA_WEBSITE] como texto.
-- Opcional ancho completo: bloque “Información útil” con viñetas (WiFi, toallas, mascotas, tinaja, etc.) usando copy genérico paramétrico — sin inventar datos del negocio; puedes repetir contacto [USUARIO_TELEFONO] / [USUARIO_EMAIL].
-- Destacado opcional: si [COMENTARIOS_HUESPED] tiene texto, muéstralo en recuadro; si no, omite la sección.
-- Dos botones secundarios lado a lado (outline): enlaces a [EMPRESA_WEBSITE] (“Qué hacer cerca” o sitio) y texto legal corto — sin inventar URL si [EMPRESA_WEBSITE] vacío.
-- CTA principal claro: botón o enlace fuerte <a href="[LINK_CONFIRMACION_PUBLICA]">Ver confirmación en el sitio web</a>.
-- Pie hero mismo azul: [EMPRESA_NOMBRE], ciudad/región si quieres placeholder “Chile”, [USUARIO_EMAIL].
-Mucho padding, bordes radius 8–12px en tarjetas; solo tablas + CSS inline; sin scripts.`;
+        return `MODELO EN TRES PARTES (confirmación cliente — HTML email, tablas anidadas, ~600px, CSS inline).
+
+══════════════════════════════════════════════════════════════════
+PARTE A — ESTÁNDAR DE PRODUCTO (obligatoria; mismo esqueleto visual para TODA empresa)
+Réplica fiel de referencia SuiteManager: hero oscuro + saludo + tarjeta lavanda + dos tarjetas blancas (horarios / cómo llegar).
+══════════════════════════════════════════════════════════════════
+1) Hero: fondo azul marino / slate muy oscuro (#0f172a o #1a202c), padding generoso, texto centrado.
+   - Título blanco grande: “¡Tu reserva está confirmada!”
+   - Subtítulo blanco o gris muy claro: “Te esperamos en [EMPRESA_NOMBRE]”
+2) Cuerpo fondo blanco:
+   - “Hola [CLIENTE_NOMBRE],” (nombre en <strong>)
+   - Un párrafo corto de bienvenida (tono cordial, sin datos inventados del lugar).
+3) Tarjeta principal ancha (lavanda/azul muy claro #eef2ff, borde #c7d2fe, border-radius 14–16px):
+   - Columna izq.: etiqueta pequeña morada “TU ALOJAMIENTO”, emoji casa + [ALOJAMIENTO_NOMBRE] destacado, línea “Reserva Nº [RESERVA_ID_CANAL]”.
+   - Columna der. (tabla): Llegada [FECHA_LLEGADA], Salida [FECHA_SALIDA], Duración [TOTAL_NOCHES] noches (tipografía jerárquica como diseño referencia).
+4) Fila dos columnas (~48% / 48%) en tabla:
+   - Izquierda tarjeta blanca borde gris claro: título “Ingreso y Salida” con emoji reloj naranja; filas tipo tabla para horarios (texto neutro si no hay datos en etiquetas: “Horarios según confirmación” o similar; NO inventes nombre comercial de complejo).
+   - Derecha tarjeta blanca: título “Cómo llegar” con emoji pin; breve línea de texto (si no hay instrucciones en módulo central, texto genérico “Indicaciones detalladas en tu correo o sitio web.”); botón oscuro “Abrir en Google Maps” con href=[EMPRESA_GOOGLE_MAPS_LINK] solo si el valor puede ser URL; si no hay Maps, botón secundario o enlace a [EMPRESA_WEBSITE].
+
+══════════════════════════════════════════════════════════════════
+PARTE B — MÓDULO CENTRAL (solo lo que el usuario describió en “Tarjetas personalizadas” / instrucciones de contenido)
+══════════════════════════════════════════════════════════════════
+- Aquí van únicamente tarjetas apiladas estilo captura “imagen 3”: fondo blanco, borde #e2e8f0, iconos emoji (tinaja, wifi, info, mascotas…), listas con ✅ cuando corresponda, recuadros destacados amarillos opcionales.
+- NO inventes nombres de marcas, claves WiFi, direcciones largas ni políticas que el usuario NO haya escrito en el texto de tarjetas.
+- Si el texto de tarjetas está vacío o solo dice “ninguna”: NO llenes con datos ficticios; entre parte A y parte C puedes dejar solo un separador sutil o una única tarjeta mínima “¿Dudas?” con [USUARIO_EMAIL] y [USUARIO_TELEFONO].
+
+══════════════════════════════════════════════════════════════════
+PARTE C — ESTÁNDAR DE PRODUCTO (obligatoria; pie como referencia “imagen 2”)
+══════════════════════════════════════════════════════════════════
+1) Fila de dos botones lado a lado (estilo outline: fondo blanco, borde #e2e8f0, texto #334155, padding, border-radius 12px):
+   - Izquierda: icono enlace externo + texto “Qué hacer cerca” → href=[EMPRESA_WEBSITE]
+   - Derecha: icono documento + texto “Términos y Condiciones” → usa la misma [EMPRESA_WEBSITE] con sufijo /ruta solo si el usuario lo indicó en instrucciones generales; si no, [EMPRESA_WEBSITE] y el editor humano corregirá la URL después.
+2) Opcional: botón o enlace principal sólido “Ver confirmación en el sitio” → [LINK_CONFIRMACION_PUBLICA]
+3) Footer bloque oscuro (#0f172a): centrado
+   - [EMPRESA_NOMBRE] en blanco negrita
+   - Línea ubicación en gris claro SOLO si el usuario dio ciudad/región en instrucciones generales; si no, omite o una línea genérica sin inventar ciudad.
+   - “Si tienes dudas, contáctanos a” + mailto:[USUARIO_EMAIL] en color acento legible (azul claro #93c5fd o similar).
+NO uses [LINK_GESTION_RESERVA] en correo huésped.`;
     }
     return `LAYOUT genérico profesional en HTML: cabecera de marca con [EMPRESA_NOMBRE], cuerpo con buen contraste, pie de contacto [USUARIO_EMAIL] / [USUARIO_TELEFONO]. Tablas + estilos inline.`;
+}
+
+/**
+ * Texto extra para el bloque modular (PARTE B) en confirmación huésped.
+ */
+function bloqueModuloTarjetasConfirmacion(instruccionesTarjetas) {
+    const t = String(instruccionesTarjetas || '').trim();
+    if (!t) {
+        return `TARJETAS PERSONALIZADAS (PARTE B): el usuario no proporcionó contenido para el módulo central.
+Genera PARTE A y PARTE C completas; entre ellas no insertes datos inventados de negocio. Opcional: una tarjeta mínima de contacto con [USUARIO_EMAIL] y [USUARIO_TELEFONO], o ninguna tarjeta intermedia.`;
+    }
+    return `TARJETAS PERSONALIZADAS (PARTE B) — contenido a convertir en tarjetas HTML apiladas (única zona que cambia por empresa):
+"""
+${t}
+"""
+Convierte este contenido en tarjetas con el estilo de la referencia larga (imagen tipo captura completa): iconos emoji por sección, bordes redondeados, mucho aire. Si el texto describe una maqueta o captura (colores, orden), respétalo.
+No añadas datos que no estén en el texto anterior.`;
 }
 
 /**
@@ -57,22 +104,34 @@ Mucho padding, bordes radius 8–12px en tarjetas; solo tablas + CSS inline; sin
  * @param {string} p.nombreEmpresa
  * @param {string} p.tipoNombre — Nombre del tipo de plantilla (Firestore)
  * @param {string} p.nombreBorrador — Nombre interno sugerido por el usuario (puede vacío)
- * @param {string} p.instrucciones — Instrucciones libres sanitizadas
+ * @param {string} p.instrucciones — Instrucciones libres sanitizadas (tono, ciudad en pie, rutas URL extra)
+ * @param {string} [p.instruccionesTarjetas] — Solo confirmación huésped: WiFi, tinaja, mascotas, etc.
  */
-function promptGenerarPlantillaMensaje({ nombreEmpresa, tipoNombre, nombreBorrador, instrucciones }) {
+function promptGenerarPlantillaMensaje({
+    nombreEmpresa,
+    tipoNombre,
+    nombreBorrador,
+    instrucciones,
+    instruccionesTarjetas,
+}) {
     const borrador = (nombreBorrador || '').trim() || '(sin sugerencia: inventa un nombre interno breve en español)';
     const extra = (instrucciones || '').trim() || 'Ninguna';
     const modo = inferirModoPlantilla(tipoNombre);
     const layoutBlock = instruccionesLayoutPorModo(modo);
+    const moduloTarjetas = modo === 'huesped_confirmacion'
+        ? bloqueModuloTarjetasConfirmacion(instruccionesTarjetas)
+        : '';
 
     return `Eres diseñador/a de emails transaccionales HTML para alojamientos (Latinoamérica, español neutro).
 
 CONTEXTO
-- Empresa: "${nombreEmpresa}"
+- Empresa (nombre comercial): "${nombreEmpresa}"
 - Tipo de plantilla (clasificación): "${tipoNombre}"
 - Modo inferido para el layout: ${modo}
 - Nombre interno sugerido (mejóralo si es vago): ${borrador}
-- Instrucciones adicionales del usuario: ${extra}
+- Instrucciones generales (tono, ciudad/región para el pie, URLs extra para términos, restricciones): ${extra}
+
+${moduloTarjetas}
 
 OBJETIVO
 Genera un **cuerpo en HTML para correo electrónico** y un **asunto** acordes al tipo. El HTML debe verse profesional en Gmail y Outlook (usa tablas anidadas, anchos máx ~600px, estilos inline).
@@ -102,4 +161,9 @@ Responde ÚNICAMENTE con JSON válido (sin markdown, sin texto fuera del JSON) c
 {"nombre":"string breve para lista interna","asunto":"string","texto":"string que empieza con ${HTML_MARKER}"}`;
 }
 
-module.exports = { promptGenerarPlantillaMensaje, inferirModoPlantilla, HTML_MARKER };
+module.exports = {
+    promptGenerarPlantillaMensaje,
+    inferirModoPlantilla,
+    HTML_MARKER,
+    bloqueModuloTarjetasConfirmacion,
+};
