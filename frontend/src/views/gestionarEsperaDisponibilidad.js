@@ -15,7 +15,8 @@ function labelPropiedad(r) {
 }
 
 function htmlEstadoOptions(r) {
-    return estados.map((e) => `<option value="${e.id}" ${e.id === r.estadoId ? 'selected' : ''}>${e.nombre}</option>`).join('');
+    const opts = estados.map((e) => `<option value="${e.id}" ${e.id === r.estadoId ? 'selected' : ''}>${e.nombre}</option>`).join('');
+    return `<option value="" disabled hidden>Cambiar a…</option>${opts}`;
 }
 
 function hashHue(str) {

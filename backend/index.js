@@ -1,7 +1,22 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
 const path = require('path');
+
+/** Query `?v=` en `adminBootstrap.js` para romper caché agresiva (CDN/navegador) tras cada deploy. */
+function computeAdminBootstrapCacheKey() {
+    const g = String(process.env.RENDER_GIT_COMMIT || '').trim().slice(0, 12);
+    if (g) return g;
+    const p = String(process.env.PANEL_ASSET_VERSION || '').trim();
+    if (p) return p.slice(0, 24);
+    try {
+        const st = fs.statSync(path.join(__dirname, '..', 'frontend', 'src', 'adminBootstrap.js'));
+        return `m${Math.floor(st.mtimeMs)}`;
+    } catch {
+        return 'dev';
+    }
+}
 const admin = require('firebase-admin');
 const sharp = require('sharp');
 const { spawn } = require('child_process');
@@ -303,8 +318,22 @@ try {
     }));
 
     const sendAdminSpaIndex = (res) => {
-        res.setHeader('Cache-Control', adminPanelRevalidate);
-        res.sendFile(path.join(frontendPath, 'index.html'));
+        const indexPath = path.join(frontendPath, 'index.html');
+        try {
+            let html = fs.readFileSync(indexPath, 'utf8');
+            const v = computeAdminBootstrapCacheKey();
+            html = html.replace(
+                /src="\/admin-assets\/src\/adminBootstrap\.js"/,
+                `src="/admin-assets/src/adminBootstrap.js?v=${encodeURIComponent(v)}"`
+            );
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+            res.setHeader('Cache-Control', adminPanelRevalidate);
+            res.send(html);
+        } catch (err) {
+            console.error('[Admin SPA] index.html cache-key inject:', err.message);
+            res.setHeader('Cache-Control', adminPanelRevalidate);
+            res.sendFile(indexPath);
+        }
     };
 
     // **PRIORIDAD 4: Páginas Legales Globales**

@@ -13,7 +13,11 @@ const views = {
     '/login': () => import('./views/login.js'),
     '/': () => import('./views/dashboard.js'),
     '/gestion-diaria': () => import('./views/gestionDiaria.js'),
-    '/gestion-diaria/espera-disponibilidad': () => import('./views/gestionarEsperaDisponibilidad.js'),
+    '/gestion-diaria/espera-disponibilidad': () => {
+        const v = typeof window !== 'undefined' ? window.__SPA_IMPORT_V__ : '';
+        const q = v ? `?v=${encodeURIComponent(v)}` : '';
+        return import(`./views/gestionarEsperaDisponibilidad.js${q}`);
+    },
     '/calendario': () => import('./views/calendario.js'),
     '/clientes': () => import('./views/gestionarClientes.js'),
     '/cliente/:id': () => import('./views/perfilCliente.js'),
