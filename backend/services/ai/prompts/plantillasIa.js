@@ -25,24 +25,29 @@ function inferirModoPlantilla(tipoNombre) {
 
 function instruccionesLayoutPorModo(modo) {
     if (modo === 'admin_alerta') {
-        return `LAYOUT “alerta administrativa” (referencia producto):
-- Cabecera horizontal con fondo morado oscuro (#5b21b6 o similar), texto blanco: título “Nueva reserva recibida” o equivalente, subtítulo con icono + [ALOJAMIENTO_NOMBRE] • [RESERVA_ID_CANAL], badge “Canal: [CANAL_NOMBRE]”.
-- Saludo: Hola [USUARIO_NOMBRE], texto corto de que el sistema registró la reserva.
-- Tarjeta “Datos del huésped”: fondo azul muy claro, borde suave; nombre [CLIENTE_NOMBRE], correo [CLIENTE_EMAIL], teléfono [CLIENTE_TELEFONO].
-- Tarjeta “Fechas y ocupación”: tabla 2×2 con [FECHA_LLEGADA], [FECHA_SALIDA], [TOTAL_NOCHES], [CANTIDAD_HUESPEDES] / grupo [GRUPO_SOLICITADO].
-- Tarjeta “Observaciones” (si [COMENTARIOS_HUESPED] puede estar vacío, muestra un guión o “Sin observaciones” en cursiva).
-- Tarjeta “Desglose”: [PRECIO_LISTA] si existe cupón, línea [LINEA_DESCUENTO_CUPON], separador, total en verde [MONTO_TOTAL], aclaración “Monto final del cliente”.
-- Botón centrado tipo enlace-estilo botón: <a href="[LINK_GESTION_RESERVA]">Ver reserva en el sistema</a> con fondo #0f172a, texto blanco, padding, border-radius.
-Usa tablas HTML (<table width="100%">) para compatibilidad con clientes de correo; estilos inline en cada celda.`;
+        return `LAYOUT “alerta administrativa” (solo equipo interno; NO uses [LINK_CONFIRMACION_PUBLICA]):
+- Cabecera con fondo azul intenso (#1e40af o #5b21b6), texto blanco: título “Nueva reserva recibida”, subtítulo [ALOJAMIENTO_NOMBRE] • [RESERVA_ID_CANAL], badge “Canal: [CANAL_NOMBRE]”.
+- Saludo: Hola [USUARIO_NOMBRE], una línea de que el sistema registró la reserva confirmada.
+- Tarjeta pastel azul “DATOS DEL HUÉSPED”: [CLIENTE_NOMBRE], [CLIENTE_EMAIL], [CLIENTE_TELEFONO].
+- Tarjeta pastel gris “FECHAS Y OCUPACIÓN”: [FECHA_LLEGADA], [FECHA_SALIDA], [TOTAL_NOCHES], [CANTIDAD_HUESPEDES].
+- Tarjeta pastel amarillo “OBSERVACIONES”: bloque citado con [COMENTARIOS_HUESPED]; si vacío, “Sin observaciones” en cursiva.
+- Tarjeta pastel verde “DESGLOSE”: [PRECIO_LISTA] si aplica, [LINEA_DESCUENTO_CUPON], total destacado [MONTO_TOTAL].
+- CTA centrado: botón oscuro <a href="[LINK_GESTION_RESERVA]">Ver reserva en el sistema</a> (solo panel).
+- Pie discreto: mensaje automático de Reservas / soporte [USUARIO_EMAIL].
+Tablas HTML, max-width ~600px, estilos inline.`;
     }
     if (modo === 'huesped_confirmacion') {
-        return `LAYOUT “confirmación huésped” (referencia producto):
-- Cabecera ancha color azul marino (#1e3a8a), texto blanco: titular tipo “¡Tu reserva está confirmada!” y subtítulo “Te esperamos en [EMPRESA_NOMBRE]”.
-- Bloque resumen alojamiento: fondo azul muy claro; ícono emoji de casa + “TU ALOJAMIENTO” + [ALOJAMIENTO_NOMBRE]; número Reserva [RESERVA_ID_CANAL]; columnas Llegada / Salida / Duración ([FECHA_LLEGADA], [FECHA_SALIDA], [TOTAL_NOCHES] noches).
-- Tarjetas en fila (tabla dos columnas): ingreso/salida horarios si los tienes como texto en plantilla genérica; “Cómo llegar” con botón secundario si [EMPRESA_WEBSITE] existe → enlazar Google Maps solo si hay URL https explícita en copy (usa [EMPRESA_WEBSITE] como texto base para “sitio”).
-- Sección útiles opcional (WiFi, reglas): solo placeholders genéricos si no hay etiqueta específica; puedes citar [EMPRESA_NOMBRE], [USUARIO_TELEFONO], [USUARIO_EMAIL].
-- Pie azul marino con ubicación y contacto.
-Estética limpia, mucho aire, fuentes sans-serif en style global del wrapper; solo HTML email seguro (tablas, inline CSS).`;
+        return `LAYOUT “confirmación cliente” (huésped; usa [LINK_CONFIRMACION_PUBLICA] como enlace principal al sitio; NO uses [LINK_GESTION_RESERVA] aquí):
+- Hero azul marino (#1e3a8a / #1a202c): “¡Tu reserva está confirmada!” + “Te esperamos en [EMPRESA_NOMBRE]”.
+- Saludo: Hola [CLIENTE_NOMBRE], párrafo corto de bienvenida.
+- Tarjeta grande lavanda/claro (#edf2ff): emoji casa + “TU ALOJAMIENTO”, [ALOJAMIENTO_NOMBRE], “Reserva [RESERVA_ID_CANAL]”; a la derecha en tabla mini: Llegada [FECHA_LLEGADA], Salida [FECHA_SALIDA], Duración [TOTAL_NOCHES] noches.
+- Fila dos columnas (tabla): izquierda tarjeta blanca “Ingreso y salida” con texto genérico de horarios (placeholder si no hay datos); derecha tarjeta blanca “Cómo llegar”: una línea de texto + botón “Abrir en Google Maps” solo si [EMPRESA_GOOGLE_MAPS_LINK] no está vacío (href esa URL); si vacío, solo [EMPRESA_WEBSITE] como texto.
+- Opcional ancho completo: bloque “Información útil” con viñetas (WiFi, toallas, mascotas, tinaja, etc.) usando copy genérico paramétrico — sin inventar datos del negocio; puedes repetir contacto [USUARIO_TELEFONO] / [USUARIO_EMAIL].
+- Destacado opcional: si [COMENTARIOS_HUESPED] tiene texto, muéstralo en recuadro; si no, omite la sección.
+- Dos botones secundarios lado a lado (outline): enlaces a [EMPRESA_WEBSITE] (“Qué hacer cerca” o sitio) y texto legal corto — sin inventar URL si [EMPRESA_WEBSITE] vacío.
+- CTA principal claro: botón o enlace fuerte <a href="[LINK_CONFIRMACION_PUBLICA]">Ver confirmación en el sitio web</a>.
+- Pie hero mismo azul: [EMPRESA_NOMBRE], ciudad/región si quieres placeholder “Chile”, [USUARIO_EMAIL].
+Mucho padding, bordes radius 8–12px en tarjetas; solo tablas + CSS inline; sin scripts.`;
     }
     return `LAYOUT genérico profesional en HTML: cabecera de marca con [EMPRESA_NOMBRE], cuerpo con buen contraste, pie de contacto [USUARIO_EMAIL] / [USUARIO_TELEFONO]. Tablas + estilos inline.`;
 }
@@ -90,7 +95,7 @@ ${bloqueEtiquetas()}
 FORMATO
 - Campo "texto": empieza con ${HTML_MARKER} + HTML (no texto plano).
 - Sin Markdown fences. Sin scripts. Sin imágenes externas obligatorias (opcional logo URL solo si el usuario lo pidió en instrucciones).
-- Máximo ~9000 caracteres en "texto".
+- Máximo ~14000 caracteres en "texto".
 
 SALIDA
 Responde ÚNICAMENTE con JSON válido (sin markdown, sin texto fuera del JSON) con estas claves exactas:

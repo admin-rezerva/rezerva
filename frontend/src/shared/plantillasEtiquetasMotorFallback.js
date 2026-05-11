@@ -15,6 +15,8 @@ export const ETIQUETAS_MOTOR_FALLBACK = [
     { tag: '[DESCUENTO_CUPON]', descripcion: 'Monto descontado por cupón (formato moneda)' },
     { tag: '[LINEA_DESCUENTO_CUPON]', descripcion: 'Texto de línea de descuento (vacío si no hubo cupón)' },
     { tag: '[LINK_GESTION_RESERVA]', descripcion: 'Enlace al panel para abrir la reserva (gestionar-reservas)' },
+    { tag: '[LINK_CONFIRMACION_PUBLICA]', descripcion: 'Enlace al sitio web (SSR) página de confirmación de la reserva' },
+    { tag: '[EMPRESA_GOOGLE_MAPS_LINK]', descripcion: 'URL de Google Maps configurada en la empresa (si existe)' },
     { tag: '[COMENTARIOS_HUESPED]', descripcion: 'Observaciones del huésped en checkout (si se informaron)' },
     { tag: '[FECHA_EMISION]', descripcion: 'Fecha en que se emite el mensaje' },
     { tag: '[FECHA_LLEGADA]', descripcion: 'Fecha de check-in' },

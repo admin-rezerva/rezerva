@@ -179,6 +179,45 @@ async function resolverLinkResenaOutbound(empresaId, {
 }
 
 /**
+ * Evita usar la misma fila de plantilla para huésped y admin si ambos disparadores están marcados:
+ * prioriza plantillas “dedicadas” (solo ese disparador entre confirmación / interna).
+ */
+function _seleccionarPlantillaPorDisparador(rows, disparadorKey, empresaIdForLog = '') {
+    const eligible = [];
+    for (const r of rows) {
+        const ec = normalizeEmailConfig(r.email_config);
+        if (!ec.permitirEnvioCorreo) continue;
+        if (!ec.disparadores?.[disparadorKey]) continue;
+        eligible.push({ r, ec });
+    }
+    if (!eligible.length) return null;
+
+    const dedicated = eligible.filter(({ ec }) => {
+        if (disparadorKey === 'notificacion_interna') return !ec.disparadores.reserva_confirmada;
+        if (disparadorKey === 'reserva_confirmada') return !ec.disparadores.notificacion_interna;
+        return true;
+    });
+
+    const pick = (dedicated.length ? dedicated : eligible)[0];
+    if (!dedicated.length && eligible.length && (disparadorKey === 'notificacion_interna' || disparadorKey === 'reserva_confirmada')) {
+        console.warn(
+            `[transactionalEmail]${empresaIdForLog ? ` empresa=${empresaIdForLog}` : ''} disparador=${disparadorKey}: `
+            + 'ninguna plantilla solo para este disparador; se usa una fila con varios disparadores — '
+            + 'huésped e interno pueden verse iguales. En Panel: dos plantillas distintas o desmarca el disparador extra.'
+        );
+    }
+
+    const r = pick.r;
+    return {
+        id: r.id,
+        nombre: r.nombre,
+        tipo: r.tipo,
+        texto: r.texto,
+        asunto: r.asunto != null ? String(r.asunto) : '',
+    };
+}
+
+/**
  * Busca la primera plantilla activa con disparador encendido y envío por correo permitido.
  */
 async function obtenerPlantillaPorDisparador(empresaId, disparadorKey) {
@@ -190,20 +229,7 @@ async function obtenerPlantillaPorDisparador(empresaId, disparadorKey) {
          ORDER BY id DESC`,
         [empresaId]
     );
-    for (const r of rows) {
-        const ec = normalizeEmailConfig(r.email_config);
-        if (!ec.permitirEnvioCorreo) continue;
-        if (ec.disparadores && ec.disparadores[disparadorKey]) {
-            return {
-                id: r.id,
-                nombre: r.nombre,
-                tipo: r.tipo,
-                texto: r.texto,
-                asunto: r.asunto != null ? String(r.asunto) : '',
-            };
-        }
-    }
-    return null;
+    return _seleccionarPlantillaPorDisparador(rows, disparadorKey, empresaId);
 }
 
 /**
@@ -465,6 +491,10 @@ async function construirVariablesDesdeReserva(empresaId, row, extras = {}) {
         : '';
     const precio = totalNum > 0 ? _fmtMonedaCLP(totalNum, localeFecha) : '';
     const baseUrl = await obtenerBaseUrlPublica(empresaId);
+    const refCanalPublico = row.id_reserva_canal != null ? String(row.id_reserva_canal).trim() : '';
+    const linkConfirmacionPublica = baseUrl && refCanalPublico
+        ? `${String(baseUrl).replace(/\/$/, '')}/confirmacion?reservaId=${encodeURIComponent(refCanalPublico)}`
+        : '';
     const linkResena = extras.linkResena || (extras.tokenResena ? `${baseUrl}/r/${extras.tokenResena}` : '');
     const depositoCfg = resolveDepositoReservaWeb(ctx.configuracion?.websiteSettings?.booking, totalNum);
     const porcentajeAbonoNum = (depositoCfg.tipo === 'monto_fijo' && totalNum > 0)
@@ -580,6 +610,7 @@ async function construirVariablesDesdeReserva(empresaId, row, extras = {}) {
         linkPago,
         urlPago: linkPago,
         empresaGoogleMapsLink: ctx.configuracion?.google_maps_url || '',
+        EMPRESA_GOOGLE_MAPS_LINK: ctx.configuracion?.google_maps_url || '',
         empresaNombre: ctx.nombre,
         empresaWebsite: ctx.website,
         contactoNombre: ctx.contactoNombre,
@@ -654,6 +685,8 @@ async function construirVariablesDesdeReserva(empresaId, row, extras = {}) {
         LINEA_DESCUENTO_CUPON: lineaDescuentoCupon,
         linkGestionReserva,
         LINK_GESTION_RESERVA: linkGestionReserva,
+        linkConfirmacionPublica,
+        LINK_CONFIRMACION_PUBLICA: linkConfirmacionPublica,
         COMENTARIOS_HUESPED: comentariosHuesped,
     };
 }
