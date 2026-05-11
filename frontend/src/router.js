@@ -166,31 +166,59 @@ async function updatePendingProposalsCount() {
     }
 }
 
+/** Rutas legacy con `_` (marcadores / enlaces viejos) → path canónico con `-` (debe coincidir con `views`). */
+function normalizePathnameForRouter(pathname) {
+    const p = pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+    const legacy = {
+        '/gestion_diaria/espera_disponibilidad': '/gestion-diaria/espera-disponibilidad',
+        '/gestion_diaria': '/gestion-diaria',
+    };
+    return legacy[p] || legacy[p.toLowerCase()] || p;
+}
+
+function applyPathnameCanonical(fullPath) {
+    const qIdx = fullPath.indexOf('?');
+    const pathname = qIdx === -1 ? fullPath : fullPath.slice(0, qIdx);
+    const query = qIdx === -1 ? '' : fullPath.slice(qIdx);
+    return normalizePathnameForRouter(pathname) + query;
+}
+
+function isLoginPath(fullPath) {
+    return fullPath.split('?')[0] === '/login';
+}
+
+function resolveRouterPath(fullPath) {
+    if (isLoginPath(fullPath)) return fullPath;
+    return applyPathnameCanonical(fullPath);
+}
 
 export async function handleNavigation(path) {
-    if (path !== '/login') sessionStorage.setItem('lastPath', path);
-    window.history.pushState({}, '', path);
-    await loadView(path);
+    const canonical = resolveRouterPath(path);
+    if (!isLoginPath(canonical)) sessionStorage.setItem('lastPath', canonical);
+    window.history.pushState({}, '', canonical);
+    await loadView(canonical);
 }
 
 async function loadView(path) {
+    const resolvedPath = resolveRouterPath(path);
     const isAuthenticated = await checkAuthAndRender();
     const appRoot = document.getElementById('app-root');
 
-    if (!isAuthenticated && path !== '/login') return handleNavigation('/login');
-    if (isAuthenticated && path === '/login') {
+    if (!isAuthenticated && !isLoginPath(resolvedPath)) return handleNavigation('/login');
+    if (isAuthenticated && isLoginPath(resolvedPath)) {
         const lastPath = sessionStorage.getItem('lastPath') || '/';
         return handleNavigation(lastPath);
     }
 
-    if (path === '/login') {
+    if (isLoginPath(resolvedPath)) {
         const { renderLogin } = await views['/login']();
         renderLogin(appRoot);
     } else {
-        let cleanPath = path.split('?')[0];
+        let cleanPath = resolvedPath.split('?')[0];
         if (cleanPath.length > 1 && cleanPath.endsWith('/')) {
             cleanPath = cleanPath.slice(0, -1);
         }
+        cleanPath = normalizePathnameForRouter(cleanPath);
 
         const dynamicRoute = Object.keys(views).find(route => {
             const regex = new RegExp(`^${route.replace(/:\w+/g, '([^/]+)')}$`);
@@ -346,5 +374,10 @@ window.addEventListener('popstate', () => loadView(initialAppPath()));
 export async function startAdminApp() {
     await ensurePlatformConfig();
     applyDocumentBranding();
-    await loadView(initialAppPath());
+    const raw = initialAppPath();
+    const resolved = resolveRouterPath(raw);
+    if (resolved.split('?')[0] !== raw.split('?')[0]) {
+        window.history.replaceState({}, '', resolved);
+    }
+    await loadView(resolved);
 }
