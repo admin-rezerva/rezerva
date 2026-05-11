@@ -9,12 +9,13 @@ const { getPanelPublicOrigin } = require('./platformPublic');
  * @returns {string}
  */
 function resolveGoogleOAuthRedirectUri(credentialsWeb) {
-    const explicit = String(process.env.GOOGLE_OAUTH_REDIRECT_URI || '').trim();
+    let explicit = String(process.env.GOOGLE_OAUTH_REDIRECT_URI || '').trim().replace(/^['"]+|['"]+$/g, '');
+    if (explicit && !/^[a-z][a-z0-9+.-]*:\/\//i.test(explicit)) {
+        explicit = `https://${explicit}`;
+    }
     if (explicit) {
         try {
-            // eslint-disable-next-line no-new
-            new URL(explicit);
-            return explicit;
+            return new URL(explicit).href;
         } catch {
             /* continuar */
         }

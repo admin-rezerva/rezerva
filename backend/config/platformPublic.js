@@ -61,24 +61,32 @@ function getRenderPublicHostname() {
 }
 
 /**
+ * Normaliza valor de env a origin válido: quita comillas, añade https:// si falta esquema
+ * (p. ej. `rezerva.cl` → `https://rezerva.cl`).
+ */
+function tryPublicOriginFromEnv(raw) {
+    let s = String(raw || '').trim().replace(/^['"]+|['"]+$/g, '');
+    if (!s) return '';
+    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(s)) {
+        s = `https://${s}`;
+    }
+    try {
+        return new URL(s).origin;
+    } catch {
+        return '';
+    }
+}
+
+/**
  * Origen HTTPS del panel/API (sin path final). OAuth y enlaces “canónicos” del backend.
  * Prioridad: PANEL_PUBLIC_ORIGIN → GOOGLE_OAUTH_PUBLIC_ORIGIN → RENDER_EXTERNAL_URL.
  * En Render con dominio custom, definir PANEL_PUBLIC_ORIGIN=https://rezerva.cl (o el host real del panel).
  */
 function getPanelPublicOrigin() {
-    const tryOrigin = (raw) => {
-        const s = String(raw || '').trim();
-        if (!s) return '';
-        try {
-            return new URL(s).origin;
-        } catch {
-            return '';
-        }
-    };
     return (
-        tryOrigin(process.env.PANEL_PUBLIC_ORIGIN)
-        || tryOrigin(process.env.GOOGLE_OAUTH_PUBLIC_ORIGIN)
-        || tryOrigin(process.env.RENDER_EXTERNAL_URL)
+        tryPublicOriginFromEnv(process.env.PANEL_PUBLIC_ORIGIN)
+        || tryPublicOriginFromEnv(process.env.GOOGLE_OAUTH_PUBLIC_ORIGIN)
+        || tryPublicOriginFromEnv(process.env.RENDER_EXTERNAL_URL)
         || ''
     );
 }
