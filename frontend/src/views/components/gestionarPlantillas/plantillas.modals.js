@@ -33,67 +33,73 @@ function renderEtiquetasAyuda(catalogo = []) {
 export const renderModalPlantilla = (catalogoEtiquetas = []) => {
     return `
         <div id="plantilla-modal" class="modal hidden">
-            <div class="modal-content !max-w-5xl h-[90vh] flex flex-col">
-                <div class="flex items-center gap-4 mb-6 pb-5 border-b flex-shrink-0">
+            <div class="modal-content !max-w-5xl !overflow-hidden flex flex-col w-full max-h-[min(92vh,920px)] p-0 shadow-xl rounded-lg">
+                <div class="flex items-center gap-4 px-6 py-4 border-b border-gray-200 flex-shrink-0 bg-white rounded-t-lg">
                     <div class="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center text-primary-600 text-xl flex-shrink-0">✉️</div>
-                    <div class="flex-1">
+                    <div class="flex-1 min-w-0">
                         <h3 id="modal-title" class="text-xl font-semibold text-gray-900">Nueva Plantilla</h3>
                         <p id="modal-plantilla-subtitle" class="text-sm text-gray-500">Redacta el contenido del mensaje</p>
+                        <p class="text-xs text-gray-400 mt-1">El asistente por tarjetas (wizard paso a paso) está planificado; por ahora usa el editor, IA y vista previa.</p>
                     </div>
-                    <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+                    <button type="button" id="close-modal-btn" class="text-gray-400 hover:text-gray-600 text-2xl leading-none p-1" aria-label="Cerrar">&times;</button>
                 </div>
-                
-                <div class="flex flex-col md:flex-row gap-6 flex-grow overflow-hidden">
-                    <div class="flex-1 flex flex-col overflow-y-auto pr-2">
-                        <form id="plantilla-form" class="flex flex-col h-full">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre Interno</label>
-                                    <input type="text" id="nombre" name="nombre" required class="form-input mt-1" placeholder="Ej: Bienvenida Estándar">
-                                </div>
-                                <div>
-                                    <label for="tipoId" class="block text-sm font-medium text-gray-700">Tipo de Mensaje</label>
-                                    <select id="tipoId" name="tipoId" required class="form-select mt-1">
+
+                <div class="flex flex-1 min-h-0 flex-col md:flex-row overflow-hidden bg-white">
+                    <div class="flex-1 flex flex-col min-w-0 min-h-0 border-b md:border-b-0 md:border-r border-gray-200">
+                        <form id="plantilla-form" class="flex flex-col h-full min-h-0">
+                            <div class="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 py-4 space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre Interno</label>
+                                        <input type="text" id="nombre" name="nombre" required class="form-input mt-1" placeholder="Ej: Bienvenida Estándar">
+                                    </div>
+                                    <div>
+                                        <label for="tipoId" class="block text-sm font-medium text-gray-700">Tipo de Mensaje</label>
+                                        <select id="tipoId" name="tipoId" required class="form-select mt-1">
                                         </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label for="asunto" class="block text-sm font-medium text-gray-700">Asunto (para Email)</label>
+                                    <input type="text" id="asunto" name="asunto" class="form-input mt-1" placeholder="Ej: Confirmación de Reserva en [ALOJAMIENTO_NOMBRE]">
+                                </div>
+
+                                <div>
+                                    <label for="plantilla-ia-instrucciones" class="block text-xs font-medium text-gray-600">Instrucciones generales para la IA</label>
+                                    <p class="text-xs text-gray-500 mt-0.5">Tono, ciudad/región para el pie del correo, enlaces extra (términos), restricciones.</p>
+                                    <textarea id="plantilla-ia-instrucciones" name="plantillaIaInstrucciones" rows="2" class="form-input mt-1 text-sm" placeholder="Ej.: tono cercano; pie: Pucón, Araucanía; términos en …/terminos"></textarea>
+                                </div>
+                                <div>
+                                    <label for="plantilla-ia-tarjetas" class="block text-xs font-medium text-gray-600">Tarjetas centrales (solo confirmación huésped)</label>
+                                    <p class="text-xs text-gray-500 mt-0.5">WiFi, tinaja, mascotas, dirección larga. Si lo dejas vacío, la IA arma solo cabecera + pie estándar.</p>
+                                    <textarea id="plantilla-ia-tarjetas" name="plantillaIaTarjetas" rows="4" class="form-input mt-1 text-sm font-sans" placeholder="Ej.: Tinaja: … WiFi cabaña…"></textarea>
+                                </div>
+
+                                <div class="flex flex-col min-h-[200px] flex-1">
+                                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
+                                        <label for="texto" class="block text-sm font-medium text-gray-700">Contenido del Mensaje</label>
+                                        <button type="button" id="plantilla-generar-ia-btn" class="btn-outline text-xs py-1.5 px-3 whitespace-nowrap shrink-0 self-start sm:self-auto" title="Requiere tipo de mensaje.">
+                                            <i class="fa-solid fa-wand-magic-sparkles"></i> Generar con IA
+                                        </button>
+                                    </div>
+                                    <textarea id="texto" name="texto" required rows="14" class="form-input w-full flex-1 min-h-[200px] max-h-[42vh] resize-y font-mono text-sm overflow-auto" placeholder="Hola [CLIENTE_NOMBRE]..."></textarea>
                                 </div>
                             </div>
-                            
-                            <div class="mb-4">
-                                <label for="asunto" class="block text-sm font-medium text-gray-700">Asunto (para Email)</label>
-                                <input type="text" id="asunto" name="asunto" class="form-input mt-1" placeholder="Ej: Confirmación de Reserva en [ALOJAMIENTO_NOMBRE]">
-                            </div>
 
-                            <div class="mb-3">
-                                <label for="plantilla-ia-instrucciones" class="block text-xs font-medium text-gray-600">Instrucciones generales para la IA</label>
-                                <p class="text-xs text-gray-500 mb-1">Tono, ciudad/región para el pie del correo, enlaces extra (términos), restricciones.</p>
-                                <textarea id="plantilla-ia-instrucciones" name="plantillaIaInstrucciones" rows="2" class="form-input mt-1 text-sm" placeholder="Ej.: tono cercano; pie: Pucón, Araucanía; términos en …/terminos"></textarea>
-                            </div>
-                            <div class="mb-4">
-                                <label for="plantilla-ia-tarjetas" class="block text-xs font-medium text-gray-600">Tarjetas centrales (solo confirmación huésped)</label>
-                                <p class="block text-xs text-gray-500 mb-1">Contenido único por empresa: WiFi, tinaja, mascotas, dirección larga, políticas. Si lo dejas vacío, la IA arma solo cabecera + pie estándar. Puedes <strong>describir con palabras</strong> una captura de referencia (layout, orden de bloques).</p>
-                                <textarea id="plantilla-ia-tarjetas" name="plantillaIaTarjetas" rows="5" class="form-input mt-1 text-sm font-sans" placeholder="Ej.: Tinaja: … WiFi cabaña Casa10 / clave … Mascotas: pequeñas con correa…"></textarea>
-                            </div>
-
-                            <div class="flex-grow flex flex-col mb-4 min-h-0">
-                                <div class="mb-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                    <label for="texto" class="block text-sm font-medium text-gray-700">Contenido del Mensaje</label>
-                                    <button type="button" id="plantilla-generar-ia-btn" class="btn-outline text-xs py-1.5 px-3 whitespace-nowrap flex items-center gap-1.5 shrink-0" title="Requiere tipo de mensaje. Usa las etiquetas [VARIABLE] del panel derecho.">
-                                        <i class="fa-solid fa-wand-magic-sparkles"></i> Generar con IA
-                                    </button>
-                                </div>
-                                <textarea id="texto" name="texto" required class="form-input flex-grow resize-none font-mono text-sm min-h-[200px]" placeholder="Hola [CLIENTE_NOMBRE]..."></textarea>
-                            </div>
-
-                            <div class="flex justify-end pt-4 border-t mt-auto flex-shrink-0">
-                                <button type="button" id="cancel-btn" class="btn-outline mr-2">Cancelar</button>
-                                <button type="submit" class="btn-primary">Guardar Plantilla</button>
+                            <div class="flex-shrink-0 flex flex-wrap items-center justify-end gap-2 px-6 py-4 border-t border-gray-200 bg-gray-50/95">
+                                <button type="button" id="cancel-btn" class="btn-outline order-1">Cancelar</button>
+                                <button type="button" id="plantilla-vista-previa-btn" class="btn-outline order-2">
+                                    <i class="fa-regular fa-eye mr-1.5"></i> Vista previa
+                                </button>
+                                <button type="submit" class="btn-primary order-3">Guardar Plantilla</button>
                             </div>
                         </form>
                     </div>
 
-                    <div class="w-full md:w-1/3 bg-gray-50 border-l p-4 overflow-y-auto flex-shrink-0 rounded-r-lg">
-                        <h4 class="font-semibold text-gray-700 mb-3 text-sm">Etiquetas del motor</h4>
-                        <p class="text-xs text-gray-500 mb-4">Solo estas variables se sustituyen al enviar el correo (mismo criterio que <strong>Generar con IA</strong>). Haz clic en el icono para copiar.</p>
+                    <div class="w-full md:w-[280px] lg:w-80 flex-shrink-0 bg-gray-50 p-4 overflow-y-auto max-h-[40vh] md:max-h-none border-t md:border-t-0">
+                        <h4 class="font-semibold text-gray-700 mb-2 text-sm">Etiquetas del motor</h4>
+                        <p class="text-xs text-gray-500 mb-3">Variables que el servidor sustituye al enviar. Clic en el icono para copiar.</p>
                         <div id="etiquetas-container" class="space-y-2">
                             ${renderEtiquetasAyuda(catalogoEtiquetas)}
                         </div>
@@ -101,8 +107,46 @@ export const renderModalPlantilla = (catalogoEtiquetas = []) => {
                 </div>
             </div>
         </div>
+
+        <div id="plantilla-preview-modal" class="modal hidden">
+            <div class="modal-content !max-w-4xl w-full !overflow-hidden flex flex-col h-[min(88vh,860px)] max-h-[min(88vh,860px)] p-0">
+                <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-200 bg-white flex-shrink-0">
+                    <h4 class="text-base font-semibold text-gray-800">Vista previa del correo</h4>
+                    <button type="button" id="plantilla-preview-close" class="text-gray-500 hover:text-gray-800 text-2xl leading-none p-1" aria-label="Cerrar vista previa">&times;</button>
+                </div>
+                <p id="plantilla-preview-asunto" class="text-sm text-gray-700 px-4 py-2 bg-gray-50 border-b border-gray-100 break-words"></p>
+                <p id="plantilla-preview-nota" class="text-xs text-amber-800 px-4 py-2 bg-amber-50 border-b border-amber-100"></p>
+                <iframe id="plantilla-preview-iframe" title="Vista previa correo" class="w-full flex-1 min-h-[320px] border-0 bg-gray-200" sandbox="allow-popups allow-popups-to-escape-sandbox"></iframe>
+            </div>
+        </div>
     `;
 };
+
+function _abrirVistaPreviaCorreo(htmlBody, asunto, nota) {
+    const wrap = document.getElementById('plantilla-preview-modal');
+    const iframe = document.getElementById('plantilla-preview-iframe');
+    const subj = document.getElementById('plantilla-preview-asunto');
+    const notaEl = document.getElementById('plantilla-preview-nota');
+    if (!wrap || !iframe) return;
+    const safe = String(htmlBody || '');
+    const doc = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base target="_blank" rel="noopener">
+<style>body{margin:0;padding:16px;background:#f1f5f9;font-family:system-ui,-apple-system,sans-serif;}</style></head><body>${safe}</body></html>`;
+    iframe.srcdoc = doc;
+    if (subj) {
+        subj.textContent = `Asunto: ${asunto || '(sin asunto)'}`;
+    }
+    if (notaEl) {
+        notaEl.textContent = nota || '';
+    }
+    wrap.classList.remove('hidden');
+}
+
+function _cerrarVistaPreviaCorreo() {
+    const wrap = document.getElementById('plantilla-preview-modal');
+    const iframe = document.getElementById('plantilla-preview-iframe');
+    if (wrap) wrap.classList.add('hidden');
+    if (iframe) iframe.srcdoc = '';
+}
 
 export const abrirModalPlantilla = (plantilla = null, tipos = []) => {
     const modal = document.getElementById('plantilla-modal');
@@ -112,9 +156,8 @@ export const abrirModalPlantilla = (plantilla = null, tipos = []) => {
 
     if (!modal || !form) return;
 
-    // Rellenar el select de tipos
-    tipoSelect.innerHTML = '<option value="">-- Seleccionar Tipo --</option>' + 
-        tipos.map(t => `<option value="${t.id}">${t.nombre}</option>`).join('');
+    tipoSelect.innerHTML = '<option value="">-- Seleccionar Tipo --</option>'
+        + tipos.map((t) => `<option value="${t.id}">${t.nombre}</option>`).join('');
 
     const subtitle = document.getElementById('modal-plantilla-subtitle');
     if (plantilla) {
@@ -124,7 +167,7 @@ export const abrirModalPlantilla = (plantilla = null, tipos = []) => {
         form.nombre.value = plantilla.nombre;
         form.tipoId.value = plantilla.tipoId;
         form.asunto.value = plantilla.asunto || '';
-        form.texto.value = plantilla.texto; // CORREGIDO: usar 'texto'
+        form.texto.value = plantilla.texto;
     } else {
         editandoPlantilla = null;
         modalTitle.textContent = 'Nueva Plantilla';
@@ -135,7 +178,7 @@ export const abrirModalPlantilla = (plantilla = null, tipos = []) => {
     if (iaInstr) iaInstr.value = '';
     const iaTarjetas = document.getElementById('plantilla-ia-tarjetas');
     if (iaTarjetas) iaTarjetas.value = '';
-    
+
     modal.classList.remove('hidden');
 };
 
@@ -143,11 +186,12 @@ export const cerrarModalPlantilla = () => {
     const modal = document.getElementById('plantilla-modal');
     if (modal) modal.classList.add('hidden');
     editandoPlantilla = null;
+    _cerrarVistaPreviaCorreo();
 };
 
 export const setupModalPlantilla = (callback) => {
     onSaveCallback = callback;
-    
+
     const form = document.getElementById('plantilla-form');
     if (!form) return;
 
@@ -156,6 +200,9 @@ export const setupModalPlantilla = (callback) => {
 
     document.getElementById('close-modal-btn').addEventListener('click', cerrarModalPlantilla);
     document.getElementById('cancel-btn').addEventListener('click', cerrarModalPlantilla);
+
+    const previewClose = document.getElementById('plantilla-preview-close');
+    if (previewClose) previewClose.addEventListener('click', _cerrarVistaPreviaCorreo);
 
     const etiquetasContainer = document.getElementById('etiquetas-container');
     const newEtiquetasContainer = etiquetasContainer.cloneNode(true);
@@ -211,6 +258,35 @@ export const setupModalPlantilla = (callback) => {
         });
     }
 
+    const prevBtn = newForm.querySelector('#plantilla-vista-previa-btn');
+    if (prevBtn) {
+        prevBtn.addEventListener('click', async () => {
+            const texto = newForm.texto?.value || '';
+            if (!String(texto).trim()) {
+                alert('Escribe o genera el contenido del mensaje antes de la vista previa.');
+                return;
+            }
+            const original = prevBtn.innerHTML;
+            prevBtn.disabled = true;
+            prevBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> …';
+            try {
+                const data = await fetchAPI('/plantillas/vista-previa', {
+                    method: 'POST',
+                    body: {
+                        texto,
+                        asunto: newForm.asunto?.value || '',
+                    },
+                });
+                _abrirVistaPreviaCorreo(data.html, data.asunto, data.nota);
+            } catch (err) {
+                alert(err.message || String(err));
+            } finally {
+                prevBtn.disabled = false;
+                prevBtn.innerHTML = original;
+            }
+        });
+    }
+
     newForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = e.target;
@@ -218,7 +294,7 @@ export const setupModalPlantilla = (callback) => {
             nombre: formData.nombre.value,
             tipoId: formData.tipoId.value,
             asunto: formData.asunto.value,
-            texto: formData.texto.value // CORREGIDO: usar 'texto'
+            texto: formData.texto.value,
         };
 
         try {
@@ -227,7 +303,7 @@ export const setupModalPlantilla = (callback) => {
             } else {
                 await fetchAPI('/plantillas', { method: 'POST', body: datos });
             }
-            
+
             cerrarModalPlantilla();
             if (onSaveCallback) onSaveCallback();
         } catch (error) {
