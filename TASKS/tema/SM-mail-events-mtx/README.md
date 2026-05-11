@@ -8,4 +8,6 @@
 
 **HTML en plantillas:** prefijo `[[HTML_EMAIL]]` al inicio del cuerpo (o `email_config.cuerpoEsHtml: true`) para no escapar etiquetas; motor sigue sustituyendo `[ETIQUETAS]`. IA: `backend/services/ai/prompts/plantillasIa.js`.
 
+**Presets listos para pegar (tablas + inline CSS, etiquetas motor):** [`plantillas-preset-html-gemini-react-port.md`](plantillas-preset-html-gemini-react-port.md) — portación desde diseño tipo React/Tailwind (no usar JSX en correo).
+
 **Puntos de entrada en código:** `transactionalEmailService.js`, `transactionalEmailHooks.js`, `transactionalEmailEventMatrix.js`, `emailService.js`, `plantillasService.js`, `publicWebsiteService.js` (`crearReservaPublica`), `comunicacionesRetryService.js`, `scheduledTransactionalEmails.js`.
