@@ -8,6 +8,16 @@ const { differenceInDays, addDays, format } = require('date-fns');
 const { precioNocheConPromoTarifa } = require('./promocionesDisplayService');
 const { obtenerCanalSsrOPorDefecto } = require('./canalesService');
 
+function _extraerPrecioCanal(tarifa, canalId, monedaCanal) {
+    const precioBaseObj = tarifa?.precios?.[canalId];
+    if (typeof precioBaseObj === 'number') return precioBaseObj;
+    if (precioBaseObj && typeof precioBaseObj === 'object') {
+        const valor = monedaCanal === 'USD' ? precioBaseObj.valorUSD : precioBaseObj.valorCLP;
+        if (Number(valor) > 0) return Number(valor);
+    }
+    return Number(tarifa?.precioBase) || 0;
+}
+
 async function calculatePrice(_db, empresaId, items, startDate, endDate, allTarifas, valorDolarDiaOverride = null) {
     const canalPorDefecto = await obtenerCanalSsrOPorDefecto(empresaId, pool);
     if (!canalPorDefecto) throw new Error('No se ha configurado un canal SSR o canal por defecto.');
@@ -47,14 +57,7 @@ async function calculatePrice(_db, empresaId, items, startDate, endDate, allTari
             );
             if (tarifasDelDia.length > 0) {
                 const tarifa = tarifasDelDia.sort((a, b) => b.fechaInicio - a.fechaInicio)[0];
-                const precioBaseObj = tarifa.precios?.[canalPorDefecto.id];
-                let base = 0;
-                if (typeof precioBaseObj === 'number') base = precioBaseObj;
-                else if (precioBaseObj && typeof precioBaseObj === 'object') {
-                    base = monedaCanal === 'USD'
-                        ? (Number(precioBaseObj.valorUSD) || 0)
-                        : (Number(precioBaseObj.valorCLP) || 0);
-                }
+                const base = _extraerPrecioCanal(tarifa, canalPorDefecto.id, monedaCanal);
                 totalListaEnMonedaDefecto += base;
                 const conPromo = precioNocheConPromoTarifa(base, tarifa.metadata?.promo, llegStr, salStr);
                 propPrecioBaseTotal += conPromo;

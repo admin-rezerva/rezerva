@@ -110,6 +110,7 @@
 | `backend/services/reparacionService.js` | [x] `repararFechasSODC`: incluye reservas con **`canalId`** del canal SODC resuelto en PG además de `canalNombre == 'SODC'`. |
 | `backend/services/reservaCodigoService.js` | [x] ID visible corto `canal-ddMMyyyy-###` desde código de canal (`metadata.codigoReserva` si existe) o etiqueta actual como fallback de presentación; no se usa para reglas de negocio. |
 | `backend/services/canalesService.js` / `frontend/src/views/components/gestionarCanales/*` | [x] Canal SSR explícito: checkbox en Canales persiste `esCanalSsr`, `origenCanal = "ssr"` y `codigoReserva = "ssr"`; `publicWebsiteService` y `publicWebsiteCalculatePriceService` priorizan ese canal y solo caen al canal por defecto por compatibilidad. |
+| `backend/routes/website.shared.js` / `backend/services/publicWebsiteCalculatePriceService.js` | [x] Compatibilidad tarifas legacy: si una tarifa fue guardada antes de existir el canal SSR y `precios_canales` aún no trae esa clave, el SSR usa `precio_base` como respaldo para no dejar alojamientos sin disponibilidad. |
 
 ---
 

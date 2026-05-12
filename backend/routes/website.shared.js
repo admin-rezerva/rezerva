@@ -4,7 +4,7 @@ const { format, nextFriday, nextSunday, isValid, parseISO, addDays } = require('
 async function fetchTarifasYCanal(empresaId) {
     const [tarifaRes, canalRes] = await Promise.all([
         pool.query(`
-            SELECT t.id, t.propiedad_id, t.precios_canales, t.metadata,
+            SELECT t.id, t.propiedad_id, t.precio_base, t.precios_canales, t.metadata,
                    temp.fecha_inicio, temp.fecha_termino
             FROM tarifas t
             JOIN temporadas temp ON t.temporada_id = temp.id
@@ -32,6 +32,7 @@ async function fetchTarifasYCanal(empresaId) {
             return {
                 id: row.id,
                 precios,
+                precioBase: Number(row.precio_base) || 0,
                 alojamientoId: row.propiedad_id,
                 fechaInicio: fi,
                 fechaTermino: ft,
@@ -56,7 +57,7 @@ async function fetchTarifasForEmpresas(empresaIds) {
     const idTxt = ids.map(String);
     const [tarifaRes, canalRes] = await Promise.all([
         pool.query(
-            `SELECT t.id, t.empresa_id, t.propiedad_id, t.precios_canales, t.metadata,
+            `SELECT t.id, t.empresa_id, t.propiedad_id, t.precio_base, t.precios_canales, t.metadata,
                     temp.fecha_inicio, temp.fecha_termino
              FROM tarifas t
              JOIN temporadas temp ON t.temporada_id = temp.id
@@ -89,6 +90,7 @@ async function fetchTarifasForEmpresas(empresaIds) {
                     id: row.id,
                     empresaId: row.empresa_id,
                     precios,
+                    precioBase: Number(row.precio_base) || 0,
                     alojamientoId: row.propiedad_id,
                     fechaInicio: fi,
                     fechaTermino: ft,
@@ -126,7 +128,7 @@ function computeNightlyPricesForRange(propiedadId, fromIso, toIso, allTarifas, c
         if (tarifasDelDia.length > 0) {
             const tarifa = tarifasDelDia.sort((a, b) => b.fechaInicio - a.fechaInicio)[0];
             const precioBaseObj = tarifa.precios?.[canalId];
-            amount = typeof precioBaseObj === 'number' ? precioBaseObj : 0;
+            amount = typeof precioBaseObj === 'number' ? precioBaseObj : Number(tarifa.precioBase) || 0;
         }
         out.push({ date: format(currentDate, 'yyyy-MM-dd'), amount });
         d = addDays(d, 1);
@@ -138,7 +140,7 @@ function getPrecioBaseNoche(propId, allTarifas, canalId) {
     if (!canalId || !allTarifas.length) return 0;
     const precios = allTarifas
         .filter((t) => t.alojamientoId === propId)
-        .map((t) => t.precios?.[canalId] || 0)
+        .map((t) => t.precios?.[canalId] || Number(t.precioBase) || 0)
         .filter((p) => p > 0);
     return precios.length ? Math.min(...precios) : 0;
 }
