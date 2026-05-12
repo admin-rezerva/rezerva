@@ -102,8 +102,9 @@ function renderResumenAlojamiento() {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
       <td valign="top" style="width:55%;padding-right:14px;">
         <span style="display:block;color:#6366f1;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:0.08em;">Tu alojamiento</span>
-        <h2 style="color:#312e81;font-size:23px;line-height:1.25;margin:7px 0 4px 0;">&#127968; <a href="[LINK_FOTOS_ALOJAMIENTO]" style="color:#312e81;text-decoration:underline;">[ALOJAMIENTO_NOMBRE]</a></h2>
+        <h2 style="color:#312e81;font-size:23px;line-height:1.25;margin:7px 0 4px 0;">&#127968; [ALOJAMIENTO_NOMBRE]</h2>
         <p style="color:#4f46e5;font-size:14px;margin:0 0 10px 0;">Reserva Nº [RESERVA_ID_CANAL]</p>
+        <a href="[LINK_FOTOS_ALOJAMIENTO]" style="display:inline-block;background:#ffffff;border:1px solid #c7d2fe;color:#4f46e5;text-decoration:none;font-weight:bold;font-size:13px;padding:9px 12px;border-radius:8px;margin:0 0 10px 0;">Ver fotos del alojamiento</a>
         [ENLACES_FOTOS_ALOJAMIENTOS_HTML]
       </td>
       <td valign="top" style="width:45%;border-left:1px solid #c7d2fe;padding-left:16px;">

@@ -217,15 +217,21 @@ function renderCuerpoPlantillaHtml(textoConEtiquetas, emailConfig) {
 const procesarPlantilla = async (db, empresaId, plantillaId, datos) => {
     const plantilla = await obtenerPlantilla(db, empresaId, plantillaId);
     const modoNombre = inferirModoPlantilla(plantilla.nombre || '');
-    const fixedAdmin = modoNombre === 'admin_confirmacion_reserva'
+    const instruccionesTarjetas = plantilla.emailConfig?.tarjetasCorreo || plantilla.emailConfig?.tarjetasConfirmacionHuesped || [];
+    const fixedTemplate = modoNombre === 'admin_confirmacion_reserva'
         ? generarPlantillaConfirmacionAdminHtml({
             nombreEmpresa: datos?.EMPRESA_NOMBRE || datos?.empresaNombre || '',
-            instruccionesTarjetas: plantilla.emailConfig?.tarjetasCorreo || plantilla.emailConfig?.tarjetasConfirmacionHuesped || [],
+            instruccionesTarjetas,
         })
-        : null;
-    const textoBase = fixedAdmin?.texto || plantilla.texto;
+        : (modoNombre === 'huesped_confirmacion'
+            ? generarPlantillaConfirmacionHuespedHtml({
+                nombreEmpresa: datos?.EMPRESA_NOMBRE || datos?.empresaNombre || '',
+                instruccionesTarjetas,
+            })
+            : null);
+    const textoBase = fixedTemplate?.texto || plantilla.texto;
     const textoConEtiquetas = _normalizarTextoPlantillaRender(reemplazarEtiquetas(textoBase, datos));
-    const asuntoBase = fixedAdmin?.asunto || ((plantilla.asunto && String(plantilla.asunto).trim()) ? plantilla.asunto : plantilla.nombre);
+    const asuntoBase = fixedTemplate?.asunto || ((plantilla.asunto && String(plantilla.asunto).trim()) ? plantilla.asunto : plantilla.nombre);
     const asuntoFinal = _normalizarTextoPlantillaRender(reemplazarEtiquetas(asuntoBase, datos));
     const contenido = renderCuerpoPlantillaHtml(textoConEtiquetas, plantilla.emailConfig);
     return { plantilla, contenido, contenidoTexto: textoConEtiquetas, asunto: asuntoFinal };

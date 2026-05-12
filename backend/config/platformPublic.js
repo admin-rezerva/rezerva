@@ -91,6 +91,19 @@ function getPanelPublicOrigin() {
     );
 }
 
+/**
+ * Origen del panel SPA para links internos a administradores.
+ * En producción puede diferir del dominio público/marketplace (`rezerva.cl`).
+ */
+function getAdminPanelOrigin() {
+    return (
+        tryPublicOriginFromEnv(process.env.ADMIN_PANEL_PUBLIC_ORIGIN)
+        || tryPublicOriginFromEnv(process.env.PANEL_APP_ORIGIN)
+        || tryPublicOriginFromEnv(process.env.RENDER_EXTERNAL_URL)
+        || getPanelPublicOrigin()
+    );
+}
+
 function getMarketplaceForceHostAlias() {
     return String(process.env.MARKETPLACE_FORCE_HOST_ALIAS || 'marketplace').trim().toLowerCase();
 }
@@ -138,6 +151,7 @@ module.exports = {
     getMarketplaceHostnamesSet,
     getRenderPublicHostname,
     getPanelPublicOrigin,
+    getAdminPanelOrigin,
     getMarketplaceForceHostAlias,
     getMarketplaceBrandLabel,
     getMarketplaceHeroRegionLabel,

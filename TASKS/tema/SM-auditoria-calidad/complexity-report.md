@@ -1,5 +1,5 @@
 # Reporte de Complejidad y Modularidad
-**Generado:** 2026-05-12 02:30
+**Generado:** 2026-05-12 02:57
 **Archivos analizados:** 413
 **Críticos:** 52 | **Warnings:** 0
 
@@ -51,9 +51,9 @@
 | `backend/services/resenasService.js` | file-size | 938 líneas (límite crítico: 700) |
 | `backend/services/resenasService.js` | function-size | función `generarResenasAutomaticas` — 144 líneas (línea 771) |
 | `backend/services/resenasService.js` | too-many-exports | 20 funciones exportadas (límite crítico: 15) |
-| `backend/services/transactionalEmailService.js` | file-size | 990 líneas (límite crítico: 700) |
+| `backend/services/transactionalEmailService.js` | file-size | 991 líneas (límite crítico: 700) |
 | `backend/services/transactionalEmailService.js` | function-size | función `enviarPorDisparador` — 120 líneas (línea 268) |
-| `backend/services/transactionalEmailService.js` | function-size | función `construirVariablesDesdeReserva` — 330 líneas (línea 640) |
+| `backend/services/transactionalEmailService.js` | function-size | función `construirVariablesDesdeReserva` — 331 líneas (línea 640) |
 | `backend/services/transactionalEmailService.js` | too-many-exports | 17 funciones exportadas (límite crítico: 15) |
 | `backend/services/webImagesRepairHero.js` | function-size | función `repairHeroTheme` — 124 líneas (línea 17) |
 | `backend/services/webImagesRepairService.js` | function-size | función `runWebImagesRepair` — 233 líneas (línea 61) |
@@ -81,11 +81,11 @@
   - Extraer sub-funciones con nombres descriptivos. Máximo 60 líneas por función.
 
 ### 2. `backend/services/transactionalEmailService.js` 🔴
-- **990 líneas (límite crítico: 700)**
+- **991 líneas (límite crítico: 700)**
   - Dividir en módulos por responsabilidad. Cada módulo debe tener una sola razón para cambiar.
 - **función `enviarPorDisparador` — 120 líneas (línea 268)**
   - Extraer sub-funciones con nombres descriptivos. Máximo 60 líneas por función.
-- **función `construirVariablesDesdeReserva` — 330 líneas (línea 640)**
+- **función `construirVariablesDesdeReserva` — 331 líneas (línea 640)**
   - Extraer sub-funciones con nombres descriptivos. Máximo 60 líneas por función.
 - **17 funciones exportadas (límite crítico: 15)**
   - Agrupar responsabilidades en sub-módulos. Ej: service.read.js, service.write.js, service.calc.js

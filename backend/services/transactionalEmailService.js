@@ -14,9 +14,9 @@ const { enmascararDocumentoParaUiPublica } = require('./reservaWebCheckinIdentid
 const { esEstadoPrincipalCancelacionSync } = require('./estadosService');
 const { generarTokenParaReserva } = require('./resenasService');
 const { resolveDepositoReservaWeb } = require('./depositoReservaWebService');
-const { getPanelPublicOrigin } = require('../config/platformPublic');
+const { getAdminPanelOrigin } = require('../config/platformPublic');
 const { normalizeWebsiteImageUrl } = require('./websitePublicImageUrl');
-const { buildTenantTermsUrl } = require('./websiteHostCanonical');
+const { buildPlatformTenantOrigin, buildTenantTermsUrl } = require('./websiteHostCanonical');
 
 const PLATFORM_DOMAIN = process.env.PLATFORM_DOMAIN || 'rezerva.cl';
 
@@ -494,7 +494,7 @@ function _buildPublicPropiedadPageUrl(baseUrl, propiedadId) {
     const b = String(baseUrl || '').replace(/\/$/, '');
     const pid = propiedadId != null ? String(propiedadId).trim() : '';
     if (!b || !pid) return '';
-    return `${b}/propiedad/${encodeURIComponent(pid)}`;
+    return `${b}/propiedad/${encodeURIComponent(pid)}#property-gallery-root`;
 }
 
 /**
@@ -628,7 +628,7 @@ function _buildEnlacesFotosAlojamientosHtml(baseUrl, metaParsed) {
         }
     }
     if (!parts.length) return '';
-    const inner = `<p style="margin:0;font-size:13px;color:#475569;line-height:1.65;">Ver fotos: ${parts.join(' · ')}</p>`;
+    const inner = `<p style="margin:0;font-size:13px;color:#475569;line-height:1.65;">Ver fotos del alojamiento: ${parts.join(' · ')}</p>`;
     return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0;padding:0 0 8px 0;"><tr><td align="center" style="padding:0 12px;">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;margin:0 auto;"><tr><td style="padding:4px 4px 0 4px;">${inner}</td></tr></table>
 </td></tr></table>`;
@@ -687,13 +687,14 @@ async function construirVariablesDesdeReserva(empresaId, row, extras = {}) {
         : '';
     const canalNombre = extras.canalNombre != null ? String(extras.canalNombre).trim()
         : (row.canal_nombre != null ? String(row.canal_nombre).trim() : '');
-    const panelOrigin = getPanelPublicOrigin();
+    const panelOrigin = getAdminPanelOrigin();
     const idReservaInterno = row.id != null ? String(row.id) : '';
     const linkGestionReserva = panelOrigin && idReservaInterno
         ? `${String(panelOrigin).replace(/\/$/, '')}/gestionar-reservas?reservaId=${encodeURIComponent(idReservaInterno)}`
         : '';
     const precio = totalNum > 0 ? _fmtMonedaCLP(totalNum, localeFecha) : '';
     const baseUrl = await obtenerBaseUrlPublica(empresaId);
+    const plataformaTenantUrl = buildPlatformTenantOrigin(ctx) || baseUrl;
     const refCanalPublico = row.id_reserva_canal != null ? String(row.id_reserva_canal).trim() : '';
     const linkConfirmacionPublica = baseUrl && refCanalPublico
         ? `${String(baseUrl).replace(/\/$/, '')}/confirmacion?reservaId=${encodeURIComponent(refCanalPublico)}`
@@ -724,8 +725,8 @@ async function construirVariablesDesdeReserva(empresaId, row, extras = {}) {
     }
 
     const propiedadIdRow = row.propiedad_id != null ? String(row.propiedad_id).trim() : '';
-    const linkFotosAlojamiento = _buildPublicPropiedadPageUrl(baseUrl, propiedadIdRow);
-    const enlacesFotosAlojamientosHtml = _buildEnlacesFotosAlojamientosHtml(baseUrl, metaParsed);
+    const linkFotosAlojamiento = _buildPublicPropiedadPageUrl(plataformaTenantUrl, propiedadIdRow);
+    const enlacesFotosAlojamientosHtml = _buildEnlacesFotosAlojamientosHtml(plataformaTenantUrl, metaParsed);
 
     const desglosePrecioHtml = _buildDesglosePrecioEmailCard({
         idiomaEn: idiomaPorDefecto === 'en',
