@@ -40,6 +40,13 @@
             : (garantiaModo === 'preautorizacion_externa'
                 ? 'Garantía por preautorización externa (sin integración de pasarela en StayManager).'
                 : 'Garantía mediante abono manual registrado por operación.');
+        const checkoutLang = String(typeof htmlLang !== 'undefined' ? htmlLang : 'es').toLowerCase().startsWith('en') ? 'en' : 'es';
+        const terminosCfg = empresa.websiteSettings?.terminosCondiciones || {};
+        const terminosPublicados = terminosCfg.publicado === true;
+        const terminosTitulo = checkoutLang === 'en'
+            ? (terminosCfg.tituloPaginaEn || terminosCfg.tituloPagina || 'terms and conditions')
+            : (terminosCfg.tituloPagina || 'términos y condiciones');
+        const terminosUrl = locals.platformTerminosUrl || '/terminos-y-condiciones';
         const depEtiqueta = dep.tipo === 'monto_fijo'
             ? 'Abono para reservar (monto fijo):'
             : `Abono para reservar (${Number(dep.porcentaje || 10)}%):`;
@@ -253,6 +260,30 @@
                             <label for="comentarios" class="form-label">Comentarios (Opcional)</label>
                             <textarea id="comentarios" name="comentarios" rows="3" class="form-input" placeholder="¿Necesitas algo especial? ¿Hora de llegada?"></textarea>
                         </div>
+
+                        <% if (terminosPublicados) { %>
+                        <label class="flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+                            <input
+                                type="checkbox"
+                                id="aceptoTerminosCondiciones"
+                                name="aceptoTerminosCondiciones"
+                                value="true"
+                                class="mt-1 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                required
+                            >
+                            <span>
+                                <% if (checkoutLang === 'en') { %>
+                                    I have read and accept the
+                                    <a href="<%= terminosUrl %>" target="_blank" rel="noopener" class="font-semibold text-primary-700 underline hover:text-primary-800"><%= terminosTitulo %></a>
+                                    for this booking.
+                                <% } else { %>
+                                    He leído y acepto los
+                                    <a href="<%= terminosUrl %>" target="_blank" rel="noopener" class="font-semibold text-primary-700 underline hover:text-primary-800"><%= terminosTitulo %></a>
+                                    de esta reserva.
+                                <% } %>
+                            </span>
+                        </label>
+                        <% } %>
                         
                         <div class="pt-4">
                             <button type="submit" id="submit-button" class="btn w-full text-lg">

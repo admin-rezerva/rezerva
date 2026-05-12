@@ -6,11 +6,17 @@ Los correos transaccionales de SuiteManager aceptan **HTML con prefijo** `[[HTML
 
 **Disparadores:** cree **dos plantillas activas distintas** (una solo `notificacion_interna`, otra solo `reserva_confirmada`) para no mezclar copias.
 
+**Estándar 2026-05-11:** el formato de confirmación huésped queda como patrón global para correos transaccionales: `[[HTML_EMAIL]]`, tabla de 600px, hero oscuro, cuerpo blanco con tarjetas, un CTA principal y footer alineado al mismo ancho. El contenido y el CTA cambian por audiencia; la geometría no.
+
+**Tarjetas 2026-05-11:** el bloque de tarjetas del modal ya no es exclusivo de confirmación huésped. Está disponible para toda plantilla, se guarda en `email_config.tarjetasCorreo` y el motor lo usa como módulo renderizable en layouts fijos o como instrucciones para IA en layouts generados.
+
 ---
 
 ## 1. Notificación administrador (`notificacion_interna`)
 
 **Asunto sugerido:** `Nueva reserva · [ALOJAMIENTO_NOMBRE] · [RESERVA_ID_CANAL]`
+
+**Estado 2026-05-11:** la plantilla “Confirmación reserva administrador” ya no debe usar el preset legacy de tarjetas pastel como fuente principal. El backend genera una estructura fija compatible con el estándar global: hero oscuro, resumen de reserva, datos del huésped, fechas, alojamiento, huéspedes, `[DESGLOSE_PRECIO_HTML]`, `[ESTADO_PAGO]`, `[COMENTARIOS_HUESPED_ADMIN]` y CTA único `[LINK_GESTION_RESERVA]`. El preset manual de abajo queda como referencia histórica para plantillas internas genéricas.
 
 **Cuerpo** (copiar todo desde `[[HTML_EMAIL]]` inclusive):
 
@@ -91,7 +97,11 @@ Los correos transaccionales de SuiteManager aceptan **HTML con prefijo** `[[HTML
 
 **Asunto sugerido:** `Confirmación · [ALOJAMIENTO_NOMBRE] · [RESERVA_ID_CANAL]`
 
-**Cuerpo:** misma idea visual que tu mockup (hero, tarjeta alojamiento, ingreso/llegada, bloques informativos). Los textos largos **tinaja / WiFi / mascotas / dirección** no tienen etiquetas en el motor hoy: están marcados como **EDITAR EN PLANTILLA** para cada empresa (paramétrico por datos en BD vendría en un backlog aparte).
+**Estado 2026-05-11:** el botón **Generar con IA** ya no deja a la IA diseñar el layout completo para confirmación huésped. El backend genera una estructura fija email-safe (hero oscuro, tarjeta alojamiento, dos tarjetas de ingreso/llegada, `[DESGLOSE_PRECIO_HTML]`, tarjetas del wizard, CTA único “Ver estado de mi reserva” y footer oscuro de tres zonas). La IA/wizard solo alimenta el módulo central mediante `email_config.tarjetasConfirmacionHuesped`.
+
+**Estado página pública:** `/confirmacion?reservaId=...` ya es página pública “Estado de mi reserva”: estado de reserva/pago, saldo o abono requerido, plazo antes de cancelación automática cuando aplique, fechas, huésped, alojamientos reservados con fotos y acciones útiles.
+
+**Cuerpo de referencia manual:** misma idea visual que el mockup (hero, tarjeta alojamiento, ingreso/llegada, bloques informativos). Los textos largos **tinaja / WiFi / mascotas / dirección** no tienen etiquetas en el motor hoy: van como **tarjetas del wizard por empresa** o, si se edita a mano, como HTML dentro de la plantilla. Parametrizar esos datos desde BD queda como backlog aparte.
 
 ```html
 [[HTML_EMAIL]]
@@ -124,52 +134,56 @@ Los correos transaccionales de SuiteManager aceptan **HTML con prefijo** `[[HTML
           </td></tr>
         </table>
 
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-          <td width="48%" valign="top" style="padding-right:2%;border:1px solid #e2e8f0;border-radius:12px;padding:16px;">
-            <p style="margin:0 0 12px;font-weight:bold;font-size:16px;color:#0f172a;">&#128337; Ingreso y salida</p>
-            <p style="margin:0;font-size:13px;color:#475569;line-height:1.5;"><!-- EDITAR: horarios reales del complejo -->Check-in: 15:00 a 23:59 hrs.<br>Check-out: hasta las 12:00.</p>
-          </td>
-          <td width="48%" valign="top" style="padding-left:2%;border:1px solid #e2e8f0;border-radius:12px;padding:16px;">
-            <p style="margin:0 0 8px;font-weight:bold;font-size:16px;color:#0f172a;">&#128205; Cómo llegar</p>
-            <p style="margin:0 0 12px;font-size:13px;color:#475569;line-height:1.5;"><!-- EDITAR: indicaciones de acceso -->Describe aquí el acceso o copia desde tu manual de huésped.</p>
-            <a href="[EMPRESA_GOOGLE_MAPS_LINK]" style="display:block;text-align:center;background:#0f172a;color:#fff;text-decoration:none;font-size:13px;font-weight:600;padding:10px;border-radius:8px;">Abrir en Google Maps</a>
-          </td>
-        </tr></table>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding:0 0 24px 0;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+            <td width="50%" valign="top" style="width:50%;max-width:50%;padding:0 8px 0 0;vertical-align:top;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:12px;min-height:148px;">
+                <tr><td style="padding:16px 18px;">
+                  <p style="margin:0 0 12px;font-weight:bold;font-size:16px;color:#0f172a;">&#128337; Ingreso y salida</p>
+                  <p style="margin:0;font-size:13px;color:#475569;line-height:1.5;"><!-- EDITAR: horarios reales del complejo -->Check-in: 15:00 a 23:59 hrs.<br>Check-out: hasta las 12:00.</p>
+                </td></tr>
+              </table>
+            </td>
+            <td width="50%" valign="top" style="width:50%;max-width:50%;padding:0 0 0 8px;vertical-align:top;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e2e8f0;border-radius:12px;min-height:148px;">
+                <tr><td style="padding:16px 18px;">
+                  <p style="margin:0 0 8px;font-weight:bold;font-size:16px;color:#0f172a;">&#128205; Cómo llegar</p>
+                  <p style="margin:0 0 12px;font-size:13px;color:#475569;line-height:1.5;"><!-- EDITAR: indicaciones de acceso -->Describe aquí el acceso o copia desde tu manual de huésped.</p>
+                  <a href="[EMPRESA_GOOGLE_MAPS_LINK]" style="display:block;text-align:center;background:#0f172a;color:#fff;text-decoration:none;font-size:13px;font-weight:600;padding:10px;border-radius:8px;">Abrir en Google Maps</a>
+                </td></tr>
+              </table>
+            </td>
+          </tr></table>
+        </td></tr></table>
 
         [DESGLOSE_PRECIO_HTML]
 
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;border:1px solid #fed7aa;border-radius:12px;background:#fffbeb;">
-          <tr><td style="padding:18px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 22px 0;border:1px solid #fed7aa;border-radius:12px;background:#fffbeb;">
+          <tr><td style="padding:16px 18px;">
             <p style="margin:0 0 12px;font-weight:bold;font-size:16px;color:#0f172a;">&#128705; Información de servicios</p>
             <p style="margin:0;font-size:13px;color:#57534e;line-height:1.55;"><!-- EDITAR: tinaja, pileta, reglas -->Personalice este bloque con políticas de su complejo (tinaja, leña, horarios de uso, etc.).</p>
           </td></tr>
         </table>
 
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;border:1px solid #e2e8f0;border-radius:10px;"><tr><td style="padding:14px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 22px 0;border:1px solid #e2e8f0;border-radius:12px;"><tr><td style="padding:16px 18px;">
           <p style="margin:0;font-weight:bold;color:#0f172a;">&#128246; WiFi y extras</p>
           <p style="margin:8px 0 0;font-size:13px;color:#475569;"><!-- EDITAR -->Red y claves: indíquelas aquí por empresa.</p>
         </td></tr></table>
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px;border:1px solid #e2e8f0;border-radius:10px;"><tr><td style="padding:14px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;border:1px solid #e2e8f0;border-radius:12px;"><tr><td style="padding:16px 18px;">
           <p style="margin:0;font-weight:bold;color:#0f172a;">&#128054; Mascotas / políticas</p>
           <p style="margin:8px 0 0;font-size:13px;color:#475569;"><!-- EDITAR -->Política de mascotas y áreas comunes.</p>
         </td></tr></table>
 
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:22px;padding-top:20px;border-top:1px solid #e2e8f0;"><tr>
-          <td width="50%" align="center" style="padding:6px;">
-            <a href="[EMPRESA_WEBSITE]" style="display:block;border:1px solid #cbd5e1;color:#334155;text-decoration:none;font-size:13px;font-weight:600;padding:12px;border-radius:12px;">&#128196; Términos y condiciones</a>
-          </td>
-          <td width="50%" align="center" style="padding:6px;">
-            <a href="[LINK_CONFIRMACION_PUBLICA]" style="display:block;border:1px solid #cbd5e1;color:#334155;text-decoration:none;font-size:13px;font-weight:600;padding:12px;border-radius:12px;">&#128279; Ver confirmación</a>
-          </td>
-        </tr></table>
-
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 0 8px;">
-          <a href="[LINK_CONFIRMACION_PUBLICA]" style="display:inline-block;background:#4f46e5;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:14px 24px;border-radius:10px;">Abrir confirmación en el sitio</a>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:4px;padding-top:22px;border-top:1px solid #e2e8f0;"><tr><td align="center" style="padding:8px 0 6px;">
+          <a href="[LINK_CONFIRMACION_PUBLICA]" style="display:inline-block;background:#4f46e5;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:14px 24px;border-radius:10px;">Ver estado de mi reserva</a>
         </td></tr></table>
       </td></tr>
-      <tr><td style="background:#0f172a;padding:28px 24px;text-align:center;">
-        <p style="margin:0;font-size:17px;font-weight:bold;color:#ffffff;">[EMPRESA_NOMBRE]</p>
-        <p style="margin:10px 0 0;font-size:13px;color:#94a3b8;">Contacto: <a href="mailto:[USUARIO_EMAIL]" style="color:#a5b4fc;">[USUARIO_EMAIL]</a> · [USUARIO_TELEFONO]</p>
+      <tr><td style="background:#0f172a;padding:24px 22px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+          <td width="32%" valign="top" style="width:32%;padding:0 12px 0 0;color:#cbd5e1;font-size:12px;line-height:1.45;">[EMPRESA_LOGO_HTML]<strong style="display:block;color:#ffffff;font-size:15px;margin:6px 0 0;">[EMPRESA_NOMBRE]</strong></td>
+          <td width="36%" valign="top" style="width:36%;padding:0 12px;color:#94a3b8;font-size:12px;line-height:1.55;border-left:1px solid #1e293b;border-right:1px solid #1e293b;"><strong style="display:block;color:#ffffff;font-size:13px;margin:0 0 6px;">Contacto</strong>[USUARIO_NOMBRE]<br><a href="mailto:[USUARIO_EMAIL]" style="color:#93c5fd;text-decoration:none;">[USUARIO_EMAIL]</a><br>[USUARIO_TELEFONO]</td>
+          <td width="32%" valign="top" style="width:32%;padding:0 0 0 12px;color:#94a3b8;font-size:11px;line-height:1.5;"><strong style="display:block;color:#ffffff;font-size:13px;margin:0 0 6px;">Rezerva</strong>Al confirmar esta reserva aceptas los términos y condiciones publicados por el alojamiento.<br><a href="[URL_TERMINOS]" style="color:#93c5fd;text-decoration:underline;">Términos y condiciones</a></td>
+        </tr></table>
       </td></tr>
     </table>
   </td></tr>
@@ -183,5 +197,5 @@ Los correos transaccionales de SuiteManager aceptan **HTML con prefijo** `[[HTML
 - `[ENLACES_FOTOS_ALOJAMIENTOS_HTML]`: solo rellena en reservas grupo; si no aplica, queda vacío.
 - Botón **Maps** debe usar solo `[EMPRESA_GOOGLE_MAPS_LINK]` (Maps declarado en empresa). Si está vacío, borre el botón o sustituya por texto sin inventar URL.
 - No se incluye “Qué hacer cerca” en el pie de acciones (opcional por empresa); sitio web queda como enlace de términos si aplica.
-- En móvil, Outlook puede apilar mal dos columnas; es aceptable en la mayoría de clientes con tablas al 48 % / 48 %.
+- En móvil, algunos clientes apilan las dos columnas; el patrón **50 % + gutter 8 px** con tablas internas suele verse alineado en Gmail y la mayoría de webmails.
 - Para copiar el texto **literal** de tinaja/WiFi del ejemplo Gemini (Cabaña 10, claves, etc.), sustituya los comentarios `<!-- EDITAR -->` por ese HTML **solo en la plantilla de ese tenant** — no conviene versionarlo en código compartido multiempresa.

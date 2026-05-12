@@ -17,6 +17,7 @@
 - **Firestore reservas (legacy, solo scripts):** el producto con `DATABASE_URL` no persiste reservas CRM en Firestore. Quedan **scripts opcionales** que leen/escriben docs `empresas/{id}/reservas` para migración o datos históricos; no son ruta de aplicación.
 - **Avance 2026-04-24 (fase 3):** SQL reutilizable + cancelación correo por semántica; cubierto además: `gestionService`, `publicWebsiteService` (disponibilidad + INSERT), `propuestasService`, `icalService`, `reportesService`, `resenasService`, `clientesService` (stats), `reservas.write` (ical lookup), `publicAiController` (choque fechas PG), hooks transaccionales, SPA `calendario.js` / `mensajeModal.js` (ver fase 3 detalle en §1).
 - **Avance 2026-04-24 (fase 2 parcial):** `publicAiController`: canal IA vía `metadata.origenCanal === ia_reserva` / `esCanalIaVenta` + helper `resolverCanalIaVentaEnLista` en `canalesService.js`; plantillas por disparador motor `reserva_confirmada` con fallback; `createPublicReservation` usa `canalNombre` del canal por defecto en cliente; `reparacionService` SODC une reservas por `canalNombre === 'SODC'` y por `canalId` del canal PG resuelto; `gestionDiaria.cards.js` colores del select de estado principal priorizan `semantica` con fallback solo si el catálogo no devolvió semántica.
+- **Avance 2026-05-11 — ID visible de reserva:** `id_reserva_canal` deja de usar UUID para reservas creadas dentro de Rezerva cuando no hay ID externo. Nuevo helper `backend/services/reservaCodigoService.js` genera códigos humanos `canal-ddMMyyyy-###` por empresa/canal/día. Aplica a checkout público, reserva/propuesta IA, propuesta manual sin ID externo y presupuesto aprobado. Reportes OTA, iCal y campos manuales que ya traen ID externo conservan el valor del canal. El checkout público SSR queda asociado al canal marcado en `canales.metadata.esCanalSsr` / `origenCanal = "ssr"`; si una empresa aún no lo marcó, usa temporalmente el canal por defecto como fallback.
 
 **Leyenda por ítem**
 
@@ -107,6 +108,8 @@
 |---------|-----------|
 | `backend/controllers/publicAiController.js` | [x] Canal IA: **`metadata.origenCanal` / `esCanalIaVenta`** + nombres legados vía `resolverCanalIaVentaEnLista`. [x] Plantilla: **`disparador` motor** `reserva_confirmada` + fallback primera con email. |
 | `backend/services/reparacionService.js` | [x] `repararFechasSODC`: incluye reservas con **`canalId`** del canal SODC resuelto en PG además de `canalNombre == 'SODC'`. |
+| `backend/services/reservaCodigoService.js` | [x] ID visible corto `canal-ddMMyyyy-###` desde código de canal (`metadata.codigoReserva` si existe) o etiqueta actual como fallback de presentación; no se usa para reglas de negocio. |
+| `backend/services/canalesService.js` / `frontend/src/views/components/gestionarCanales/*` | [x] Canal SSR explícito: checkbox en Canales persiste `esCanalSsr`, `origenCanal = "ssr"` y `codigoReserva = "ssr"`; `publicWebsiteService` y `publicWebsiteCalculatePriceService` priorizan ese canal y solo caen al canal por defecto por compatibilidad. |
 
 ---
 
@@ -185,3 +188,4 @@ Marcar [n/a] salvo que se conviertan en rutinas de producción.
 | 2026-04-24 | Cursor | §6b política cancelación: etiqueta UI vs `tarifaIds` en bloques. |
 | 2026-04-24 | Cursor | `estado_principal_id` PG + temporadas `metadata` importador + mensajeService/tarifas; Firestore reservas explícitamente diferido. |
 | 2026-04-24 | Cursor | Firestore: IA disponibilidad/intent con PG; `claveMotor` tipos plantilla; script backfill IDs reservas FS; migración imágenes nombres duplicados. |
+| 2026-05-11 | Cursor | ID visible corto para reservas internas y asociación explícita del canal SSR desde Canales. |

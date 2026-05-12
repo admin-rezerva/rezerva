@@ -15,6 +15,8 @@ const { esEstadoPrincipalCancelacionSync } = require('./estadosService');
 const { generarTokenParaReserva } = require('./resenasService');
 const { resolveDepositoReservaWeb } = require('./depositoReservaWebService');
 const { getPanelPublicOrigin } = require('../config/platformPublic');
+const { normalizeWebsiteImageUrl } = require('./websitePublicImageUrl');
+const { buildTenantTermsUrl } = require('./websiteHostCanonical');
 
 const PLATFORM_DOMAIN = process.env.PLATFORM_DOMAIN || 'rezerva.cl';
 
@@ -96,7 +98,7 @@ const EVENTO_POR_DISPARADOR = {
 
 async function _obtenerEmpresaEmailContext(empresaId) {
     const { rows } = await pool.query(
-        `SELECT nombre, email, configuracion, google_maps_url
+        `SELECT nombre, email, subdominio, configuracion, google_maps_url
          FROM empresas WHERE id = $1`,
         [empresaId]
     );
@@ -109,12 +111,36 @@ async function _obtenerEmpresaEmailContext(empresaId) {
     }
     return {
         nombre: r.nombre || '',
+        subdominio: r.subdominio || '',
         contactoEmail: cfg.contactoEmail || r.email || null,
         contactoNombre: cfg.contactoNombre || '',
         contactoTelefono: cfg.contactoTelefono || '',
         website: cfg.website || '',
         configuracion: cfg,
     };
+}
+
+function _coerceLogoUrl(raw) {
+    if (!raw) return '';
+    if (typeof raw === 'string') return raw.trim();
+    if (typeof raw === 'object') {
+        return String(raw.url || raw.storagePath || raw.storageUrl || '').trim();
+    }
+    return '';
+}
+
+function _empresaLogoUrlFromWebsiteSettings(ws = {}) {
+    const raw =
+        _coerceLogoUrl(ws.brand?.logos?.primary)
+        || _coerceLogoUrl(ws.brand?.logos?.secondary)
+        || _coerceLogoUrl(ws.theme?.logoUrl);
+    return normalizeWebsiteImageUrl(raw);
+}
+
+function _buildEmpresaLogoEmailHtml(logoUrl, empresaNombre) {
+    const clean = String(logoUrl || '').trim();
+    if (!clean) return '';
+    return `<img src="${_escapeHtmlAttr(clean)}" alt="${_escapeHtmlAttr(empresaNombre || 'Logo')}" width="120" style="display:block;max-width:120px;max-height:42px;width:auto;height:auto;border:0;outline:none;text-decoration:none;">`;
 }
 
 /**
@@ -495,13 +521,13 @@ function _buildDesglosePrecioEmailCard({
     const chunks = [];
 
     chunks.push(
-        `<tr><td colspan="2" style="padding:12px 14px;font-size:12px;font-weight:700;color:#0f172a;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #e2e8f0;">${_escapeHtmlText(title)}</td></tr>`
+        `<tr><td colspan="2" style="padding:14px 18px 12px 18px;font-size:12px;font-weight:700;color:#0f172a;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #e2e8f0;">${_escapeHtmlText(title)}</td></tr>`
     );
 
     const pushRow = (labelHtml, valueHtml, { strong = false, valueColor } = {}) => {
         if (valueHtml == null || valueHtml === '') return;
-        const ls = `padding:10px 14px;font-size:14px;color:#334155;${strong ? 'font-weight:700;color:#0f172a;' : ''}`;
-        const vs = `padding:10px 14px;font-size:14px;text-align:right;white-space:nowrap;${strong ? 'font-weight:800;color:#047857;' : ''}${valueColor ? `color:${valueColor};` : ''}`;
+        const ls = `padding:12px 18px;font-size:14px;color:#334155;${strong ? 'font-weight:700;color:#0f172a;' : ''}`;
+        const vs = `padding:12px 18px;font-size:14px;text-align:right;white-space:nowrap;${strong ? 'font-weight:800;color:#047857;' : ''}${valueColor ? `color:${valueColor};` : ''}`;
         chunks.push(
             `<tr><td style="${ls}">${labelHtml}</td><td style="${vs}">${valueHtml}</td></tr>`
         );
@@ -543,7 +569,10 @@ function _buildDesglosePrecioEmailCard({
 
     if (chunks.length <= 1) return '';
 
-    return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:18px 0 12px;border:1px solid #e2e8f0;border-radius:12px;background:#ffffff;">${chunks.join('')}</table>`;
+    const inner = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid #e2e8f0;border-radius:12px;background:#ffffff;border-collapse:separate;">${chunks.join('')}</table>`;
+    return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0;padding:0;border:0;"><tr><td align="center" style="padding:22px 12px 24px 12px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;margin:0 auto;">${inner}</table>
+</td></tr></table>`;
 }
 
 function _buildDesglosePrecioTexto({
@@ -599,8 +628,10 @@ function _buildEnlacesFotosAlojamientosHtml(baseUrl, metaParsed) {
         }
     }
     if (!parts.length) return '';
-    const intro = 'Ver fotos: ';
-    return `<p style="margin:10px 0 0;font-size:13px;color:#475569;line-height:1.65;">${intro}${parts.join(' · ')}</p>`;
+    const inner = `<p style="margin:0;font-size:13px;color:#475569;line-height:1.65;">Ver fotos: ${parts.join(' · ')}</p>`;
+    return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0;padding:0 0 8px 0;"><tr><td align="center" style="padding:0 12px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;margin:0 auto;"><tr><td style="padding:4px 4px 0 4px;">${inner}</td></tr></table>
+</td></tr></table>`;
 }
 
 /**
@@ -667,6 +698,10 @@ async function construirVariablesDesdeReserva(empresaId, row, extras = {}) {
     const linkConfirmacionPublica = baseUrl && refCanalPublico
         ? `${String(baseUrl).replace(/\/$/, '')}/confirmacion?reservaId=${encodeURIComponent(refCanalPublico)}`
         : '';
+    const linkTerminosCondiciones = buildTenantTermsUrl(ctx)
+        || (baseUrl ? `${String(baseUrl).replace(/\/$/, '')}/terminos-y-condiciones` : '');
+    const empresaLogoUrl = _empresaLogoUrlFromWebsiteSettings(ws);
+    const empresaLogoHtml = _buildEmpresaLogoEmailHtml(empresaLogoUrl, ctx.nombre);
 
     const metaParsed = _parseReservaMetadata(row.metadata);
     const pv = metaParsed.precioCheckoutVerificado && typeof metaParsed.precioCheckoutVerificado === 'object'
@@ -722,6 +757,9 @@ async function construirVariablesDesdeReserva(empresaId, row, extras = {}) {
     const montoAbono = montoAbonoNum > 0 ? _fmtMonedaCLP(montoAbonoNum, localeFecha) : '';
     const saldoPendienteNum = totalNum > 0 ? Math.max(0, totalNum - montoAbonoNum) : 0;
     const saldoPendiente = saldoPendienteNum > 0 ? _fmtMonedaCLP(saldoPendienteNum, localeFecha) : '';
+    const estadoPago = depositoCfg.activo && montoAbonoNum > 0
+        ? (idiomaPorDefecto === 'en' ? 'Pending deposit payment' : 'Pendiente de abono')
+        : (idiomaPorDefecto === 'en' ? 'No deposit required at booking' : 'Sin abono requerido al reservar');
     const horasPlazo = depositoCfg.horasLimite;
     const plazo = new Date();
     plazo.setHours(plazo.getHours() + horasPlazo);
@@ -748,6 +786,8 @@ async function construirVariablesDesdeReserva(empresaId, row, extras = {}) {
     const comentariosHuesped = extras.comentariosHuesped != null
         ? String(extras.comentariosHuesped).trim().slice(0, 2000)
         : '';
+    const comentariosHuespedAdmin = comentariosHuesped
+        || (idiomaPorDefecto === 'en' ? 'No guest comments were recorded.' : 'Sin comentarios registrados por el huésped.');
 
     const ci = extras.checkInIdentidad && typeof extras.checkInIdentidad === 'object'
         ? extras.checkInIdentidad
@@ -816,6 +856,8 @@ async function construirVariablesDesdeReserva(empresaId, row, extras = {}) {
         detallePropiedades,
         precioFinal: precio,
         montoTotal: precio,
+        estadoPago,
+        ESTADO_PAGO: estadoPago,
         saldoPendiente: saldoPendiente || precio,
         resumenValores: precio ? `${resumenTotalPrefix}: ${precio}` : '',
         porcentajeAbono: depositoCfg.activo ? `${porcentajeAbonoNum}%` : '0%',
@@ -831,6 +873,10 @@ async function construirVariablesDesdeReserva(empresaId, row, extras = {}) {
         EMPRESA_GOOGLE_MAPS_LINK: ctx.configuracion?.google_maps_url || '',
         empresaNombre: ctx.nombre,
         empresaWebsite: ctx.website,
+        empresaLogoUrl,
+        EMPRESA_LOGO_URL: empresaLogoUrl,
+        empresaLogoHtml,
+        EMPRESA_LOGO_HTML: empresaLogoHtml,
         contactoNombre: ctx.contactoNombre,
         contactoEmail: ctx.contactoEmail,
         contactoTelefono: ctx.contactoTelefono,
@@ -862,6 +908,7 @@ async function construirVariablesDesdeReserva(empresaId, row, extras = {}) {
         documentoRefViajero,
         DOC_REF_VIAJERO: documentoRefViajero,
         comentariosHuesped,
+        comentariosHuespedAdmin,
         NOTAS_HUESPED_CHECKOUT: comentariosHuesped,
         checkInIdentidad: ci || null,
         documentoTipoCodigo,
@@ -905,7 +952,11 @@ async function construirVariablesDesdeReserva(empresaId, row, extras = {}) {
         LINK_GESTION_RESERVA: linkGestionReserva,
         linkConfirmacionPublica,
         LINK_CONFIRMACION_PUBLICA: linkConfirmacionPublica,
+        linkTerminosCondiciones,
+        LINK_TERMINOS_CONDICIONES: linkTerminosCondiciones,
+        URL_TERMINOS: linkTerminosCondiciones,
         COMENTARIOS_HUESPED: comentariosHuesped,
+        COMENTARIOS_HUESPED_ADMIN: comentariosHuespedAdmin,
         linkFotosAlojamiento,
         LINK_FOTOS_ALOJAMIENTO: linkFotosAlojamiento,
         enlacesFotosAlojamientosHtml,

@@ -69,6 +69,11 @@ export const renderModalCanal = () => {
                             <input type="checkbox" id="esCanalIcal" name="esCanalIcal" class="rounded border-gray-300 text-primary-600 shadow-sm focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
                             <span class="ml-2 text-sm text-gray-600">🗓️ Usar este canal para las reservas creadas desde la sincronización iCal.</span>
                         </label>
+                        <label for="esCanalSsr" class="flex items-center">
+                            <input type="checkbox" id="esCanalSsr" name="esCanalSsr" class="rounded border-gray-300 text-primary-600 shadow-sm focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
+                            <span class="ml-2 text-sm text-gray-600">🌐 Usar este canal para reservas del sitio público (SSR).</span>
+                        </label>
+                        <p class="pl-6 text-xs text-gray-500">Solo puede existir un canal SSR por empresa. Sus reservas internas usarán el prefijo corto <code>ssr</code>.</p>
                     </div>
                     <div class="flex justify-end pt-4 mt-4 border-t">
                         <button type="button" id="cancel-btn" class="btn-outline mr-2">Cancelar</button>
@@ -99,6 +104,7 @@ export const abrirModalCanal = (canal = null) => {
         form.separadorDecimal.value = canal.separadorDecimal || ',';
         form.esCanalPorDefecto.checked = canal.esCanalPorDefecto || false;
         form.esCanalIcal.checked = canal.esCanalIcal || false;
+        form.esCanalSsr.checked = canal.esCanalSsr || false;
         form.modificadorTipo.value = canal.modificadorTipo || '';
         form.modificadorValor.value = canal.modificadorValor || 0;
     } else {
@@ -143,6 +149,7 @@ export const setupModalCanal = (callback) => {
             separadorDecimal: formData.separadorDecimal.value,
             esCanalPorDefecto: formData.esCanalPorDefecto.checked,
             esCanalIcal: formData.esCanalIcal.checked,
+            esCanalSsr: formData.esCanalSsr.checked,
             modificadorTipo: formData.modificadorTipo.value,
             modificadorValor: parseFloat(formData.modificadorValor.value) || 0
         };

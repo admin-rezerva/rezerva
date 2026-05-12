@@ -65,6 +65,7 @@ Sitemap: ${baseUrl}/sitemap.xml
             const propiedadesListadas = todasLasPropiedades.filter(
                 (p) => p.googleHotelData?.isListed === true && p.websiteData?.cardImage?.storagePath
             );
+            const terminosPublicados = req.empresaCompleta?.websiteSettings?.terminosCondiciones?.publicado === true;
             const lastmodStatic = new Date().toISOString().slice(0, 10);
             let xmlString = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
@@ -86,7 +87,17 @@ Sitemap: ${baseUrl}/sitemap.xml
         <lastmod>${lastmodStatic}</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
-    </url>
+    </url>`;
+            if (terminosPublicados) {
+                xmlString += `
+    <url>
+        <loc>${baseUrl}/terminos-y-condiciones</loc>
+        <lastmod>${lastmodStatic}</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
+    </url>`;
+            }
+            xmlString += `
     <url>
         <loc>${baseUrl}/blog</loc>
         <lastmod>${lastmodStatic}</lastmod>

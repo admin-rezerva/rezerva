@@ -4,6 +4,7 @@ const { getAvailabilityData } = require('./propuestasService');
 const { marcarCuponComoUtilizado } = require('./cuponesService');
 const { enviarEmailReservaConfirmada } = require('./gestionPropuestas.email');
 const { obtenerNombreEstadoGestionInicialReservaConfirmada } = require('./estadosService');
+const { generarCodigoReservaCorto } = require('./reservaCodigoService');
 
 async function _verificarConflictoPG(empresaId, propiedadId, alojamientoNombre, startDate, endDate) {
     const { rows } = await pool.query(
@@ -92,8 +93,10 @@ const aprobarPresupuesto = async (db, empresaId, presupuestoId) => {
     const nombreEstadoGestion = await obtenerNombreEstadoGestionInicialReservaConfirmada(empresaId);
     if (!nombreEstadoGestion) throw new Error('La empresa no tiene estados de gestión configurados.');
     const client = await pool.connect();
+    let idReservaCanal = '';
     try {
         await client.query('BEGIN');
+        idReservaCanal = await generarCodigoReservaCorto(client, empresaId, canal);
         for (const prop of presupuesto.propiedades || []) {
             const valores = { valorHuesped: Math.round((presupuesto.monto || 0) / presupuesto.propiedades.length) };
             await client.query(
@@ -102,7 +105,7 @@ const aprobarPresupuesto = async (db, empresaId, presupuestoId) => {
                  VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'Confirmada',$9,'CLP',$10,$11,$12,$13,$14)`,
                 [
                     empresaId,
-                    presupuestoId,
+                    idReservaCanal,
                     prop.id,
                     prop.nombre,
                     canal.id,
@@ -129,7 +132,7 @@ const aprobarPresupuesto = async (db, empresaId, presupuestoId) => {
 
     const { rows: resNuevas } = await pool.query(
         `SELECT * FROM reservas WHERE empresa_id = $1 AND id_reserva_canal = $2::text ORDER BY fecha_llegada ASC`,
-        [empresaId, String(presupuestoId)]
+        [empresaId, idReservaCanal]
     );
     if (resNuevas.length && presupuesto.clienteId) {
         const primera = resNuevas[0];
@@ -137,7 +140,7 @@ const aprobarPresupuesto = async (db, empresaId, presupuestoId) => {
             || presupuesto.propiedades?.reduce((s, p) => s + (p.capacidad || 0), 0) || 0;
         const datosParaEmail = {
             clienteId: presupuesto.clienteId,
-            reservaId: String(presupuestoId),
+            reservaId: idReservaCanal,
             reservaInternaId: primera.id,
             propiedades: resNuevas.map((r) => ({ nombre: r.alojamiento_nombre })),
             fechaLlegada: new Date(primera.fecha_llegada),

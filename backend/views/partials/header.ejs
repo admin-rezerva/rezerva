@@ -1,5 +1,9 @@
 <%- /* backend/views/partials/header.ejs */ %>
-<% const _navHl = (typeof htmlLang !== 'undefined' && htmlLang === 'en') ? 'en' : 'es'; %>
+<%
+    const _navHl = (typeof htmlLang !== 'undefined' && htmlLang === 'en') ? 'en' : 'es';
+    const _navTermsPublished = empresa.websiteSettings?.terminosCondiciones?.publicado === true;
+    const _navTermsUrl = locals.platformTerminosUrl || '/terminos-y-condiciones';
+%>
 <a href="#main-content" class="absolute left-[-10000px] top-auto z-[100] px-4 py-2 bg-primary-600 text-white rounded-md focus:left-4 focus:top-4 focus:outline-none focus:ring-2 focus:ring-primary-400"><%= _navHl === 'en' ? 'Skip to main content' : 'Saltar al contenido principal' %></a>
 <header class="bg-white shadow-sm sticky top-0 z-50">
     <div class="container py-3 flex items-center justify-between">
@@ -30,6 +34,9 @@
         </a>
         <nav class="hidden sm:flex items-center space-x-4">
             <a href="/#propiedades" class="text-gray-600 hover:text-primary-600 font-semibold transition text-sm"><%= _navHl === 'en' ? 'Browse stays' : 'Ver Propiedades' %></a>
+            <% if (_navTermsPublished) { %>
+            <a href="<%= _navTermsUrl %>" class="text-gray-600 hover:text-primary-600 font-semibold transition text-sm"><%= _navHl === 'en' ? 'Terms' : 'Términos' %></a>
+            <% } %>
             
             <%# --- INICIO BOTÓN WHATSAPP HEADER --- %>
             <%# Ocultar si estamos en la página de una propiedad (paginaPropiedad se define en propiedad.ejs) %>

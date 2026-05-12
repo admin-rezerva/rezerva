@@ -1,19 +1,16 @@
 /**
- * Cálculo de precio público por estadía (canal por defecto + promos en tarifa.metadata.promo).
+ * Cálculo de precio público por estadía (canal SSR o fallback por defecto + promos en tarifa.metadata.promo).
  * Extraído de publicWebsiteService para mantener tamaño modular del archivo principal.
  */
 const pool = require('../db/postgres');
 const { obtenerValorDolar } = require('./dolarService');
 const { differenceInDays, addDays, format } = require('date-fns');
 const { precioNocheConPromoTarifa } = require('./promocionesDisplayService');
+const { obtenerCanalSsrOPorDefecto } = require('./canalesService');
 
 async function calculatePrice(_db, empresaId, items, startDate, endDate, allTarifas, valorDolarDiaOverride = null) {
-    const { rows } = await pool.query(
-        `SELECT id, nombre, COALESCE(metadata->>'moneda', 'CLP') AS moneda FROM canales WHERE empresa_id = $1 AND (metadata->>'esCanalPorDefecto')::boolean = true LIMIT 1`,
-        [empresaId]
-    );
-    if (!rows[0]) throw new Error('No se ha configurado un canal por defecto.');
-    const canalPorDefecto = rows[0];
+    const canalPorDefecto = await obtenerCanalSsrOPorDefecto(empresaId, pool);
+    if (!canalPorDefecto) throw new Error('No se ha configurado un canal SSR o canal por defecto.');
 
     const valorDolarDia = valorDolarDiaOverride ??
         (canalPorDefecto.moneda === 'USD' ? await obtenerValorDolar(_db, empresaId, startDate) : null);

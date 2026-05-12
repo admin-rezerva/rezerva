@@ -1,5 +1,9 @@
 const { loadHomeSearchBundle, loadHomeSeoAndContent } = require('./website.home.helpers');
 const { normalizeBookingUrlForSsr } = require('../services/bookingSettingsSanitize');
+const {
+    SECCION_KEYS,
+    mergeTerminosCondiciones,
+} = require('../services/terminosCondicionesDefaults');
 
 /**
  * Renderiza GET / (home SSR).
@@ -101,4 +105,32 @@ async function renderGuestGuidePage(req, res) {
     }
 }
 
-module.exports = { renderHomePage, renderContactoPage, renderGuestGuidePage };
+async function renderTerminosCondicionesPage(req, res) {
+    const empresaCompleta = req.empresaCompleta;
+    try {
+        const htmlLang = empresaCompleta?.websiteSettings?.email?.idiomaPorDefecto === 'en' ? 'en' : 'es';
+        const terminos = mergeTerminosCondiciones(
+            null,
+            empresaCompleta?.websiteSettings?.terminosCondiciones || null
+        );
+        const titleBase = htmlLang === 'en'
+            ? (terminos.tituloPaginaEn || 'Terms and conditions')
+            : (terminos.tituloPagina || 'Términos y condiciones');
+        res.render('terminos-condiciones', {
+            title: `${titleBase} | ${empresaCompleta.nombre}`,
+            terminos,
+            orderedSectionKeys: SECCION_KEYS,
+            htmlLang,
+            baseUrl: req.baseUrl || '',
+        });
+    } catch (error) {
+        res.status(500).render('404', { title: 'Error Interno del Servidor', empresa: empresaCompleta || { nombre: 'Error Crítico' } });
+    }
+}
+
+module.exports = {
+    renderHomePage,
+    renderContactoPage,
+    renderGuestGuidePage,
+    renderTerminosCondicionesPage,
+};

@@ -2,6 +2,7 @@ const { getEmpresaContextForSSR, getSSROptimizedData } = require('../services/bu
 const { generateCustomCSS } = require('../services/brandIdentityService');
 const { ssrCache } = require('../services/cacheService');
 const { normalizeWebsiteImageUrl } = require('../services/websitePublicImageUrl');
+const { buildTenantTermsUrl } = require('../services/websiteHostCanonical');
 
 function createWebsiteContextMiddleware({ db, obtenerDetallesEmpresa }) {
     return async (req, res, next) => {
@@ -26,6 +27,7 @@ function createWebsiteContextMiddleware({ db, obtenerDetallesEmpresa }) {
                 const protocol = req.protocol;
                 const host = req.get('host');
                 req.baseUrl = `${protocol}://${host}`;
+                res.locals.platformTerminosUrl = buildTenantTermsUrl(req.empresaCompleta);
                 console.log(`[DEBUG middleware] Base URL determinada: ${req.baseUrl}`);
             } else {
                 req.empresaCompleta = { id: req.empresa.id, nombre: req.empresa.nombre || 'Empresa (Detalles no cargados)' };

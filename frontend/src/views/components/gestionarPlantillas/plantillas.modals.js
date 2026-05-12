@@ -12,6 +12,112 @@ function _escHtml(s) {
         .replace(/"/g, '&quot;');
 }
 
+/** Misma heurística que backend `inferirModoPlantilla` (nombre del tipo en Firestore). */
+function inferirModoPlantillaNombreTipo(tipoNombre, nombrePlantilla = '') {
+    const t = `${tipoNombre || ''} ${nombrePlantilla || ''}`.toLowerCase();
+    if (/confirm|reserva/i.test(t) && /intern|administrador|admin|equipo|staff|copia.*interna|notifica.*intern/i.test(t)) {
+        return 'admin_confirmacion_reserva';
+    }
+    if (/intern|administrador|equipo|staff|copia.*interna|notifica.*intern/i.test(t)) {
+        return 'admin_alerta';
+    }
+    if (/confirm|hu[eé]sped|cliente|reserva.*confirm|bienvenida/i.test(t)) {
+        return 'huesped_confirmacion';
+    }
+    return 'generico_html';
+}
+
+function esTipoConfirmacionHuespedForm(form) {
+    const opt = form?.tipoId?.options?.[form.tipoId.selectedIndex];
+    const nombre = opt ? opt.textContent : '';
+    return inferirModoPlantillaNombreTipo(nombre, form?.nombre?.value || '') === 'huesped_confirmacion';
+}
+
+function esTipoConfirmacionAdminForm(form) {
+    const opt = form?.tipoId?.options?.[form.tipoId.selectedIndex];
+    const nombre = opt ? opt.textContent : '';
+    return inferirModoPlantillaNombreTipo(nombre, form?.nombre?.value || '') === 'admin_confirmacion_reserva';
+}
+
+function isPlantillaCorreoHtml(texto) {
+    const s = String(texto || '').replace(/^\uFEFF?\s*/, '');
+    return /^\[\[HTML_EMAIL\]\]/i.test(s) || /^<\s*(!DOCTYPE|html|table|div)/i.test(s);
+}
+
+function tarjetasArrayToInstruccionesIa(rows) {
+    const parts = (rows || [])
+        .map((r) => ({
+            titulo: String(r.titulo || '').trim(),
+            cuerpo: String(r.cuerpo || '').trim(),
+        }))
+        .filter((r) => r.titulo || r.cuerpo);
+    if (!parts.length) return '';
+    return parts
+        .map((r) => {
+            const t = r.titulo || 'Información';
+            return `### ${t}\n${r.cuerpo || '(sin texto)'}`;
+        })
+        .join('\n\n---\n\n');
+}
+
+function renderTarjetaRowHtml(titulo = '', cuerpo = '') {
+    return `
+        <div class="plantilla-tarjeta-row border border-gray-200 rounded-lg p-3 space-y-2 bg-white">
+            <div class="flex flex-wrap items-end gap-2 justify-between">
+                <div class="flex-1 min-w-[140px]">
+                    <label class="block text-xs font-medium text-gray-600">Título de la tarjeta</label>
+                    <input type="text" class="form-input mt-0.5 text-sm js-tarjeta-titulo" placeholder="Ej.: WiFi, Tinaja, Toallas" value="${_escHtml(titulo)}">
+                </div>
+                <button type="button" class="btn-outline text-xs py-1 px-2 js-tarjeta-remove shrink-0" title="Quitar tarjeta">Quitar</button>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600">Texto de la tarjeta</label>
+                <textarea class="form-input mt-0.5 text-sm w-full js-tarjeta-cuerpo resize-y min-h-[72px]" rows="3" placeholder="Indicaciones, reglas, avisos, datos de operación…">${_escHtml(cuerpo)}</textarea>
+            </div>
+        </div>
+    `;
+}
+
+function collectTarjetasFromForm(formRoot) {
+    const list = formRoot.querySelector('#plantilla-tarjetas-list');
+    if (!list) return [];
+    const rows = list.querySelectorAll('.plantilla-tarjeta-row');
+    const out = [];
+    rows.forEach((row) => {
+        const titulo = row.querySelector('.js-tarjeta-titulo')?.value ?? '';
+        const cuerpo = row.querySelector('.js-tarjeta-cuerpo')?.value ?? '';
+        if (String(titulo).trim() || String(cuerpo).trim()) {
+            out.push({ titulo: String(titulo).trim(), cuerpo: String(cuerpo).trim() });
+        }
+    });
+    return out;
+}
+
+function hydrateTarjetasList(formRoot, tarjetas) {
+    const list = formRoot.querySelector('#plantilla-tarjetas-list');
+    if (!list) return;
+    const arr = Array.isArray(tarjetas) && tarjetas.length ? tarjetas : [{ titulo: '', cuerpo: '' }];
+    list.innerHTML = arr.map((t) => renderTarjetaRowHtml(t.titulo, t.cuerpo)).join('');
+}
+
+function syncTarjetasWrapVisibility(formRoot) {
+    const wrap = formRoot.querySelector('#plantilla-tarjetas-wrap');
+    if (!wrap) return;
+    wrap.classList.remove('hidden');
+}
+
+function syncHtmlAdvancedSection(formRoot) {
+    const details = formRoot.querySelector('#plantilla-html-avanzado');
+    const ta = formRoot.querySelector('#texto');
+    if (!details || !ta) return;
+    const htmlMode = isPlantillaCorreoHtml(ta.value);
+    if (htmlMode) {
+        details.removeAttribute('open');
+    } else {
+        details.setAttribute('open', 'open');
+    }
+}
+
 /** @param {Array<{ tag: string, descripcion: string }>} catalogo — GET /plantillas/etiquetas-motor */
 function renderEtiquetasAyuda(catalogo = []) {
     if (!catalogo || catalogo.length === 0) {
@@ -38,8 +144,8 @@ export const renderModalPlantilla = (catalogoEtiquetas = []) => {
                     <div class="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center text-primary-600 text-xl flex-shrink-0">✉️</div>
                     <div class="flex-1 min-w-0">
                         <h3 id="modal-title" class="text-xl font-semibold text-gray-900">Nueva Plantilla</h3>
-                        <p id="modal-plantilla-subtitle" class="text-sm text-gray-500">Redacta el contenido del mensaje</p>
-                        <p class="text-xs text-gray-400 mt-1">El asistente por tarjetas (wizard paso a paso) está planificado; por ahora usa el editor, IA y vista previa.</p>
+                        <p id="modal-plantilla-subtitle" class="text-sm text-gray-500">Nombre, asunto, tarjetas de información y vista previa</p>
+                        <p class="text-xs text-gray-400 mt-1">El correo se arma con la estructura estándar del producto; aquí defines tarjetas por tema. El HTML lo genera la IA o puedes editarlo en avanzado.</p>
                     </div>
                     <button type="button" id="close-modal-btn" class="text-gray-400 hover:text-gray-600 text-2xl leading-none p-1" aria-label="Cerrar">&times;</button>
                 </div>
@@ -65,25 +171,36 @@ export const renderModalPlantilla = (catalogoEtiquetas = []) => {
                                     <input type="text" id="asunto" name="asunto" class="form-input mt-1" placeholder="Ej: Confirmación de Reserva en [ALOJAMIENTO_NOMBRE]">
                                 </div>
 
-                                <div>
-                                    <label for="plantilla-ia-instrucciones" class="block text-xs font-medium text-gray-600">Instrucciones generales para la IA</label>
-                                    <p class="text-xs text-gray-500 mt-0.5">Tono, ciudad/región para el pie del correo, enlaces extra (términos), restricciones.</p>
-                                    <textarea id="plantilla-ia-instrucciones" name="plantillaIaInstrucciones" rows="2" class="form-input mt-1 text-sm" placeholder="Ej.: tono cercano; pie: Pucón, Araucanía; términos en …/terminos"></textarea>
-                                </div>
-                                <div>
-                                    <label for="plantilla-ia-tarjetas" class="block text-xs font-medium text-gray-600">Tarjetas centrales (solo confirmación huésped)</label>
-                                    <p class="text-xs text-gray-500 mt-0.5">WiFi, tinaja, mascotas, dirección larga. Si lo dejas vacío, la IA arma solo cabecera + pie estándar.</p>
-                                    <textarea id="plantilla-ia-tarjetas" name="plantillaIaTarjetas" rows="4" class="form-input mt-1 text-sm font-sans" placeholder="Ej.: Tinaja: … WiFi cabaña…"></textarea>
+                                <div id="plantilla-tarjetas-wrap" class="space-y-2">
+                                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                        <div>
+                                            <span class="block text-sm font-medium text-gray-800">Tarjetas de información</span>
+                                            <p class="text-xs text-gray-500 mt-0.5">Añade una tarjeta por tema. La IA las convierte en bloques del correo respetando el formato estándar.</p>
+                                        </div>
+                                        <button type="button" id="plantilla-tarjeta-add" class="btn-outline text-xs py-1.5 px-3 shrink-0 self-start sm:self-auto">
+                                            + Añadir tarjeta
+                                        </button>
+                                    </div>
+                                    <div id="plantilla-tarjetas-list" class="space-y-3"></div>
                                 </div>
 
-                                <div class="flex flex-col min-h-[200px] flex-1">
-                                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
-                                        <label for="texto" class="block text-sm font-medium text-gray-700">Contenido del Mensaje</label>
+                                <div class="rounded-lg border border-gray-200 bg-gray-50/80 p-3 space-y-2">
+                                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                        <div>
+                                            <span class="block text-sm font-medium text-gray-800">Cuerpo del correo</span>
+                                            <p class="text-xs text-gray-500 mt-0.5">En plantillas HTML no hace falta editarlo día a día: usa <strong>Vista previa</strong> y, si hace falta, <strong>Generar con IA</strong> o el bloque avanzado.</p>
+                                        </div>
                                         <button type="button" id="plantilla-generar-ia-btn" class="btn-outline text-xs py-1.5 px-3 whitespace-nowrap shrink-0 self-start sm:self-auto" title="Requiere tipo de mensaje.">
                                             <i class="fa-solid fa-wand-magic-sparkles"></i> Generar con IA
                                         </button>
                                     </div>
-                                    <textarea id="texto" name="texto" required rows="14" class="form-input w-full flex-1 min-h-[200px] max-h-[42vh] resize-y font-mono text-sm overflow-auto" placeholder="Hola [CLIENTE_NOMBRE]..."></textarea>
+                                    <details id="plantilla-html-avanzado" class="group">
+                                        <summary class="cursor-pointer text-sm text-primary-700 font-medium list-none flex items-center gap-2">
+                                            <span class="select-none">▸</span><span>Editor HTML (avanzado)</span>
+                                        </summary>
+                                        <p class="text-xs text-gray-500 mt-2 mb-1">Solo para ajustes puntuales. Las etiquetas <code class="text-primary-700">[TAG]</code> las sustituye el motor al enviar.</p>
+                                        <textarea id="texto" name="texto" required rows="12" class="form-input w-full min-h-[180px] max-h-[38vh] resize-y font-mono text-xs overflow-auto mt-1" placeholder="[[HTML_EMAIL]] … o texto plano con [CLIENTE_NOMBRE]"></textarea>
+                                    </details>
                                 </div>
                             </div>
 
@@ -168,16 +285,17 @@ export const abrirModalPlantilla = (plantilla = null, tipos = []) => {
         form.tipoId.value = plantilla.tipoId;
         form.asunto.value = plantilla.asunto || '';
         form.texto.value = plantilla.texto;
+        const tj = plantilla.emailConfig?.tarjetasCorreo || plantilla.emailConfig?.tarjetasConfirmacionHuesped;
+        hydrateTarjetasList(form, tj);
     } else {
         editandoPlantilla = null;
         modalTitle.textContent = 'Nueva Plantilla';
-        if (subtitle) subtitle.textContent = 'Redacta el contenido del mensaje';
+        if (subtitle) subtitle.textContent = 'Nombre, asunto, tarjetas de información y vista previa';
         form.reset();
+        hydrateTarjetasList(form, []);
     }
-    const iaInstr = document.getElementById('plantilla-ia-instrucciones');
-    if (iaInstr) iaInstr.value = '';
-    const iaTarjetas = document.getElementById('plantilla-ia-tarjetas');
-    if (iaTarjetas) iaTarjetas.value = '';
+    syncTarjetasWrapVisibility(form);
+    syncHtmlAdvancedSection(form);
 
     modal.classList.remove('hidden');
 };
@@ -220,6 +338,40 @@ export const setupModalPlantilla = (callback) => {
         }
     });
 
+    newForm.querySelector('#tipoId')?.addEventListener('change', () => {
+        syncTarjetasWrapVisibility(newForm);
+    });
+
+    newForm.querySelector('#plantilla-tarjeta-add')?.addEventListener('click', () => {
+        const list = newForm.querySelector('#plantilla-tarjetas-list');
+        if (!list) return;
+        const wrap = document.createElement('div');
+        wrap.innerHTML = renderTarjetaRowHtml('', '').trim();
+        const node = wrap.firstElementChild;
+        if (node) list.appendChild(node);
+    });
+
+    newForm.querySelector('#plantilla-tarjetas-list')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.js-tarjeta-remove');
+        if (!btn) return;
+        const row = btn.closest('.plantilla-tarjeta-row');
+        const list = newForm.querySelector('#plantilla-tarjetas-list');
+        if (!row || !list) return;
+        const rows = list.querySelectorAll('.plantilla-tarjeta-row');
+        if (rows.length <= 1) {
+            const ti = row.querySelector('.js-tarjeta-titulo');
+            const cu = row.querySelector('.js-tarjeta-cuerpo');
+            if (ti) ti.value = '';
+            if (cu) cu.value = '';
+            return;
+        }
+        row.remove();
+    });
+
+    newForm.querySelector('#texto')?.addEventListener('input', () => {
+        syncHtmlAdvancedSection(newForm);
+    });
+
     const genIaBtn = newForm.querySelector('#plantilla-generar-ia-btn');
     if (genIaBtn) {
         genIaBtn.addEventListener('click', async () => {
@@ -234,21 +386,22 @@ export const setupModalPlantilla = (callback) => {
             try {
                 const tipoOpt = newForm.tipoId.options[newForm.tipoId.selectedIndex];
                 const tipoNombre = tipoOpt ? tipoOpt.textContent.trim() : '';
-                const iaInstr = newForm.querySelector('#plantilla-ia-instrucciones');
-                const iaTarjetas = newForm.querySelector('#plantilla-ia-tarjetas');
+                const tarjetas = collectTarjetasFromForm(newForm);
+                const instruccionesTarjetas = tarjetasArrayToInstruccionesIa(tarjetas);
                 const data = await fetchAPI('/plantillas/generar-ia', {
                     method: 'POST',
                     body: {
                         tipoId,
                         tipoNombre,
                         nombreBorrador: newForm.nombre.value,
-                        instrucciones: iaInstr?.value || '',
-                        instruccionesTarjetas: iaTarjetas?.value || '',
+                        instrucciones: '',
+                        instruccionesTarjetas,
                     },
                 });
                 if (data.nombre) newForm.nombre.value = data.nombre;
                 if (data.asunto != null) newForm.asunto.value = data.asunto;
                 if (data.texto) newForm.texto.value = data.texto;
+                syncHtmlAdvancedSection(newForm);
             } catch (err) {
                 alert(err.message || String(err));
             } finally {
@@ -262,19 +415,26 @@ export const setupModalPlantilla = (callback) => {
     if (prevBtn) {
         prevBtn.addEventListener('click', async () => {
             const texto = newForm.texto?.value || '';
-            if (!String(texto).trim()) {
-                alert('Escribe o genera el contenido del mensaje antes de la vista previa.');
+            const esConfirmacion = esTipoConfirmacionHuespedForm(newForm);
+            const esConfirmacionAdmin = esTipoConfirmacionAdminForm(newForm);
+            if (!String(texto).trim() && !esConfirmacion && !esConfirmacionAdmin) {
+                alert('Genera el correo con IA primero, o abre el editor avanzado y pega el HTML.');
                 return;
             }
             const original = prevBtn.innerHTML;
             prevBtn.disabled = true;
             prevBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> …';
             try {
+                const tipoOpt = newForm.tipoId.options[newForm.tipoId.selectedIndex];
+                const tarjetas = collectTarjetasFromForm(newForm);
                 const data = await fetchAPI('/plantillas/vista-previa', {
                     method: 'POST',
                     body: {
                         texto,
                         asunto: newForm.asunto?.value || '',
+                        tipoNombre: tipoOpt ? tipoOpt.textContent.trim() : '',
+                        nombreBorrador: newForm.nombre?.value || '',
+                        instruccionesTarjetas: tarjetasArrayToInstruccionesIa(tarjetas),
                     },
                 });
                 _abrirVistaPreviaCorreo(data.html, data.asunto, data.nota);
@@ -290,14 +450,51 @@ export const setupModalPlantilla = (callback) => {
     newForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = e.target;
-        const datos = {
-            nombre: formData.nombre.value,
-            tipoId: formData.tipoId.value,
-            asunto: formData.asunto.value,
-            texto: formData.texto.value,
-        };
+        const ecBase = editandoPlantilla?.emailConfig && typeof editandoPlantilla.emailConfig === 'object'
+            ? { ...editandoPlantilla.emailConfig }
+            : { permitirEnvioCorreo: true, disparadores: {} };
+
+        const esConfirmacion = esTipoConfirmacionHuespedForm(formData);
+        const esConfirmacionAdmin = esTipoConfirmacionAdminForm(formData);
+        const tarjetas = collectTarjetasFromForm(formData);
+        let textoFinal = formData.texto.value;
+        let asuntoFinal = formData.asunto.value;
 
         try {
+            if (esConfirmacion || esConfirmacionAdmin) {
+                const tipoOpt = formData.tipoId.options[formData.tipoId.selectedIndex];
+                const data = await fetchAPI('/plantillas/generar-ia', {
+                    method: 'POST',
+                    body: {
+                        tipoId: formData.tipoId.value,
+                        tipoNombre: tipoOpt ? tipoOpt.textContent.trim() : '',
+                        nombreBorrador: formData.nombre.value,
+                        instrucciones: '',
+                        instruccionesTarjetas: tarjetasArrayToInstruccionesIa(tarjetas),
+                    },
+                });
+                if (data.texto) {
+                    textoFinal = data.texto;
+                    formData.texto.value = data.texto;
+                }
+                if (!String(asuntoFinal || '').trim() && data.asunto) {
+                    asuntoFinal = data.asunto;
+                    formData.asunto.value = data.asunto;
+                }
+            }
+
+            const datos = {
+                nombre: formData.nombre.value,
+                tipoId: formData.tipoId.value,
+                asunto: asuntoFinal,
+                texto: textoFinal,
+                emailConfig: {
+                    ...ecBase,
+                    tarjetasCorreo: tarjetas,
+                    tarjetasConfirmacionHuesped: tarjetas,
+                },
+            };
+
             if (editandoPlantilla) {
                 await fetchAPI(`/plantillas/${editandoPlantilla.id}`, { method: 'PUT', body: datos });
             } else {

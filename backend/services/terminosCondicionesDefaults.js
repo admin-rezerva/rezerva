@@ -36,7 +36,17 @@ const TITULOS_DEFAULT_EN = {
     operadorLeyAplicable: 'Operator and governing law',
 };
 
-/** HTML modelo: prácticas tipo Booking/Airbnb/Expedia adaptadas + ejemplos de gestión (piscina, mascotas, depósito). */
+const CONDICIONES_ESPECIFICAS_DEFAULT = {
+    titulo: 'Condiciones específicas de la empresa',
+    html: '',
+};
+
+const CONDICIONES_ESPECIFICAS_DEFAULT_EN = {
+    titulo: 'Company-specific conditions',
+    html: '',
+};
+
+/** HTML modelo: prácticas tipo Booking/Airbnb/Expedia adaptadas, sin reglas propias de un complejo particular. */
 const HTML_DEFAULT = {
     introduccion: `<p>Al reservar o utilizar los alojamientos gestionados a través de este sitio, usted acepta estos términos y condiciones en su versión publicada en la fecha de la reserva. Si no está de acuerdo, no debe completar la reserva.</p>
 <p>Los servicios de alojamiento son prestados por el operador indicado al final de este documento (o en la confirmación de reserva). La plataforma de reservas actúa como canal de contratación salvo que se indique lo contrario.</p>`,
@@ -55,13 +65,13 @@ const HTML_DEFAULT = {
 <p><strong>Cancelación:</strong> Se aplicará la política de cancelación publicada en el sitio en el momento de la reserva (incluidos plazos de reembolso o penalidades). Las políticas pueden variar según tarifa o temporada.</p>
 <p><strong>Derecho de admisión y permanencia:</strong> El operador podrá denegar o finalizar la estadía en caso de incumplimiento grave de estas normas, conductas que afecten la seguridad o convivencia, o información falsa relevante para la reserva, conforme a la ley aplicable.</p>`,
 
-    seguridadNormasUso: `<p><strong>Menores:</strong> Los menores de edad deben estar bajo la supervisión permanente de un adulto responsable, en especial en zonas con agua (piscina, río, lago) y áreas de juego.</p>
-<p><strong>Zonas acuáticas:</strong> Salvo señalización y reglas específicas del alojamiento, el uso de piscinas o similares es bajo su propia responsabilidad. Si no hay salvavidas, el baño es exclusivamente bajo su cuidado y el de los menores a su cargo. Respete las prohibiciones locales (por ejemplo, baño en corrientes peligrosas) cuando existan.</p>
+    seguridadNormasUso: `<p><strong>Menores:</strong> Los menores de edad deben estar bajo la supervisión permanente de un adulto responsable durante toda la estadía.</p>
+<p><strong>Instalaciones:</strong> El huésped debe usar las instalaciones conforme a las instrucciones publicadas por el operador y reportar oportunamente cualquier condición insegura o daño observado.</p>
 <p><strong>Emergencias:</strong> Ante sismo, incendio u otra emergencia, siga las instrucciones del personal y los puntos de reunión indicados en el alojamiento.</p>
 <p><strong>Daños:</strong> Cualquier deterioro imputable al huésped o a sus acompañantes podrá ser reclamado conforme a la ley y a la documentación de la reserva.</p>`,
 
     conductaAreasComunes: `<p>Se espera un comportamiento respetuoso hacia vecinos y otros huéspedes. Horario de silencio o reducción de ruidos según lo indicado en el alojamiento (típicamente entre la noche y la mañana).</p>
-<p><strong>Áreas comunes:</strong> Parrillas, mobiliario de exterior u otros elementos deben usarse solo en las zonas permitidas. No está permitido desplazar mobiliario de las unidades hacia zonas no autorizadas.</p>
+<p><strong>Áreas comunes:</strong> Las zonas compartidas deben usarse de forma razonable, respetando las instrucciones del operador, la seguridad y la convivencia con otros huéspedes.</p>
 <p><strong>Sustancias ilegales:</strong> Queda prohibido el consumo, distribución o posesión de drogas ilegales. Cualquier actividad ilícita podrá ser reportada a las autoridades y dar lugar a la terminación inmediata de la estadía sin reembolso.</p>
 <p><strong>Fiestas y visitas:</strong> Eventos o reuniones con personas no registradas pueden requerir autorización previa por escrito del operador.</p>`,
 
@@ -93,13 +103,13 @@ const HTML_DEFAULT_EN = {
 <p><strong>Cancellation:</strong> The cancellation policy published at booking time applies (including refund windows or penalties). Policies may vary by rate or season.</p>
 <p><strong>Right of admission:</strong> The operator may refuse or end a stay for serious breach of these rules, safety or community issues, or material misrepresentation, in line with applicable law.</p>`,
 
-    seguridadNormasUso: `<p><strong>Children:</strong> Minors must be supervised at all times by a responsible adult, especially around water (pool, river, lake) and play areas.</p>
-<p><strong>Water features:</strong> Unless specific signage and rules apply, use of pools or similar is at your own risk. Where no lifeguard is on duty, swimming is entirely under your supervision and that of minors in your care. Observe any local prohibitions (e.g. unsafe currents).</p>
+    seguridadNormasUso: `<p><strong>Children:</strong> Minors must be supervised at all times by a responsible adult throughout the stay.</p>
+<p><strong>Facilities:</strong> Guests must use facilities according to the operator’s published instructions and promptly report any unsafe condition or damage observed.</p>
 <p><strong>Emergencies:</strong> In case of earthquake, fire or other emergency, follow staff instructions and assembly points posted at the property.</p>
 <p><strong>Damage:</strong> Damage attributable to you or your guests may be charged in accordance with law and your booking documentation.</p>`,
 
     conductaAreasComunes: `<p>Please behave respectfully towards neighbours and other guests. Quiet hours or noise reduction may apply as indicated (typically overnight).</p>
-<p><strong>Shared areas:</strong> Barbecues, outdoor furniture or equipment must be used only in designated areas. Do not move indoor furniture to unauthorised outdoor or other-unit areas.</p>
+<p><strong>Shared areas:</strong> Shared spaces must be used reasonably, following operator instructions, safety requirements and respectful coexistence with other guests.</p>
 <p><strong>Illegal substances:</strong> Use, distribution or possession of illegal drugs is prohibited. Unlawful activity may be reported to authorities and may result in immediate termination of the stay without refund.</p>
 <p><strong>Parties and visitors:</strong> Events or gatherings with people not on the booking may require prior written approval from the operator.</p>`,
 
@@ -152,6 +162,19 @@ function createDefaultTerminosCondiciones() {
         tituloPaginaEn: 'Terms and conditions',
         secciones,
         seccionesEn: buildDefaultSeccionesEn(),
+        condicionesEspecificas: { ...CONDICIONES_ESPECIFICAS_DEFAULT },
+        condicionesEspecificasEn: { ...CONDICIONES_ESPECIFICAS_DEFAULT_EN },
+    };
+}
+
+function mergeEditableSection(current, incoming, fallback) {
+    const base = current && typeof current === 'object' ? current : fallback;
+    const add = incoming && typeof incoming === 'object' ? incoming : {};
+    return {
+        titulo: add.titulo != null && String(add.titulo).trim()
+            ? String(add.titulo).trim().slice(0, 200)
+            : String(base.titulo || fallback.titulo || '').slice(0, 200),
+        html: add.html != null ? String(add.html).slice(0, 200000) : String(base.html || ''),
     };
 }
 
@@ -204,6 +227,17 @@ function mergeTerminosCondiciones(existing, incoming) {
         base.seccionesEn[key] = { titulo, html };
     }
 
+    base.condicionesEspecificas = mergeEditableSection(
+        base.condicionesEspecificas,
+        incoming.condicionesEspecificas,
+        CONDICIONES_ESPECIFICAS_DEFAULT
+    );
+    base.condicionesEspecificasEn = mergeEditableSection(
+        base.condicionesEspecificasEn,
+        incoming.condicionesEspecificasEn,
+        CONDICIONES_ESPECIFICAS_DEFAULT_EN
+    );
+
     return base;
 }
 
@@ -211,6 +245,8 @@ module.exports = {
     SECCION_KEYS,
     TITULOS_DEFAULT,
     TITULOS_DEFAULT_EN,
+    CONDICIONES_ESPECIFICAS_DEFAULT,
+    CONDICIONES_ESPECIFICAS_DEFAULT_EN,
     createDefaultTerminosCondiciones,
     mergeTerminosCondiciones,
 };

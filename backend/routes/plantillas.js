@@ -13,6 +13,11 @@ const {
 } = require('../services/plantillasService');
 const { ETIQUETAS_CATALOGO, reemplazarEtiquetasEnTexto } = require('../services/plantillasEtiquetasCatalog');
 const { construirVariablesDesdeReserva } = require('../services/transactionalEmailService');
+const { inferirModoPlantilla } = require('../services/ai/prompts/plantillasIa');
+const {
+    generarPlantillaConfirmacionAdminHtml,
+    generarPlantillaConfirmacionHuespedHtml,
+} = require('../services/plantillasEmailTemplates');
 
 module.exports = (db) => {
     const router = express.Router();
@@ -76,8 +81,22 @@ module.exports = (db) => {
     router.post('/vista-previa', async (req, res) => {
         try {
             const empresaId = req.user.empresaId;
-            const texto = String(req.body?.texto ?? '');
-            const asunto = String(req.body?.asunto ?? '');
+            let texto = String(req.body?.texto ?? '');
+            let asunto = String(req.body?.asunto ?? '');
+            const tipoNombre = String(req.body?.tipoNombre ?? '');
+            const nombreBorrador = String(req.body?.nombreBorrador ?? '');
+            const instruccionesTarjetas = String(req.body?.instruccionesTarjetas ?? '');
+            const modoPlantilla = inferirModoPlantilla(`${tipoNombre} ${nombreBorrador}`);
+            if (modoPlantilla === 'huesped_confirmacion' || modoPlantilla === 'admin_confirmacion_reserva') {
+                const fixed = modoPlantilla === 'admin_confirmacion_reserva'
+                    ? generarPlantillaConfirmacionAdminHtml({ nombreEmpresa: '', instruccionesTarjetas })
+                    : generarPlantillaConfirmacionHuespedHtml({
+                        nombreEmpresa: '',
+                        instruccionesTarjetas,
+                    });
+                texto = fixed.texto;
+                if (!asunto.trim()) asunto = fixed.asunto;
+            }
             if (!texto.trim()) {
                 return res.status(400).json({ error: 'Escribe o genera el contenido del mensaje antes de previsualizar.' });
             }
@@ -100,7 +119,7 @@ module.exports = (db) => {
             };
             const mockRow = {
                 id: '00000000-0000-4000-8000-000000000099',
-                id_reserva_canal: 'WEB-EJEMPLO',
+                id_reserva_canal: 'app-12052026-001',
                 cliente_id: null,
                 propiedad_id: '00000000-0000-4000-8000-0000000000a1',
                 alojamiento_nombre: 'Cabaña Ejemplo A + Cabaña Ejemplo B',

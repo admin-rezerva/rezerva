@@ -29,6 +29,8 @@ const {
     construirVariablesDesdeReserva,
     resolverLinkResenaOutbound,
 } = require('./transactionalEmailService');
+const { generarCodigoReservaCorto } = require('./reservaCodigoService');
+const { obtenerCanalSsrOPorDefecto } = require('./canalesService');
 
 // --- Helpers de Cliente ---
 
@@ -980,11 +982,13 @@ const crearReservaPublica = async (db, empresaId, datosFormulario) => {
         email,
         telefono,
         rut,
+        comentarios,
         codigoCupon: rawCuponForm,
         menores: rawMenores,
         camasExtra: rawCamasExtra,
     } = datosFormulario;
     const codigoCuponForm = rawCuponForm != null ? String(rawCuponForm).trim() : '';
+    const comentariosHuespedCheckout = String(comentarios || '').trim().slice(0, 2000);
     const menores = Math.max(0, parseInt(String(rawMenores ?? '0'), 10) || 0);
     const camasExtra = Math.max(0, parseInt(String(rawCamasExtra ?? '0'), 10) || 0);
 
@@ -1082,13 +1086,9 @@ const crearReservaPublica = async (db, empresaId, datosFormulario) => {
         throw err;
     }
 
-    const { rows: canalRows } = await pool.query(
-        `SELECT id, nombre, COALESCE(metadata->>'moneda', 'CLP') AS moneda FROM canales WHERE empresa_id = $1 AND (metadata->>'esCanalPorDefecto')::boolean = true LIMIT 1`,
-        [empresaId]
-    );
-    if (!canalRows[0]) throw new Error('No se encontró un canal por defecto.');
-    const canal = canalRows[0];
-    const idReservaCanal = `WEB-${Date.now().toString(36).toUpperCase().slice(-8)}`;
+    const canal = await obtenerCanalSsrOPorDefecto(empresaId);
+    if (!canal) throw new Error('No se encontró un canal SSR o canal por defecto.');
+    let idReservaCanal = '';
     const legalCfg = empresaDet.websiteSettings?.legal || {};
     const hlRes = empresaDet.websiteSettings?.email?.idiomaPorDefecto === 'en' ? 'en' : 'es';
     const des = buildDesglosePrecioCheckout(parseFloat(precioFinal), legalCfg, hlRes, {
@@ -1126,6 +1126,7 @@ const crearReservaPublica = async (db, empresaId, datosFormulario) => {
             registradaEnCheckoutAt: new Date().toISOString(),
         },
         politicaCancelacionCheckout: snapshotPoliticaCancelacionParaMetadata(legalEff),
+        ...(comentariosHuespedCheckout ? { comentariosHuespedCheckout } : {}),
         ...(tcCfg && tcCfg.publicado
             ? {
                 aceptacionTerminos: {
@@ -1167,29 +1168,29 @@ const crearReservaPublica = async (db, empresaId, datosFormulario) => {
             canal_id, canal_nombre, cliente_id, total_noches, estado, estado_gestion,
             moneda, valores, cantidad_huespedes, fecha_llegada, fecha_salida, metadata)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING *`;
-    const insertParams = [
-        empresaId,
-        idReservaCanal,
-        propiedadIdInsert,
-        nombreAlojamientos || propsData[0].nombre,
-        canal.id,
-        canal.nombre,
-        clienteId,
-        parseInt(noches, 10),
-        'Confirmada',
-        nombreEstadoGestion,
-        'CLP',
-        JSON.stringify(valoresObj),
-        parseInt(personas, 10),
-        fechaLlegada,
-        fechaSalida,
-        JSON.stringify(metadataReserva),
-    ];
-
     const pgClient = await pool.connect();
     let newRow;
     try {
         await pgClient.query('BEGIN');
+        idReservaCanal = await generarCodigoReservaCorto(pgClient, empresaId, canal);
+        const insertParams = [
+            empresaId,
+            idReservaCanal,
+            propiedadIdInsert,
+            nombreAlojamientos || propsData[0].nombre,
+            canal.id,
+            canal.nombre,
+            clienteId,
+            parseInt(noches, 10),
+            'Confirmada',
+            nombreEstadoGestion,
+            'CLP',
+            JSON.stringify(valoresObj),
+            parseInt(personas, 10),
+            fechaLlegada,
+            fechaSalida,
+            JSON.stringify(metadataReserva),
+        ];
         const ins = await pgClient.query(insertSql, insertParams);
         newRow = ins.rows[0];
         if (codigoCuponForm) {
@@ -1236,6 +1237,7 @@ const crearReservaPublica = async (db, empresaId, datosFormulario) => {
         });
         const variablesCorreo = await construirVariablesDesdeReserva(empresaId, rowForEmail, {
             clienteNombre: String(nombre || '').trim(),
+            comentariosHuesped: comentariosHuespedCheckout,
             linkResena,
         });
         const envio = await enviarPorDisparador(null, empresaId, 'reserva_confirmada', {
@@ -1258,6 +1260,7 @@ const crearReservaPublica = async (db, empresaId, datosFormulario) => {
                 linkResena,
                 clienteEmail: String(email || '').trim(),
                 clienteTelefono: telefonoNormalizado,
+                comentariosHuesped: comentariosHuespedCheckout,
                 canalNombre: canal.nombre || '',
             });
             const envioAdmin = await enviarNotificacionInterna(null, empresaId, variablesAdmin, {

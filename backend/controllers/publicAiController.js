@@ -1,5 +1,4 @@
 const pool = require('../db/postgres');
-const { randomUUID } = require('crypto');
 const { fetchGlobalPublicAiInventoryPostgres } = require('../services/publicAiInventoryPg');
 const {
     obtenerPropiedadesPorEmpresa,
@@ -33,6 +32,7 @@ const {
 } = require('../services/chatgptSalesCoreEmailService');
 const { getChatgptReservaGuardDiag } = require('../services/chatgptSalesReservationGuardModule');
 const { registrarEsperaDisponibilidadDesdeIa } = require('../services/esperaDisponibilidadService');
+const { generarCodigoReservaCorto } = require('../services/reservaCodigoService');
 const {
     isPublicAiSanitizeResponses,
     maybeSanitizePublicAiResponse,
@@ -576,7 +576,7 @@ const createBookingIntent = async (req, res) => {
         const montoSeña = Math.round(totalEstadia * 0.10);
         const saldoPendiente = totalEstadia - montoSeña;
 
-        const reservaId = randomUUID();
+        const reservaId = await generarCodigoReservaCorto(pool, targetEmpresaId, iaChannel);
         const plantilla = await resolverPlantillaCorreoPreferida(db, targetEmpresaId);
         const plantillaId = plantilla ? plantilla.id : null;
 
@@ -1089,19 +1089,24 @@ const createPublicReservation = async (req, res) => {
         propiedadId = unidad.booking_id;
         const propiedadNombre = unidad.nombre || '';
 
-        // 2. Canal por defecto (el mismo que usa el sitio web)
-        const { rows: canalRows } = await pool.query(
-            `SELECT id, nombre FROM canales WHERE empresa_id = $1 AND (metadata->>'esCanalPorDefecto')::boolean = true LIMIT 1`,
-            [empresaId]
-        );
-        if (!canalRows[0]) {
-            return res.status(422).json({ success: false, error: 'NO_CANAL', message: 'No hay canal por defecto configurado' });
+        const db = require('firebase-admin').firestore();
+
+        // 2. Canal IA configurado en Canales; si no existe, se crea igual que en cotización IA.
+        let canalesIA = await obtenerCanalesPorEmpresa(db, empresaId);
+        let canalIA = resolverCanalIaVentaEnLista(canalesIA);
+        if (!canalIA) {
+            canalIA = await crearCanal(db, empresaId, {
+                ...CANAL_IA_VENTA_CREAR_DATOS,
+                modificadorTipo: 'porcentaje',
+                modificadorValor: 0,
+                configuracionIva: 'incluido',
+                descripcion: 'Canal para reservas generadas por agentes IA',
+            });
         }
-        const canalId   = canalRows[0].id;
-        const canalNombre = canalRows[0].nombre;
+        const canalId = canalIA.id;
+        const canalNombre = canalIA.nombre;
 
         // 3. Precio vía tarifas PostgreSQL
-        const db = require('firebase-admin').firestore();
         const valorDolar   = await obtenerValorDolar(db, empresaId, inicio);
         const allTarifas   = await obtenerTarifasParaConsumidores(empresaId);
         const precioCalc = await calculatePrice(
@@ -1153,8 +1158,8 @@ const createPublicReservation = async (req, res) => {
         });
 
         // 5. Insertar reserva directamente en PostgreSQL
-        const { randomUUID } = require('crypto');
-        const reservaId = randomUUID();
+        const prefijoReserva = agenteIA && agenteIA !== 'Desconocido' ? agenteIA : canalNombre;
+        const reservaId = await generarCodigoReservaCorto(pool, empresaId, canalIA, { prefijo: prefijoReserva });
         const valores = {
             valorHuesped: valorTotal,
             valorTotal: Math.round(valorTotal / 1.19),

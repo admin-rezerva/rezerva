@@ -4,8 +4,12 @@ const admin = require('firebase-admin');
 const { generateForTask } = require('./aiContentService');
 const { AI_TASK } = require('./ai/aiEnums');
 const { sanitizeInput } = require('./ai/prompts/sanitizer');
-const { promptGenerarPlantillaMensaje } = require('./ai/prompts/plantillasIa');
+const { promptGenerarPlantillaMensaje, inferirModoPlantilla } = require('./ai/prompts/plantillasIa');
 const { reemplazarEtiquetasEnTexto } = require('./plantillasEtiquetasCatalog');
+const {
+    generarPlantillaConfirmacionAdminHtml,
+    generarPlantillaConfirmacionHuespedHtml,
+} = require('./plantillasEmailTemplates');
 
 // --- Lógica para Tipos de Plantilla (sin tabla PG — Firestore-only) ---
 
@@ -45,6 +49,21 @@ const DISPARADOR_KEYS = [
     'notificacion_interna',
 ];
 
+const MAX_TARJETAS_CORREO = 18;
+const MAX_TARJETA_TITULO = 120;
+const MAX_TARJETA_CUERPO = 4000;
+
+function normalizeTarjetasCorreo(input) {
+    return (Array.isArray(input) ? input : [])
+        .filter((x) => x && typeof x === 'object')
+        .map((x) => ({
+            titulo: String(x.titulo ?? '').trim().slice(0, MAX_TARJETA_TITULO),
+            cuerpo: String(x.cuerpo ?? '').trim().slice(0, MAX_TARJETA_CUERPO),
+        }))
+        .filter((x) => x.titulo || x.cuerpo)
+        .slice(0, MAX_TARJETAS_CORREO);
+}
+
 function normalizeEmailConfig(input) {
     const disparadores = Object.fromEntries(DISPARADOR_KEYS.map((k) => [k, false]));
     if (input && typeof input === 'object' && input.disparadores && typeof input.disparadores === 'object') {
@@ -52,12 +71,19 @@ function normalizeEmailConfig(input) {
             if (input.disparadores[k] !== undefined) disparadores[k] = Boolean(input.disparadores[k]);
         });
     }
-    return {
+    const out = {
         permitirEnvioCorreo: input && input.permitirEnvioCorreo === false ? false : true,
         disparadores,
         /** Si true, el cuerpo de la plantilla ya es HTML (sin conversion texto→HTML). */
         cuerpoEsHtml: !!(input && input.cuerpoEsHtml === true),
     };
+    const tarjetasCorreo = normalizeTarjetasCorreo(input?.tarjetasCorreo || input?.tarjetasConfirmacionHuesped);
+    if (tarjetasCorreo.length) {
+        out.tarjetasCorreo = tarjetasCorreo;
+        // Compatibilidad con plantillas ya creadas durante la primera iteración de confirmación huésped.
+        out.tarjetasConfirmacionHuesped = tarjetasCorreo;
+    }
+    return out;
 }
 
 function mapPlantillaRow(r) {
@@ -104,7 +130,19 @@ const actualizarPlantilla = async (_db, empresaId, plantillaId, datosActualizado
     if (datosActualizados.tipoId !== undefined) { sets.push(`tipo=$${params.push(datosActualizados.tipoId)}`); }
     if (datosActualizados.asunto !== undefined) { sets.push(`asunto=$${params.push(String(datosActualizados.asunto || '').trim())}`); }
     if (datosActualizados.emailConfig !== undefined || datosActualizados.email_config !== undefined) {
-        const ec = normalizeEmailConfig(datosActualizados.emailConfig || datosActualizados.email_config);
+        const { rows: prevEcRows } = await pool.query(
+            `SELECT COALESCE(email_config,'{}'::jsonb) AS email_config FROM plantillas WHERE id=$1 AND empresa_id=$2`,
+            [plantillaId, empresaId]
+        );
+        const prevEc = prevEcRows[0]?.email_config && typeof prevEcRows[0].email_config === 'object'
+            ? prevEcRows[0].email_config
+            : {};
+        const incoming = datosActualizados.emailConfig || datosActualizados.email_config || {};
+        const merged = { ...prevEc, ...incoming };
+        if (incoming.disparadores && typeof incoming.disparadores === 'object') {
+            merged.disparadores = incoming.disparadores;
+        }
+        const ec = normalizeEmailConfig(merged);
         sets.push(`email_config=$${params.push(JSON.stringify(ec))}::jsonb`);
     }
     if (sets.length) {
@@ -165,7 +203,8 @@ function renderCuerpoPlantillaHtml(textoConEtiquetas, emailConfig) {
     const raw = String(textoConEtiquetas || '');
     const trimmedLeft = raw.replace(/^\uFEFF?\s*/, '');
     const useMarker = trimmedLeft.toUpperCase().startsWith(HTML_EMAIL_MARKER.toUpperCase());
-    if (ec.cuerpoEsHtml === true || useMarker) {
+    const looksLikeHtml = /^<\s*(?:!DOCTYPE|html|body|table|div|section|article)\b/i.test(trimmedLeft);
+    if (ec.cuerpoEsHtml === true || useMarker || looksLikeHtml) {
         let body = raw;
         if (useMarker) {
             body = body.replace(/^\s*\[\[HTML_EMAIL\]\]\s*/i, '');
@@ -177,8 +216,16 @@ function renderCuerpoPlantillaHtml(textoConEtiquetas, emailConfig) {
 
 const procesarPlantilla = async (db, empresaId, plantillaId, datos) => {
     const plantilla = await obtenerPlantilla(db, empresaId, plantillaId);
-    const textoConEtiquetas = _normalizarTextoPlantillaRender(reemplazarEtiquetas(plantilla.texto, datos));
-    const asuntoBase = (plantilla.asunto && String(plantilla.asunto).trim()) ? plantilla.asunto : plantilla.nombre;
+    const modoNombre = inferirModoPlantilla(plantilla.nombre || '');
+    const fixedAdmin = modoNombre === 'admin_confirmacion_reserva'
+        ? generarPlantillaConfirmacionAdminHtml({
+            nombreEmpresa: datos?.EMPRESA_NOMBRE || datos?.empresaNombre || '',
+            instruccionesTarjetas: plantilla.emailConfig?.tarjetasCorreo || plantilla.emailConfig?.tarjetasConfirmacionHuesped || [],
+        })
+        : null;
+    const textoBase = fixedAdmin?.texto || plantilla.texto;
+    const textoConEtiquetas = _normalizarTextoPlantillaRender(reemplazarEtiquetas(textoBase, datos));
+    const asuntoBase = fixedAdmin?.asunto || ((plantilla.asunto && String(plantilla.asunto).trim()) ? plantilla.asunto : plantilla.nombre);
     const asuntoFinal = _normalizarTextoPlantillaRender(reemplazarEtiquetas(asuntoBase, datos));
     const contenido = renderCuerpoPlantillaHtml(textoConEtiquetas, plantilla.emailConfig);
     return { plantilla, contenido, contenidoTexto: textoConEtiquetas, asunto: asuntoFinal };
@@ -214,6 +261,18 @@ const generarPlantillaConIa = async (db, empresaId, body = {}) => {
     const nombreBorrador = sanitizeInput(body.nombreBorrador || '', AI_TASK.TEMPLATE_GENERATION, { empresaId, campo: 'nombrePlantillaIA' });
     const instrucciones = sanitizeInput(body.instrucciones || body.instruccionesExtra || '', AI_TASK.TEMPLATE_GENERATION, { empresaId, campo: 'instruccionesPlantillaIA' });
     const instruccionesTarjetas = sanitizeInput(body.instruccionesTarjetas || '', AI_TASK.TEMPLATE_GENERATION, { empresaId, campo: 'instruccionesTarjetasIA' });
+    const modo = inferirModoPlantilla(`${tipoNombre} ${nombreBorrador}`);
+
+    if (modo === 'huesped_confirmacion') {
+        return generarPlantillaConfirmacionHuespedHtml({
+            nombreEmpresa,
+            instruccionesTarjetas,
+            nombreBorrador,
+        });
+    }
+    if (modo === 'admin_confirmacion_reserva') {
+        return generarPlantillaConfirmacionAdminHtml({ nombreEmpresa, nombreBorrador, instruccionesTarjetas });
+    }
 
     const prompt = promptGenerarPlantillaMensaje({
         nombreEmpresa,

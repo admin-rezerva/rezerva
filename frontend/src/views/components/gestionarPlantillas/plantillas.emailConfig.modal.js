@@ -96,7 +96,11 @@ export function setupPlantillaEmailConfigModal() {
         document.querySelectorAll('#plantilla-email-disparadores .disparador-cb').forEach((cb) => {
             disparadores[cb.dataset.key] = cb.checked;
         });
+        const prev = plantillaActual.emailConfig && typeof plantillaActual.emailConfig === 'object'
+            ? plantillaActual.emailConfig
+            : {};
         const emailConfig = {
+            ...prev,
             permitirEnvioCorreo: document.getElementById('plantilla-email-permitir')?.checked !== false,
             disparadores,
         };

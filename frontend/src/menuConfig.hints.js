@@ -41,6 +41,7 @@ export const ITEM_HINTS = {
     'seo-tenant': 'Diagnóstico SEO técnico de tu SSR: host, sitemap, robots, indexación y enlaces a Search Console/Bing.',
     'seo-plataforma': 'Monitoreo SEO del marketplace de la plataforma (solo superadministrador).',
     'config-empresa': 'Datos generales de la empresa.',
+    'terminos-condiciones': 'Términos para huéspedes por empresa y referencia a términos de contratación de Rezerva.',
     'config-usuarios': 'Usuarios del panel.',
     'gestionar-plantillas': 'Plantillas de correo y mensajes.',
     'gestionar-dolar': 'Tipo de cambio referencial.',

@@ -17,6 +17,9 @@ function bloqueEtiquetas() {
 /** Palabras clave en el nombre del tipo (Firestore) para elegir layout HTML */
 function inferirModoPlantilla(tipoNombre) {
     const t = String(tipoNombre || '').toLowerCase();
+    if (/confirm|reserva/i.test(t) && /intern|administrador|admin|equipo|staff|copia.*interna|notifica.*intern/i.test(t)) {
+        return 'admin_confirmacion_reserva';
+    }
     if (/intern|administrador|equipo|staff|copia.*interna|notifica.*intern/i.test(t)) {
         return 'admin_alerta';
     }
@@ -40,7 +43,13 @@ function instruccionesLayoutPorModo(modo) {
 Tablas HTML, max-width ~600px, estilos inline.`;
     }
     if (modo === 'huesped_confirmacion') {
-        return `MODELO EN TRES PARTES (confirmación cliente — HTML email, tablas anidadas, ~600px, CSS inline).
+        return `MODELO EN TRES PARTES (confirmación cliente — HTML email, tablas anidadas, CSS inline).
+
+RITMO Y ALINEACIÓN (obligatorio — aspecto profesional)
+- Contenedor único: una tabla raíz role="presentation" width="100%" style="max-width:600px;margin:0 auto;" que envuelva **todo** el cuerpo del correo (incluido hero). No mezcles bloques a ancho completo del viewport con otros más estrechos.
+- Separación vertical: entre hero, saludo, tarjeta lavanda, fila de 2 columnas, [DESGLOSE_PRECIO_HTML], cada tarjeta de PARTE B y el bloque de botones/pie, deja **20–28px** de espacio (padding-bottom en el <td> que cierra el bloque o una fila <tr><td height="24"></td></tr> vacía). **Nunca** pegues dos tarjetas sin margen.
+- Fila dos columnas “Ingreso / Cómo llegar”: usa <tr><td width="50%" style="width:50%;max-width:50%;padding-right:10px;vertical-align:top"> y la derecha con padding-left:10px (no 48%/48% a ojo). Dentro de cada celda, tabla interna width="100%" con border-radius 12px, borde #e2e8f0, padding 16px 18px; misma **min-height** en ambas (ej. min-height:140px) para igualar altura visual.
+- Tarjetas PARTE B (WiFi, etc.): cada una tabla width="100%" con margin inferior (espacio antes de la siguiente), mismo border-radius y padding que las blancas de PARTE A.
 
 ══════════════════════════════════════════════════════════════════
 PARTE A — ESTÁNDAR DE PRODUCTO (obligatoria; mismo esqueleto visual para TODA empresa)
@@ -56,15 +65,15 @@ Réplica fiel de referencia SuiteManager: hero oscuro + saludo + tarjeta lavanda
    - Columna izq.: etiqueta pequeña morada “TU ALOJAMIENTO”; el nombre [ALOJAMIENTO_NOMBRE] debe ser enlace <a href="[LINK_FOTOS_ALOJAMIENTO]">…</a> si [LINK_FOTOS_ALOJAMIENTO] no está vacío (página pública del alojamiento con galería); si el enlace está vacío, texto sin enlace. Inmediatamente debajo, si [ENLACES_FOTOS_ALOJAMIENTOS_HTML] no está vacío, insértelo (reservas con varios alojamientos: enlaces a fotos por unidad).
    - Línea “Reserva Nº [RESERVA_ID_CANAL]”.
    - Columna der. (tabla): Llegada [FECHA_LLEGADA], Salida [FECHA_SALIDA], Duración [TOTAL_NOCHES] noches (tipografía jerárquica como diseño referencia).
-4) Fila dos columnas (~48% / 48%) en tabla:
-   - Izquierda tarjeta blanca borde gris claro: título “Ingreso y Salida” con emoji reloj naranja; filas tipo tabla para horarios (texto neutro si no hay datos en etiquetas: “Horarios según confirmación” o similar; NO inventes nombre comercial de complejo).
-   - Derecha tarjeta blanca: título “Cómo llegar” con emoji pin; breve línea de texto genérico si no hay copy en módulo central; botón “Abrir en Google Maps” con href **exclusivamente** [EMPRESA_GOOGLE_MAPS_LINK] (dirección/Maps declarados en la empresa). Si [EMPRESA_GOOGLE_MAPS_LINK] está vacío, no inventes URL: muestra solo texto o enlace genérico a [EMPRESA_WEBSITE] como “Sitio web” (sin rotular como Maps).
-5) **Obligatorio** justo debajo de la fila anterior, ancho completo: inserta el marcador exacto [DESGLOSE_PRECIO_HTML] (el motor reemplaza por tabla detallada: por alojamiento si hubo reserva múltiple, recargos, cupón, neto/IVA si aplica, total). No dupliques montos en texto libre alrededor de ese bloque.
+4) Fila dos columnas **50% / 50%** con gutter 10px (ver RITMO). Tarjetas blancas internas alineadas en altura (min-height igual en ambas).
+   - Izquierda: “Ingreso y Salida” + emoji reloj; horarios neutros si no hay datos.
+   - Derecha: “Cómo llegar” + emoji pin; texto breve; botón Maps solo con [EMPRESA_GOOGLE_MAPS_LINK]; si vacío, sin inventar URL.
+5) Tras **al menos 22px** de separación desde la fila anterior: inserta [DESGLOSE_PRECIO_HTML] (ancho ya centrado al contenedor 600px por el motor). No dupliques montos alrededor.
 
 ══════════════════════════════════════════════════════════════════
 PARTE B — MÓDULO CENTRAL (solo lo que el usuario describió en “Tarjetas personalizadas” / instrucciones de contenido)
 ══════════════════════════════════════════════════════════════════
-- Aquí van únicamente tarjetas apiladas estilo captura “imagen 3”: fondo blanco, borde #e2e8f0, iconos emoji (tinaja, wifi, info, mascotas…), listas con ✅ cuando corresponda, recuadros destacados amarillos opcionales.
+- Tarjetas apiladas (imagen 3): cada bloque en su propia tabla width="100%" con **margin/padding inferior 20–24px** respecto a la siguiente; mismo ancho que el contenedor 600px; padding interno 16px 18px; borde #e2e8f0; border-radius 12px; iconos emoji; listas con ✅ cuando corresponda.
 - NO inventes nombres de marcas, claves WiFi, direcciones largas ni políticas que el usuario NO haya escrito en el texto de tarjetas.
 - Si el texto de tarjetas está vacío o solo dice “ninguna”: NO llenes con datos ficticios; no repitas desglose de precio (ya va [DESGLOSE_PRECIO_HTML] en PARTE A). Opcional: tarjeta mínima “¿Dudas?” con [USUARIO_EMAIL] y [USUARIO_TELEFONO].
 
@@ -72,12 +81,12 @@ PARTE B — MÓDULO CENTRAL (solo lo que el usuario describió en “Tarjetas pe
 PARTE C — ESTÁNDAR DE PRODUCTO (obligatoria; pie como referencia “imagen 2”)
 ══════════════════════════════════════════════════════════════════
 1) **No** incluyas botón “Qué hacer cerca” (no todas las empresas lo usan).
-2) Si [EMPRESA_WEBSITE] no está vacío: un solo botón outline “Términos y Condiciones” → href=[EMPRESA_WEBSITE] (o la URL que el usuario indicó en instrucciones generales para términos). Si [EMPRESA_WEBSITE] está vacío, omite este botón.
-3) Botón o enlace principal sólido “Ver confirmación en el sitio” → [LINK_CONFIRMACION_PUBLICA]
-4) Footer bloque oscuro (#0f172a), centrado:
-   - [EMPRESA_NOMBRE] en blanco negrita
-   - Línea ubicación en gris claro SOLO si el usuario dio ciudad/región en instrucciones generales; si no, omite o una línea genérica sin inventar ciudad.
-   - “Si tienes dudas, contáctanos a” + mailto:[USUARIO_EMAIL] en color acento legible (azul claro #93c5fd o similar).
+2) Usa un solo CTA principal sólido “Ver estado de mi reserva” → [LINK_CONFIRMACION_PUBLICA]. No dupliques “Ver confirmación”.
+3) El link a términos va en el footer → [URL_TERMINOS] / [LINK_TERMINOS_CONDICIONES], no como CTA principal.
+4) Footer bloque oscuro (#0f172a), en 3 zonas:
+   - izquierda: [EMPRESA_LOGO_HTML] si existe + [EMPRESA_NOMBRE];
+   - centro: [USUARIO_NOMBRE], mailto:[USUARIO_EMAIL], [USUARIO_TELEFONO];
+   - derecha: marca Rezerva en texto y frase breve “Al confirmar esta reserva aceptas los términos y condiciones publicados por el alojamiento.” + link a [URL_TERMINOS].
 NO uses [LINK_GESTION_RESERVA] en correo huésped. Incluye en el HTML al menos estas etiquetas además de otras del catálogo: [DESGLOSE_PRECIO_HTML], [LINK_FOTOS_ALOJAMIENTO], [EMPRESA_GOOGLE_MAPS_LINK], [LINK_CONFIRMACION_PUBLICA].`;
     }
     return `LAYOUT genérico profesional en HTML: cabecera de marca con [EMPRESA_NOMBRE], cuerpo con buen contraste, pie de contacto [USUARIO_EMAIL] / [USUARIO_TELEFONO]. Tablas + estilos inline.`;
@@ -96,7 +105,9 @@ Genera PARTE A (con [DESGLOSE_PRECIO_HTML] en su sitio) y PARTE C completas; ent
 """
 ${t}
 """
-Convierte este contenido en tarjetas con el estilo de la referencia larga (imagen tipo captura completa): iconos emoji por sección, bordes redondeados, mucho aire. Si el texto describe una maqueta o captura (colores, orden), respétalo.
+Convierte este contenido en tarjetas con el estilo de la referencia larga (imagen tipo captura completa): iconos emoji por sección, bordes redondeados, mucho aire.
+Cada tarjeta: tabla role="presentation" width="100%" con padding interno 16px–18px, border-radius 12px, borde #e2e8f0; **entre tarjeta y tarjeta** deja 20–24px de separación (fila vacía o padding-bottom en el <td> contenedor). Mismo ancho que el resto del correo (no más estrecho que [DESGLOSE_PRECIO_HTML]).
+Si el texto describe una maqueta o captura (colores, orden), respétalo.
 No añadas datos que no estén en el texto anterior.`;
 }
 
@@ -106,7 +117,7 @@ No añadas datos que no estén en el texto anterior.`;
  * @param {string} p.tipoNombre — Nombre del tipo de plantilla (Firestore)
  * @param {string} p.nombreBorrador — Nombre interno sugerido por el usuario (puede vacío)
  * @param {string} p.instrucciones — Instrucciones libres sanitizadas (tono, ciudad en pie, rutas URL extra)
- * @param {string} [p.instruccionesTarjetas] — Solo confirmación huésped: WiFi, tinaja, mascotas, etc.
+ * @param {string} [p.instruccionesTarjetas] — Tarjetas de contenido por tema (WiFi, tinaja, operación, avisos, etc.).
  */
 function promptGenerarPlantillaMensaje({
     nombreEmpresa,
@@ -119,7 +130,7 @@ function promptGenerarPlantillaMensaje({
     const extra = (instrucciones || '').trim() || 'Ninguna';
     const modo = inferirModoPlantilla(tipoNombre);
     const layoutBlock = instruccionesLayoutPorModo(modo);
-    const moduloTarjetas = modo === 'huesped_confirmacion'
+    const moduloTarjetas = String(instruccionesTarjetas || '').trim()
         ? bloqueModuloTarjetasConfirmacion(instruccionesTarjetas)
         : '';
 

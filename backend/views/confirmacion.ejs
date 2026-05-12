@@ -1,166 +1,227 @@
-<% const hl = (typeof htmlLang !== 'undefined' && htmlLang === 'en') ? 'en' : 'es'; %>
+<%
+    const hl = (typeof htmlLang !== 'undefined' && htmlLang === 'en') ? 'en' : 'es';
+    const _locFecha = hl === 'en' ? 'en-US' : 'es-CL';
+    const _fmtFechaCorta = (isoYmd) => {
+        const s = String(isoYmd || '').slice(0, 10);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return 'N/A';
+        const d = new Date(`${s}T00:00:00Z`);
+        if (Number.isNaN(d.getTime())) return 'N/A';
+        return d.toLocaleDateString(_locFecha, { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' });
+    };
+    const _fmtFechaHora = (iso) => {
+        if (!iso) return '';
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return '';
+        return d.toLocaleString(_locFecha, { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    };
+    const _fmtCLP = (n) => `$${Number(n || 0).toLocaleString(_locFecha)} CLP`;
+    const pago = reserva?.pago || {};
+    const gl = (typeof guestBookingLinks !== 'undefined' && guestBookingLinks && typeof guestBookingLinks === 'object') ? guestBookingLinks : {};
+    const hasGuestLinks = !!(gl.manualHuespedUrl || gl.manualHuespedPdfUrl || gl.checkinOnlineUrl);
+    const depShow = (typeof depositoReserva !== 'undefined' && depositoReserva && depositoReserva.activo !== false);
+    const depNota = String(empresa.websiteSettings?.booking?.depositoNotaHtml || '').trim();
+    const garantiaModo = String(empresa.websiteSettings?.booking?.garantiaModo || 'abono_manual');
+    const garantiaDetalleOperacion = String(empresa.websiteSettings?.booking?.garantiaDetalleOperacion || '').trim();
+    const garantiaTexto = garantiaModo === 'sin_garantia'
+        ? (hl === 'en' ? 'No advance guarantee required to confirm this booking.' : 'Sin garantía previa para confirmar la reserva.')
+        : (garantiaModo === 'preautorizacion_externa'
+            ? (hl === 'en' ? 'Guarantee via external pre-authorization.' : 'Garantía por preautorización externa.')
+            : (hl === 'en' ? 'Guarantee via manual deposit recorded by operations.' : 'Garantía mediante abono manual registrado por operación.'));
+    const estadoPagoLabel = pago.estado === 'pagado'
+        ? (hl === 'en' ? 'Paid' : 'Pagado')
+        : (pago.estado === 'abono_recibido'
+            ? (hl === 'en' ? 'Deposit received' : 'Abono recibido')
+            : (hl === 'en' ? 'Deposit pending' : 'Abono pendiente'));
+    const estadoPagoClass = pago.estado === 'pagado'
+        ? 'bg-success-50 text-success-800 border-success-200'
+        : (pago.estado === 'abono_recibido'
+            ? 'bg-primary-50 text-primary-800 border-primary-200'
+            : (pago.vencido ? 'bg-danger-50 text-danger-800 border-danger-200' : 'bg-warning-50 text-warning-800 border-warning-200'));
+    const terminosUrl = locals.platformTerminosUrl || '/terminos-y-condiciones';
+    const tel = String(empresa.contactoTelefono || '').replace(/\D/g, '');
+    const waMsg = encodeURIComponent(hl === 'en'
+        ? `Hi, I need help with booking ${reserva?.id || ''}.`
+        : `Hola, necesito ayuda con la reserva ${reserva?.id || ''}.`);
+    const waUrl = tel ? `https://wa.me/${tel}?text=${waMsg}` : '';
+%>
 <!DOCTYPE html>
 <html lang="<%= hl %>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <%- include('partials/google-site-verification') %>
-    <title><%= hl === 'en' ? 'Booking received' : 'Reserva confirmada' %> | <%= empresa.nombre %></title>
-    <meta name="description" content="<%= hl === 'en' ? 'Your booking request was received.' : 'Tu reserva ha sido recibida.' %>" />
+    <title><%= hl === 'en' ? 'My booking status' : 'Estado de mi reserva' %> | <%= empresa.nombre %></title>
+    <meta name="description" content="<%= hl === 'en' ? 'Review your booking, payment status and useful stay information.' : 'Revisa tu reserva, estado de pago e información útil para tu estadía.' %>" />
     <link rel="stylesheet" href="/public/css/website.css">
     <%- include('partials/web-fonts') %>
 </head>
-<body class="bg-gray-50">
-
+<body class="bg-gray-50 min-h-screen flex flex-col">
     <%- include('partials/header') %>
 
-    <main id="main-content" class="container py-12 md:py-24">
-        <div class="max-w-2xl mx-auto bg-white p-8 md:p-12 rounded-lg shadow-lg text-center">
-            <%
-                const _locFecha = hl === 'en' ? 'en-US' : 'es-CL';
-                const _fmtFechaCorta = (isoYmd) => {
-                    const s = String(isoYmd || '').slice(0, 10);
-                    if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return 'N/A';
-                    const d = new Date(`${s}T00:00:00Z`);
-                    if (Number.isNaN(d.getTime())) return 'N/A';
-                    return d.toLocaleDateString(_locFecha, { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' });
-                };
-            %>
-            
-            <svg class="w-16 h-16 text-success-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-
-            <h1 class="text-3xl font-bold text-gray-900 mt-4"><%= hl === 'en' ? 'Booking received!' : '¡Reserva recibida!' %></h1>
-            
-            <p class="text-lg text-gray-600 mt-4">
-                <%= hl === 'en'
-                    ? 'We have received your booking request. We will contact you shortly to confirm your stay details.'
-                    : 'Hemos recibido tu solicitud de reserva. Nos pondremos en contacto contigo a la brevedad para confirmar los detalles de tu estadía.' %>
-            </p>
-
-            <% 
-                const depNota = String(empresa.websiteSettings?.booking?.depositoNotaHtml || '').trim();
-                const depShow = (typeof depositoReserva !== 'undefined' && depositoReserva && depositoReserva.activo !== false);
-                const garantiaModo = String(empresa.websiteSettings?.booking?.garantiaModo || 'abono_manual');
-                const garantiaDetalleOperacion = String(empresa.websiteSettings?.booking?.garantiaDetalleOperacion || '').trim();
-                const garantiaTexto = garantiaModo === 'sin_garantia'
-                    ? (hl === 'en' ? 'No advance guarantee required to confirm this booking.' : 'Sin garantía previa para confirmar la reserva.')
-                    : (garantiaModo === 'preautorizacion_externa'
-                        ? (hl === 'en' ? 'Guarantee via external pre-authorization (no in-app payment gateway).' : 'Garantía por preautorización externa (sin integración de pasarela en StayManager).')
-                        : (hl === 'en' ? 'Guarantee via manual deposit recorded by operations.' : 'Garantía mediante abono manual registrado por operación.'));
-            %>
-            <% if (depShow) { %>
-                <div class="mt-6 border border-primary-200 bg-primary-50 rounded-lg p-4 text-left">
-                    <h3 class="font-semibold text-primary-900 mb-2"><%= hl === 'en' ? 'Deposit information' : 'Información de abono' %></h3>
-                    <p class="text-sm text-primary-800">
-                        <% if (depositoReserva.tipo === 'monto_fijo') { %>
-                            <%= hl === 'en' ? 'Deposit required:' : 'Abono requerido:' %> $<%= Number(depositoReserva.montoDeposito || 0).toLocaleString(_locFecha) %> CLP <%= hl === 'en' ? '(fixed amount).' : '(monto fijo).' %>
-                        <% } else { %>
-                            <%= hl === 'en' ? 'Deposit required:' : 'Abono requerido:' %> <%= Number(depositoReserva.porcentaje || 10) %>% <%= hl === 'en' ? 'of total' : 'del total' %>
-                            ($<%= Number(depositoReserva.montoDeposito || 0).toLocaleString(_locFecha) %> CLP).
-                        <% } %>
-                    </p>
-                    <p class="text-sm text-primary-800 mt-1">
-                        <%= hl === 'en' ? 'Suggested time to pay deposit:' : 'Plazo sugerido para abonar:' %> <strong><%= Number(depositoReserva.horasLimite || 48) %> <%= hl === 'en' ? 'hours' : 'horas' %></strong>.
-                    </p>
-                    <% if (depNota) { %>
-                        <p class="text-xs text-primary-900/80 mt-2"><%= depNota %></p>
-                    <% } %>
-                    <p class="text-xs text-primary-900/80 mt-2"><strong><%= hl === 'en' ? 'Guarantee policy:' : 'Política de garantía:' %></strong> <%= garantiaTexto %></p>
-                    <% if (garantiaDetalleOperacion) { %>
-                        <p class="text-xs text-primary-900/70 mt-1"><%= garantiaDetalleOperacion %></p>
-                    <% } %>
-                </div>
-            <% } else { %>
-                <div class="mt-6 border border-gray-200 bg-gray-50 rounded-lg p-4 text-left">
-                    <h3 class="font-semibold text-gray-800 mb-2"><%= hl === 'en' ? 'Guarantee policy' : 'Política de garantía' %></h3>
-                    <p class="text-sm text-gray-700"><%= garantiaTexto %></p>
-                    <% if (garantiaDetalleOperacion) { %>
-                        <p class="text-xs text-gray-600 mt-1"><%= garantiaDetalleOperacion %></p>
-                    <% } %>
-                </div>
-            <% } %>
-
-            <% if (reserva) { %>
-                <div class="mt-6 border-t pt-6 text-left space-y-2">
-                    <h3 class="text-lg font-semibold text-gray-800"><%= hl === 'en' ? 'Your request details' : 'Detalles de tu solicitud' %></h3>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600"><%= hl === 'en' ? 'Booking ID:' : 'ID de reserva:' %></span>
-                        <span class="font-medium font-mono text-sm"><%= reserva.id %></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600"><%= hl === 'en' ? 'Check-in:' : 'Llegada:' %></span>
-                        <span class="font-medium"><%= _fmtFechaCorta(reserva.fechaLlegada) %></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600"><%= hl === 'en' ? 'Check-out:' : 'Salida:' %></span>
-                        <span class="font-medium"><%= _fmtFechaCorta(reserva.fechaSalida) %></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600"><%= hl === 'en' ? 'Property:' : 'Alojamiento:' %></span>
-                        <span class="font-medium text-right"><%= reserva.alojamientoNombre || 'N/A' %></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600"><%= hl === 'en' ? 'Nights:' : 'Noches:' %></span>
-                        <span class="font-medium"><%= reserva.totalNoches || 'N/A' %></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600"><%= hl === 'en' ? 'Guests:' : 'Huéspedes:' %></span>
-                        <span class="font-medium"><%= reserva.cantidadHuespedes || 'N/A' %></span>
-                    </div>
-                     <div class="flex justify-between">
-                        <span class="text-gray-600"><%= hl === 'en' ? 'Total:' : 'Total:' %></span>
-                        <span class="font-medium">$<%= reserva.precioFinal.toLocaleString(_locFecha) %></span>
-                    </div>
-                </div>
-            <% } %>
-
-            <% 
-              const gl = (typeof guestBookingLinks !== 'undefined' && guestBookingLinks && typeof guestBookingLinks === 'object') ? guestBookingLinks : {};
-              const hasGuestLinks = !!(gl.manualHuespedUrl || gl.manualHuespedPdfUrl || gl.checkinOnlineUrl);
-            %>
-            <% if (hasGuestLinks) { %>
-                <div class="mt-6 border-t pt-6 text-left rounded-lg bg-primary-50/60 border border-primary-100 p-4 space-y-3">
-                    <h3 class="text-base font-semibold text-gray-900">
-                        <%= hl === 'en' ? 'Useful links for your stay' : 'Enlaces útiles para tu estadía' %>
-                    </h3>
-                    <p class="text-sm text-gray-700">
-                        <%= hl === 'en' ? 'You can open these now; the same links may appear in your confirmation email.' : 'Puedes abrirlos ahora; los mismos enlaces pueden venir en tu correo de confirmación.' %>
-                    </p>
-                    <ul class="text-sm space-y-2 list-none pl-0">
-                        <li>
-                            <a href="/guia-huesped" class="text-primary-700 font-medium hover:underline">
-                                <%= hl === 'en' ? 'Guest guide page' : 'Página guía del huésped' %>
-                            </a>
-                        </li>
-                        <% if (gl.manualHuespedUrl) { %>
-                            <li>
-                                <a href="<%= gl.manualHuespedUrl %>" target="_blank" rel="noopener noreferrer" class="text-primary-700 font-medium hover:underline">
-                                    <%= hl === 'en' ? 'Guest information (web)' : 'Información para huéspedes (web)' %>
-                                </a>
-                            </li>
-                        <% } %>
-                        <% if (gl.manualHuespedPdfUrl) { %>
-                            <li>
-                                <a href="<%= gl.manualHuespedPdfUrl %>" target="_blank" rel="noopener noreferrer" class="text-primary-700 font-medium hover:underline">
-                                    <%= hl === 'en' ? 'House manual (PDF)' : 'Manual / guía (PDF)' %>
-                                </a>
-                            </li>
-                        <% } %>
-                        <% if (gl.checkinOnlineUrl) { %>
-                            <li>
-                                <a href="<%= gl.checkinOnlineUrl %>" target="_blank" rel="noopener noreferrer" class="text-primary-700 font-medium hover:underline">
-                                    <%= hl === 'en' ? 'Online check-in' : 'Check-in online' %>
-                                </a>
-                            </li>
-                        <% } %>
-                    </ul>
-                </div>
-            <% } %>
-
-            <div class="mt-8">
-                <a href="/" class="btn"><%= hl === 'en' ? 'Back to home' : 'Volver al inicio' %></a>
+    <main id="main-content" class="flex-grow">
+        <section class="bg-primary-700 text-white py-12 px-4">
+            <div class="container max-w-5xl">
+                <p class="text-primary-100 text-sm font-semibold uppercase tracking-wide"><%= hl === 'en' ? 'Booking status' : 'Estado de mi reserva' %></p>
+                <h1 class="text-3xl md:text-4xl font-bold mt-2"><%= reserva.alojamientoNombre || empresa.nombre %></h1>
+                <p class="text-primary-100 mt-3 max-w-2xl">
+                    <%= hl === 'en'
+                        ? 'Review your booking details, payment status and useful links for your stay.'
+                        : 'Revisa los datos de tu reserva, el estado del pago y enlaces útiles para tu estadía.' %>
+                </p>
             </div>
+        </section>
 
+        <div class="container max-w-5xl py-8 md:py-12">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <section class="lg:col-span-2 space-y-6">
+                    <article class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                            <div>
+                                <p class="text-sm text-gray-500"><%= hl === 'en' ? 'Booking ID' : 'ID de reserva' %></p>
+                                <p class="font-mono text-lg font-semibold text-gray-900"><%= reserva.id %></p>
+                            </div>
+                            <span class="inline-flex items-center rounded-full border px-3 py-1 text-sm font-semibold <%= estadoPagoClass %>">
+                                <%= estadoPagoLabel %>
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+                            <div class="rounded-xl bg-gray-50 p-4">
+                                <p class="text-xs text-gray-500"><%= hl === 'en' ? 'Check-in' : 'Llegada' %></p>
+                                <p class="text-lg font-semibold text-gray-900"><%= _fmtFechaCorta(reserva.fechaLlegada) %></p>
+                            </div>
+                            <div class="rounded-xl bg-gray-50 p-4">
+                                <p class="text-xs text-gray-500"><%= hl === 'en' ? 'Check-out' : 'Salida' %></p>
+                                <p class="text-lg font-semibold text-gray-900"><%= _fmtFechaCorta(reserva.fechaSalida) %></p>
+                            </div>
+                            <div class="rounded-xl bg-gray-50 p-4">
+                                <p class="text-xs text-gray-500"><%= hl === 'en' ? 'Guests / nights' : 'Huéspedes / noches' %></p>
+                                <p class="text-lg font-semibold text-gray-900"><%= reserva.cantidadHuespedes || 'N/A' %> / <%= reserva.totalNoches || 'N/A' %></p>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 border-t border-gray-100 pt-5 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p class="text-gray-500"><%= hl === 'en' ? 'Primary guest' : 'Huésped principal' %></p>
+                                <p class="font-semibold text-gray-900"><%= cliente?.nombre || reserva.cliente?.nombre || 'Huésped' %></p>
+                            </div>
+                            <div>
+                                <p class="text-gray-500"><%= hl === 'en' ? 'Booking status' : 'Estado de reserva' %></p>
+                                <p class="font-semibold text-gray-900"><%= reserva.estadoGestion || reserva.estado || 'Confirmada' %></p>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                        <h2 class="text-xl font-bold text-gray-900"><%= hl === 'en' ? 'Reserved stays' : 'Alojamientos reservados' %></h2>
+                        <% if (Array.isArray(reserva.propiedades) && reserva.propiedades.length) { %>
+                            <div class="mt-5 space-y-5">
+                                <% reserva.propiedades.forEach((prop) => { %>
+                                    <div class="rounded-xl border border-gray-200 overflow-hidden">
+                                        <div class="p-4 flex items-center justify-between gap-3">
+                                            <div>
+                                                <h3 class="font-semibold text-gray-900"><%= prop.nombre %></h3>
+                                                <a href="<%= prop.href %>" class="text-sm font-semibold text-primary-700 hover:underline"><%= hl === 'en' ? 'View accommodation' : 'Ver alojamiento' %></a>
+                                            </div>
+                                        </div>
+                                        <% if (Array.isArray(prop.fotos) && prop.fotos.length) { %>
+                                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 p-4 pt-0">
+                                                <% prop.fotos.forEach((foto) => { %>
+                                                    <img src="<%= foto.url %>" alt="<%= foto.alt %>" class="h-28 w-full object-cover rounded-lg bg-gray-100" loading="lazy">
+                                                <% }) %>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                <% }) %>
+                            </div>
+                        <% } else { %>
+                            <p class="mt-3 text-sm text-gray-600"><%= reserva.alojamientoNombre || (hl === 'en' ? 'No photo gallery available.' : 'No hay galería disponible para esta reserva.') %></p>
+                        <% } %>
+                    </article>
+                </section>
+
+                <aside class="space-y-6">
+                    <article class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                        <h2 class="text-xl font-bold text-gray-900"><%= hl === 'en' ? 'Payment status' : 'Estado de pago' %></h2>
+                        <div class="mt-4 space-y-3 text-sm">
+                            <div class="flex justify-between gap-4">
+                                <span class="text-gray-600"><%= hl === 'en' ? 'Total' : 'Total' %></span>
+                                <strong class="text-gray-900"><%= _fmtCLP(pago.total) %></strong>
+                            </div>
+                            <div class="flex justify-between gap-4">
+                                <span class="text-gray-600"><%= hl === 'en' ? 'Paid' : 'Pagado' %></span>
+                                <strong class="text-gray-900"><%= _fmtCLP(pago.pagado) %></strong>
+                            </div>
+                            <div class="flex justify-between gap-4">
+                                <span class="text-gray-600"><%= hl === 'en' ? 'Balance' : 'Saldo' %></span>
+                                <strong class="text-gray-900"><%= _fmtCLP(pago.saldo) %></strong>
+                            </div>
+                            <% if (depShow) { %>
+                                <div class="flex justify-between gap-4 border-t border-gray-100 pt-3">
+                                    <span class="text-gray-600"><%= hl === 'en' ? 'Required deposit' : 'Abono requerido' %></span>
+                                    <strong class="text-gray-900"><%= _fmtCLP(pago.abonoRequerido) %></strong>
+                                </div>
+                            <% } %>
+                        </div>
+
+                        <% if (depShow && pago.abonoPendiente) { %>
+                            <div class="mt-5 rounded-xl border <%= pago.vencido ? 'border-danger-200 bg-danger-50 text-danger-900' : 'border-warning-200 bg-warning-50 text-warning-900' %> p-4">
+                                <p class="font-semibold">
+                                    <%= pago.vencido
+                                        ? (hl === 'en' ? 'Deposit deadline expired' : 'Plazo de abono vencido')
+                                        : (hl === 'en' ? 'Pending before automatic cancellation' : 'Pendiente antes de cancelación automática') %>
+                                </p>
+                                <% if (pago.venceAt) { %>
+                                    <p class="text-sm mt-1"><%= _fmtFechaHora(pago.venceAt) %></p>
+                                <% } %>
+                                <p class="text-xs mt-2">
+                                    <%= hl === 'en'
+                                        ? 'If the deposit is not recorded by the operator before the deadline, the booking may be cancelled according to the published policy.'
+                                        : 'Si el abono no queda registrado por operación antes del plazo, la reserva puede cancelarse según la política publicada.' %>
+                                </p>
+                            </div>
+                        <% } else if (depShow) { %>
+                            <div class="mt-5 rounded-xl border border-success-200 bg-success-50 text-success-900 p-4 text-sm">
+                                <strong><%= hl === 'en' ? 'Deposit covered' : 'Abono cubierto' %></strong>
+                                <p class="mt-1"><%= hl === 'en' ? 'The minimum guarantee for this booking is already covered or not required.' : 'La garantía mínima de esta reserva ya está cubierta o no es requerida.' %></p>
+                            </div>
+                        <% } %>
+
+                        <% if (depNota) { %>
+                            <p class="text-xs text-gray-500 mt-4"><%= depNota %></p>
+                        <% } %>
+                        <p class="text-xs text-gray-500 mt-3"><strong><%= hl === 'en' ? 'Guarantee policy:' : 'Política de garantía:' %></strong> <%= garantiaTexto %></p>
+                        <% if (garantiaDetalleOperacion) { %>
+                            <p class="text-xs text-gray-500 mt-1"><%= garantiaDetalleOperacion %></p>
+                        <% } %>
+                    </article>
+
+                    <article class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                        <h2 class="text-xl font-bold text-gray-900"><%= hl === 'en' ? 'Useful actions' : 'Acciones útiles' %></h2>
+                        <div class="mt-4 space-y-3">
+                            <% if (waUrl) { %>
+                                <a href="<%= waUrl %>" target="_blank" rel="noopener" class="btn-whatsapp w-full justify-center"><%= hl === 'en' ? 'Contact host' : 'Contactar anfitrión' %></a>
+                            <% } %>
+                            <a href="<%= terminosUrl %>" target="_blank" rel="noopener" class="btn-secondary w-full justify-center"><%= hl === 'en' ? 'Terms and conditions' : 'Términos y condiciones' %></a>
+                            <a href="/guia-huesped" class="btn-secondary w-full justify-center"><%= hl === 'en' ? 'Guest guide' : 'Guía del huésped' %></a>
+                            <% if (gl.checkinOnlineUrl) { %>
+                                <a href="<%= gl.checkinOnlineUrl %>" target="_blank" rel="noopener noreferrer" class="btn w-full justify-center"><%= hl === 'en' ? 'Online check-in' : 'Check-in online' %></a>
+                            <% } %>
+                        </div>
+
+                        <% if (hasGuestLinks) { %>
+                            <ul class="mt-5 text-sm space-y-2 list-none pl-0">
+                                <% if (gl.manualHuespedUrl) { %>
+                                    <li><a href="<%= gl.manualHuespedUrl %>" target="_blank" rel="noopener noreferrer" class="text-primary-700 font-medium hover:underline"><%= hl === 'en' ? 'Guest information' : 'Información para huéspedes' %></a></li>
+                                <% } %>
+                                <% if (gl.manualHuespedPdfUrl) { %>
+                                    <li><a href="<%= gl.manualHuespedPdfUrl %>" target="_blank" rel="noopener noreferrer" class="text-primary-700 font-medium hover:underline"><%= hl === 'en' ? 'House manual PDF' : 'Manual / guía PDF' %></a></li>
+                                <% } %>
+                            </ul>
+                        <% } %>
+                    </article>
+                </aside>
+            </div>
         </div>
     </main>
 

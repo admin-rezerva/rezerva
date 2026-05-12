@@ -1,9 +1,9 @@
 // backend/services/gestionPropuestas.write.js
-const { randomUUID } = require('crypto');
 const pool = require('../db/postgres');
 const { crearOActualizarCliente } = require('./clientesService');
 const { recalcularValoresDesdeTotal } = require('./utils/calculoValoresService');
 const { registrarAjusteValor } = require('./utils/trazabilidadService');
+const { generarCodigoReservaCorto } = require('./reservaCodigoService');
 
 function _calcularFinanciero(valorOriginal, moneda, valorDolarDia, descuentoPct, descuentoFijo, valorFinalFijado, configuracionIva) {
     let ancla_Subtotal_USD = valorOriginal;
@@ -78,7 +78,16 @@ async function _pgTransactionPropuesta(client, empresaId, idGrupo, propiedades, 
 
 const guardarOActualizarPropuesta = async (db, empresaId, usuarioEmail, datos, idPropuestaExistente = null) => {
     const { cliente, propiedades, canalId, canalNombre, moneda, valorDolarDia, valorOriginal, descuentoPct, descuentoFijo, valorFinalFijado, idReservaCanal, noches, personas } = datos;
-    const idGrupo = idReservaCanal || idPropuestaExistente || randomUUID();
+    const { rows } = await pool.query('SELECT nombre, metadata FROM canales WHERE id = $1 AND empresa_id = $2', [canalId, empresaId]);
+    if (!rows[0]) throw new Error("El canal seleccionado no es válido.");
+    const canalRow = rows[0];
+    const idGrupo = idReservaCanal
+        || idPropuestaExistente
+        || await generarCodigoReservaCorto(pool, empresaId, {
+            id: canalId,
+            nombre: canalNombre || canalRow.nombre,
+            metadata: canalRow.metadata,
+        });
 
     let clienteId, clienteData = cliente;
     if (cliente.id) {
@@ -88,9 +97,7 @@ const guardarOActualizarPropuesta = async (db, empresaId, usuarioEmail, datos, i
         clienteId = res.cliente.id; clienteData = res.cliente;
     } else { clienteId = null; }
 
-    const { rows } = await pool.query('SELECT metadata FROM canales WHERE id = $1 AND empresa_id = $2', [canalId, empresaId]);
-    if (!rows[0]) throw new Error("El canal seleccionado no es válido.");
-    const configuracionIva = rows[0].metadata?.configuracionIva || 'incluido';
+    const configuracionIva = canalRow.metadata?.configuracionIva || 'incluido';
 
     const fin = _calcularFinanciero(valorOriginal, moneda, valorDolarDia, descuentoPct, descuentoFijo, valorFinalFijado, configuracionIva);
     const datosCompletos = { ...datos, idPropuestaExistente };

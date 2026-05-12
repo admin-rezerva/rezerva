@@ -12,6 +12,7 @@ export const renderFilasTabla = (canales) => {
                 ${c.nombre}
                 ${c.esCanalPorDefecto ? '<i class="fa-solid fa-star text-warning-400 ml-1 text-xs" title="Canal por defecto"></i>' : ''}
                 ${c.esCanalIcal ? '<i class="fa-solid fa-calendar-days text-primary-400 ml-1 text-xs" title="Canal iCal"></i>' : ''}
+                ${c.esCanalSsr ? '<i class="fa-solid fa-globe text-primary-500 ml-1 text-xs" title="Canal sitio público (SSR)"></i>' : ''}
             </td>
             <td class="py-3 px-4">${c.moneda}</td>
             <td class="py-3 px-4">${c.separadorDecimal === ',' ? 'Coma (,)' : 'Punto (.)'}</td>

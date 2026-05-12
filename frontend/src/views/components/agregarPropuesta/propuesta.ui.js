@@ -165,8 +165,8 @@ function _renderPanelCliente() {
                   <input type="text" id="new-client-lastname" placeholder="Apellido" class="form-input mt-1 w-full">
                 </div>
                 <div>
-                  <label for="id-reserva-canal-input" class="block text-sm font-medium text-gray-700">ID Reserva Canal</label>
-                  <input type="text" id="id-reserva-canal-input" class="form-input mt-1 w-full">
+                  <label for="id-reserva-canal-input" class="block text-sm font-medium text-gray-700">ID externo / canal</label>
+                  <input type="text" id="id-reserva-canal-input" class="form-input mt-1 w-full" placeholder="Booking/Airbnb: pega su ID; interno: dejar vacío">
                 </div>
               </div>
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">

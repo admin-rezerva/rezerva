@@ -12,6 +12,8 @@
     const _fCiudad    = locals.ubicacion?.ciudad  || empresaContext?.ubicacion?.ciudad  || '';
     const _fRegion    = locals.ubicacion?.region  || empresaContext?.ubicacion?.region  || '';
     const _fRedes     = locals.contacto?.redesSociales || {};
+    const _fTermsPublished = empresa.websiteSettings?.terminosCondiciones?.publicado === true;
+    const _fTermsUrl = locals.platformTerminosUrl || '/terminos-y-condiciones';
 %>
 <footer class="bg-gray-900 text-gray-300 mt-12">
     <div class="container mx-auto px-4 py-10">
@@ -54,6 +56,9 @@
                     <li><a href="/" class="text-gray-300 hover:text-white transition"><%= _fhl === 'en' ? 'Home' : 'Inicio' %></a></li>
                     <li><a href="/#propiedades" class="text-gray-300 hover:text-white transition"><%= _fhl === 'en' ? 'Stays' : 'Alojamientos' %></a></li>
                     <li><a href="/guia-huesped" class="text-gray-300 hover:text-white transition"><%= _fhl === 'en' ? 'Guest guide' : 'Guía del huésped' %></a></li>
+                    <% if (_fTermsPublished) { %>
+                    <li><a href="<%= _fTermsUrl %>" class="text-gray-300 hover:text-white transition"><%= _fhl === 'en' ? 'Terms and conditions' : 'Términos y condiciones' %></a></li>
+                    <% } %>
                     <li><a href="/contacto" class="text-gray-300 hover:text-white transition"><%= _fhl === 'en' ? 'Contact' : 'Contacto' %></a></li>
                 </ul>
             </div>

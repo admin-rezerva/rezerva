@@ -42,6 +42,7 @@ const views = {
     '/gestionar-dolar': () => import('./views/gestionarDolar.js'),
     '/autorizar-google': () => import('./views/autorizarGoogle.js'),
     '/empresa': () => import('./views/empresa.js'),
+    '/terminos-condiciones': () => import('./views/terminosCondiciones.js'),
     '/gestionar-usuarios': () => import('./views/gestionarUsuarios.js'),
     '/historial-cargas': () => import('./views/historialCargas.js'),
     '/gestionar-tipos-plantilla': () => import('./views/gestionarTiposPlantilla.js'),
@@ -137,6 +138,7 @@ const menuConfig = [
         id: 'configuracion',
         children: [
             { icon: 'fa-solid fa-building-columns', name: 'Empresa',                  path: '/empresa',                      id: 'config-empresa' },
+            { icon: 'fa-solid fa-file-contract',    name: 'Términos y condiciones',   path: '/terminos-condiciones',         id: 'terminos-condiciones' },
             { icon: 'fa-solid fa-users-gear',       name: 'Usuarios',                 path: '/gestionar-usuarios',           id: 'config-usuarios' },
             { icon: 'fa-solid fa-envelope',         name: 'Plantillas',               path: '/gestionar-plantillas',         id: 'gestionar-plantillas' },
             { icon: 'fa-solid fa-dollar-sign',      name: 'Valor Dólar',              path: '/gestionar-dolar',              id: 'gestionar-dolar' },

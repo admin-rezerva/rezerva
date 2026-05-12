@@ -15,7 +15,7 @@
         const _pageDesc  = _hl === 'en'
             ? `Terms and conditions for bookings and use of accommodations operated by ${empresa.nombre}.`
             : `Términos y condiciones de reserva y uso de los alojamientos de ${empresa.nombre}.`;
-        const _pageUrl   = (locals.baseUrl || '') + '/terminos-y-condiciones';
+        const _pageUrl   = locals.platformTerminosUrl || ((locals.baseUrl || '') + '/terminos-y-condiciones');
         const _hrefLangCode = (typeof htmlLang !== 'undefined' && htmlLang === 'en') ? 'en' : 'es';
         const _ogLocaleTag  = _hrefLangCode === 'en' ? 'en_US' : 'es_CL';
         const _heroImage    = empresa.websiteSettings?.theme?.heroImageUrl || '';
@@ -43,7 +43,7 @@
         "@type": "WebPage",
         "name": _pageTitle,
         "url": _pageUrl,
-        "isPartOf": { "@type": "WebSite", "name": empresa.nombre, "url": locals.baseUrl || '' }
+        "isPartOf": { "@type": "WebSite", "name": empresa.nombre, "url": (_pageUrl || '').replace(/\/terminos-y-condiciones$/, '') }
     }) %></script>
     <link rel="stylesheet" href="/public/css/website.css">
     <% if (locals.customCSS && locals.customCSS.trim().length > 0) { %>
@@ -73,9 +73,9 @@
             <% } %>
             <p class="text-xs text-gray-500 mb-8">
                 <% if (_hl === 'en') { %>
-                Content is defined by the accommodation operator. The version that applies to your booking appears in your confirmation email.
+                This page combines the general booking terms with the specific conditions defined by <%= empresa.nombre %>. Content is defined by the accommodation operator; the version that applies to your booking appears in your confirmation email.
                 <% } else { %>
-                Los textos son definidos por el operador del alojamiento. Revisa la versión aplicable a tu reserva en la confirmación que recibas por correo.
+                Esta página combina los términos generales de reserva con las condiciones específicas definidas por <%= empresa.nombre %>. Los textos son definidos por el operador del alojamiento; revisa la versión aplicable a tu reserva en la confirmación que recibas por correo.
                 <% } %>
             </p>
             <article class="prose prose-gray max-w-none text-gray-800 space-y-10">
@@ -97,6 +97,30 @@
                     <h2 class="text-xl font-bold text-gray-900 border-b border-gray-200 pb-2 mb-3"><%= sec.titulo || key %></h2>
                     <div class="terminos-seccion text-sm leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_strong]:font-semibold">
                         <%- html %>
+                    </div>
+                </section>
+                <% } %>
+                <%
+                    const espEs = terminos && terminos.condicionesEspecificas;
+                    const espEn = terminos && terminos.condicionesEspecificasEn;
+                    let esp = null;
+                    if (_hl === 'en') {
+                        esp = (espEn && String(espEn.html || '').trim()) ? espEn : ((espEs && String(espEs.html || '').trim()) ? espEs : null);
+                    } else {
+                        esp = (espEs && String(espEs.html || '').trim()) ? espEs : ((espEn && String(espEn.html || '').trim()) ? espEn : null);
+                    }
+                    const espHtml = esp ? String(esp.html || '').trim() : '';
+                    const espTituloRaw = esp ? String(esp.titulo || '').trim() : '';
+                    const espTitulosGenericos = ['Condiciones específicas de la empresa', 'Condiciones específicas', 'Company-specific conditions'];
+                    const espTitulo = espTituloRaw && !espTitulosGenericos.includes(espTituloRaw)
+                        ? espTituloRaw
+                        : (_hl === 'en' ? `Specific conditions - ${empresa.nombre}` : `Condiciones ${empresa.nombre}`);
+                %>
+                <% if (esp && espHtml) { %>
+                <section>
+                    <h2 class="text-xl font-bold text-gray-900 border-b border-gray-200 pb-2 mb-3"><%= espTitulo %></h2>
+                    <div class="terminos-seccion text-sm leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_strong]:font-semibold">
+                        <%- espHtml %>
                     </div>
                 </section>
                 <% } %>

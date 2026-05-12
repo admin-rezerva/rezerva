@@ -1,4 +1,9 @@
-const { renderHomePage, renderContactoPage, renderGuestGuidePage } = require('./website.home.render');
+const {
+    renderHomePage,
+    renderContactoPage,
+    renderGuestGuidePage,
+    renderTerminosCondicionesPage,
+} = require('./website.home.render');
 
 function registerHomeRoutes({ router, db, cacheStaticRoutes, deps }) {
     router.get('/', cacheStaticRoutes, async (req, res) => {
@@ -14,6 +19,10 @@ function registerHomeRoutes({ router, db, cacheStaticRoutes, deps }) {
 
     router.get('/guia-huesped', cacheStaticRoutes, async (req, res) => {
         await renderGuestGuidePage(req, res);
+    });
+
+    router.get('/terminos-y-condiciones', cacheStaticRoutes, async (req, res) => {
+        await renderTerminosCondicionesPage(req, res);
     });
 }
 
