@@ -458,6 +458,132 @@ function _armarDatosTransferenciaTexto(datosBancarios) {
     return lines.join('\n');
 }
 
+function _datosBancariosObjetoLimpio(raw) {
+    const db = raw && typeof raw === 'object' ? raw : {};
+    return {
+        titular: String(db.titular || '').trim(),
+        rut: String(db.rut || '').trim(),
+        banco: String(db.banco || '').trim(),
+        tipoCuenta: String(db.tipoCuenta || '').trim(),
+        numeroCuenta: String(db.numeroCuenta || '').trim(),
+        email: String(db.email || '').trim(),
+    };
+}
+
+function _buildDatosBancariosFilasEmail(dbRaw, idiomaEn) {
+    const d = _datosBancariosObjetoLimpio(dbRaw);
+    const en = idiomaEn === 'en';
+    const rows = [];
+    const push = (label, val) => {
+        if (!val) return;
+        rows.push(
+            `<tr><td style="padding:5px 12px 5px 0;font-size:13px;color:#64748b;vertical-align:top;width:40%;">${_escapeHtmlText(label)}</td>`
+            + `<td style="padding:5px 0;font-size:14px;color:#0f172a;font-weight:600;">${_escapeHtmlText(val)}</td></tr>`
+        );
+    };
+    push(en ? 'Account holder' : 'Titular', d.titular);
+    push(en ? 'Tax ID (RUT)' : 'RUT', d.rut);
+    push(en ? 'Bank' : 'Banco', d.banco);
+    push(en ? 'Account type' : 'Tipo de cuenta', d.tipoCuenta);
+    push(en ? 'Account number' : 'N° de cuenta', d.numeroCuenta);
+    push(en ? 'Transfer email' : 'Email (transferencia)', d.email);
+    return rows.join('');
+}
+
+function _resumenCuentaTransferUnaLinea(dbRaw) {
+    const d = _datosBancariosObjetoLimpio(dbRaw);
+    const num = d.numeroCuenta ? `N° ${d.numeroCuenta}` : '';
+    const parts = [d.banco, d.tipoCuenta, num, d.titular].filter(Boolean);
+    return parts.join(' · ');
+}
+
+/**
+ * Bloque fijo (plantilla confirmación huésped): abono + datos cuenta. Vacío si no hay depósito activo.
+ */
+function _buildBloqueAbonoTransferenciaHuespedHtml({
+    idiomaEn,
+    depositoCfg,
+    montoAbonoNum,
+    montoAbono,
+    totalFmt,
+    plazoAbono,
+    porcentajeAbonoNum,
+    datosBancariosRaw,
+    depositoNota,
+}) {
+    if (!depositoCfg.activo || !montoAbonoNum || montoAbonoNum <= 0) return '';
+    const en = idiomaEn === 'en';
+    const pctStr = `${porcentajeAbonoNum}%`;
+    let introP;
+    if (depositoCfg.tipo === 'monto_fijo') {
+        introP = en
+            ? `To confirm your booking, transfer <strong>${montoAbono}</strong> (fixed deposit) by <strong>${plazoAbono}</strong>.`
+            : `Para confirmar tu reserva debes transferir <strong>${montoAbono}</strong> (abono fijo configurado para tu estadía) antes del <strong>${plazoAbono}</strong>.`;
+    } else {
+        introP = en
+            ? `To confirm your booking, transfer <strong>${montoAbono}</strong> — <strong>${pctStr}</strong> of the total (<strong>${totalFmt}</strong>) — by <strong>${plazoAbono}</strong>.`
+            : `Para confirmar tu reserva debes transferir <strong>${montoAbono}</strong>, correspondiente al <strong>${pctStr}</strong> del total a pagar (<strong>${totalFmt}</strong>), antes del <strong>${plazoAbono}</strong>.`;
+    }
+    const filas = _buildDatosBancariosFilasEmail(datosBancariosRaw, idiomaEn);
+    const datosTit = en ? 'Bank details' : 'Datos para realizar la transferencia';
+    const sinDatos = en
+        ? 'Bank details are not on file yet; use the contact section of this email to request them.'
+        : 'Los datos de cuenta aún no están cargados en el sistema; escribe al alojamiento usando los datos de contacto de este correo.';
+    const notaHtml = depositoNota
+        ? `<div style="margin:14px 0 0 0;padding:12px 14px;background:#f8fafc;border-radius:8px;font-size:13px;color:#475569;line-height:1.55;">${_escapeHtmlText(depositoNota).replace(/\n/g, '<br>')}</div>`
+        : '';
+    const datosBlock = filas
+        ? `<p style="margin:16px 0 8px 0;font-size:13px;font-weight:700;color:#312e81;">${_escapeHtmlText(datosTit)}</p>`
+        + `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">${filas}</table>`
+        : `<p style="margin:14px 0 0 0;font-size:13px;color:#92400e;line-height:1.55;">${_escapeHtmlText(sinDatos)}</p>`;
+    const title = en ? 'Deposit by bank transfer' : 'Abono por transferencia';
+    const body = `<p style="margin:0;font-size:14px;color:#334155;line-height:1.65;">${introP}</p>${datosBlock}${notaHtml}`;
+    return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0;padding:0;border:0;"><tr><td align="center" style="padding:0 12px 22px 12px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;margin:0 auto;border:1px solid #c7d2fe;border-radius:12px;background:#eef2ff;border-collapse:separate;"><tr><td style="padding:18px 20px;">
+<h3 style="margin:0 0 12px 0;font-size:16px;line-height:1.3;color:#312e81;">${_escapeHtmlText(title)}</h3>
+${body}
+</td></tr></table></td></tr></table>`;
+}
+
+/**
+ * Bloque fijo (plantilla confirmación admin): resumen operativo del abono y cuenta.
+ */
+function _buildBloqueAbonoTransferenciaAdminHtml({
+    idiomaEn,
+    depositoCfg,
+    montoAbonoNum,
+    montoAbono,
+    totalFmt,
+    plazoAbono,
+    porcentajeAbonoNum,
+    datosBancariosRaw,
+}) {
+    if (!depositoCfg.activo || !montoAbonoNum || montoAbonoNum <= 0) return '';
+    const en = idiomaEn === 'en';
+    const pctStr = `${porcentajeAbonoNum}%`;
+    const tipoAbono = depositoCfg.tipo === 'monto_fijo'
+        ? (en ? 'fixed deposit' : 'abono fijo')
+        : (en ? `${pctStr} of total` : `${pctStr} del total`);
+    const resumen = _resumenCuentaTransferUnaLinea(datosBancariosRaw);
+    const p1 = en
+        ? `Deposit requested from the guest: <strong>${montoAbono}</strong> (${tipoAbono}; stay total <strong>${totalFmt}</strong>). Deadline: <strong>${plazoAbono}</strong>.`
+        : `Abono solicitado al huésped: <strong>${montoAbono}</strong> (${tipoAbono}; total estadía <strong>${totalFmt}</strong>). Plazo: <strong>${plazoAbono}</strong>.`;
+    const p2 = resumen
+        ? (en
+            ? `<p style="margin:10px 0 0 0;font-size:14px;color:#334155;line-height:1.55;">Account instructed: <strong>${_escapeHtmlText(resumen)}</strong>.</p>`
+            : `<p style="margin:10px 0 0 0;font-size:14px;color:#334155;line-height:1.55;">Cuenta indicada para la transferencia: <strong>${_escapeHtmlText(resumen)}</strong>.</p>`)
+        : (en
+            ? '<p style="margin:10px 0 0 0;font-size:13px;color:#92400e;">No bank details on file for this company.</p>'
+            : '<p style="margin:10px 0 0 0;font-size:13px;color:#92400e;">No hay datos bancarios cargados en la ficha de la empresa.</p>');
+    const title = en ? 'Bank transfer (guest deposit)' : 'Transferencia (abono huésped)';
+    return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0;padding:0;border:0;"><tr><td align="center" style="padding:0 12px 22px 12px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;margin:0 auto;border:1px solid #fde68a;border-radius:12px;background:#fffbeb;border-collapse:separate;"><tr><td style="padding:16px 18px;">
+<h3 style="margin:0 0 10px 0;font-size:15px;line-height:1.3;color:#78350f;">${_escapeHtmlText(title)}</h3>
+<p style="margin:0;font-size:14px;color:#334155;line-height:1.6;">${p1}</p>
+${p2}
+</td></tr></table></td></tr></table>`;
+}
+
 function _htmlToTextLite(html) {
     return String(html || '')
         .replace(/<br\s*\/?>/gi, '\n')
@@ -775,6 +901,27 @@ async function construirVariablesDesdeReserva(empresaId, row, extras = {}) {
         : plazo.toLocaleString('es-CL', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
     const datosTransferencia = _armarDatosTransferenciaTexto(ctx.configuracion?.datosBancarios);
     const depositoNota = _htmlToTextLite(ctx.configuracion?.websiteSettings?.booking?.depositoNotaHtml);
+    const bloqueAbonoTransferenciaHuespedHtml = _buildBloqueAbonoTransferenciaHuespedHtml({
+        idiomaEn: idiomaPorDefecto === 'en',
+        depositoCfg,
+        montoAbonoNum,
+        montoAbono,
+        totalFmt: precio,
+        plazoAbono,
+        porcentajeAbonoNum,
+        datosBancariosRaw: ctx.configuracion?.datosBancarios,
+        depositoNota,
+    });
+    const bloqueAbonoTransferenciaAdminHtml = _buildBloqueAbonoTransferenciaAdminHtml({
+        idiomaEn: idiomaPorDefecto === 'en',
+        depositoCfg,
+        montoAbonoNum,
+        montoAbono,
+        totalFmt: precio,
+        plazoAbono,
+        porcentajeAbonoNum,
+        datosBancariosRaw: ctx.configuracion?.datosBancarios,
+    });
     const linkPago = '';
     const horaLlegadaEstimada = extras.horaLlegadaEstimada != null
         ? String(extras.horaLlegadaEstimada).trim().slice(0, 120)
@@ -972,6 +1119,10 @@ async function construirVariablesDesdeReserva(empresaId, row, extras = {}) {
         DESGLOSE_PRECIO_HTML: desglosePrecioHtml,
         desglosePrecioTexto,
         DESGLOSE_PRECIO_TEXTO: desglosePrecioTexto,
+        bloqueAbonoTransferenciaHuespedHtml,
+        BLOQUE_ABONO_TRANSFERENCIA_HTML: bloqueAbonoTransferenciaHuespedHtml,
+        bloqueAbonoTransferenciaAdminHtml,
+        BLOQUE_ABONO_TRANSFERENCIA_ADMIN_HTML: bloqueAbonoTransferenciaAdminHtml,
     };
 }
 

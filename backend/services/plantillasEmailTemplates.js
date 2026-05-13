@@ -256,6 +256,7 @@ function renderAdminBodyContent(tarjetasHtml) {
     <p style="color:#475569;font-size:15px;line-height:1.5;margin:0 0 24px 0;">Se registró una nueva reserva desde el sitio público. Revisa los datos operativos antes de contactar al huésped.</p>
     ${renderAdminResumenReserva()}
     [DESGLOSE_PRECIO_HTML]
+    [BLOQUE_ABONO_TRANSFERENCIA_ADMIN_HTML]
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;padding:0;border:0;"><tr><td align="center" style="padding:24px 12px 24px 12px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;margin:0 auto;border:1px solid #e2e8f0;border-radius:12px;background:#ffffff;border-collapse:separate;">
       <tr><td style="padding:16px 18px;color:#334155;font-size:14px;line-height:1.6;">
@@ -295,6 +296,7 @@ function renderBodyContent(tarjetasHtml) {
     ${renderResumenAlojamiento()}
     ${renderIngresoYMapa()}
     [DESGLOSE_PRECIO_HTML]
+    [BLOQUE_ABONO_TRANSFERENCIA_HTML]
     ${tarjetasHtml}
     ${renderAcciones()}
   </td>

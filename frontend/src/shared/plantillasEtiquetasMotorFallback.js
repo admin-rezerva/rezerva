@@ -22,6 +22,8 @@ export const ETIQUETAS_MOTOR_FALLBACK = [
     { tag: '[ENLACES_FOTOS_ALOJAMIENTOS_HTML]', descripcion: 'Solo reserva grupo: párrafo HTML con enlace ver fotos por cada alojamiento' },
     { tag: '[DESGLOSE_PRECIO_HTML]', descripcion: 'Tabla HTML 2 columnas con desglose de precio' },
     { tag: '[DESGLOSE_PRECIO_TEXTO]', descripcion: 'Desglose de precio en texto plano' },
+    { tag: '[BLOQUE_ABONO_TRANSFERENCIA_HTML]', descripcion: 'Confirmación huésped: abono y datos bancarios (plantilla fija); vacío sin depósito' },
+    { tag: '[BLOQUE_ABONO_TRANSFERENCIA_ADMIN_HTML]', descripcion: 'Confirmación admin: abono solicitado y cuenta (plantilla fija); vacío sin depósito' },
     { tag: '[EMPRESA_GOOGLE_MAPS_LINK]', descripcion: 'URL de Google Maps declarada en la empresa (configuración)' },
     { tag: '[COMENTARIOS_HUESPED]', descripcion: 'Observaciones del huésped en checkout (si se informaron)' },
     { tag: '[COMENTARIOS_HUESPED_ADMIN]', descripcion: 'Observaciones del huésped o texto sin comentarios para notificación interna' },

@@ -132,8 +132,8 @@ function renderDatosBancarios() {
         <fieldset class="border p-4 rounded-md">
             <legend class="px-2 font-semibold text-gray-700">Datos para Transferencia Bancaria</legend>
             <p class="text-sm text-gray-500 mt-2 mb-4">
-                Se incluyen automáticamente en los correos de confirmación de reservas creadas por el asistente virtual (IA).
-                Usa la etiqueta <code class="bg-gray-100 px-1 rounded text-xs">[DATOS_TRANSFERENCIA]</code> en tus plantillas de email.
+                Se incluyen en los correos de confirmación de reserva (plantilla fija huésped y administrador) cuando hay abono configurado,
+                y en plantillas personalizadas con la etiqueta <code class="bg-gray-100 px-1 rounded text-xs">[DATOS_TRANSFERENCIA]</code>.
             </p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
