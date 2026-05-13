@@ -184,6 +184,40 @@ function _normalizarTextoPlantillaRender(texto) {
 
 const HTML_EMAIL_MARKER = '[[HTML_EMAIL]]';
 
+/**
+ * Plantillas guardadas en PG antes de nuevas etiquetas: el nombre puede no
+ * disparar `inferirModoPlantilla`, pero el HTML sigue siendo el layout estándar.
+ */
+function _textoPareceLayoutConfirmacionAdmin(texto) {
+    const s = String(texto || '');
+    return s.includes(HTML_EMAIL_MARKER)
+        && s.includes('[DESGLOSE_PRECIO_HTML]')
+        && s.includes('Abono requerido:');
+}
+
+function _textoPareceLayoutConfirmacionHuesped(texto) {
+    const s = String(texto || '');
+    if (!s.includes(HTML_EMAIL_MARKER) || !s.includes('[DESGLOSE_PRECIO_HTML]')) return false;
+    if (s.includes('Abono requerido:')) return false;
+    return s.includes('[LINK_CONFIRMACION_PUBLICA]') || s.includes('¡Tu reserva está confirmada!');
+}
+
+/** Si el HTML guardado es layout estándar antiguo sin las nuevas etiquetas, insertarlas tras el desglose. */
+function _ensureBloqueAbonoPlaceholdersEnTexto(texto) {
+    let t = String(texto || '');
+    if (!t.includes('[DESGLOSE_PRECIO_HTML]')) return t;
+    if (t.includes('[BLOQUE_ABONO_TRANSFERENCIA_HTML]') || t.includes('[BLOQUE_ABONO_TRANSFERENCIA_ADMIN_HTML]')) {
+        return t;
+    }
+    if (t.includes('Abono requerido:') && t.includes('Estado de pago')) {
+        return t.replace(/(\[DESGLOSE_PRECIO_HTML\])(\s*)/, '$1\n    [BLOQUE_ABONO_TRANSFERENCIA_ADMIN_HTML]\n');
+    }
+    if (t.includes('[LINK_CONFIRMACION_PUBLICA]')) {
+        return t.replace(/(\[DESGLOSE_PRECIO_HTML\])(\s*)/, '$1\n    [BLOQUE_ABONO_TRANSFERENCIA_HTML]\n');
+    }
+    return t;
+}
+
 const textoAHtml = (texto) => {
     if (!texto) return '';
     let html = texto.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -216,7 +250,14 @@ function renderCuerpoPlantillaHtml(textoConEtiquetas, emailConfig) {
 
 const procesarPlantilla = async (db, empresaId, plantillaId, datos) => {
     const plantilla = await obtenerPlantilla(db, empresaId, plantillaId);
-    const modoNombre = inferirModoPlantilla(plantilla.nombre || '');
+    let modoNombre = inferirModoPlantilla(plantilla.nombre || '');
+    if (modoNombre === 'generico_html' && plantilla.texto) {
+        if (_textoPareceLayoutConfirmacionAdmin(plantilla.texto)) {
+            modoNombre = 'admin_confirmacion_reserva';
+        } else if (_textoPareceLayoutConfirmacionHuesped(plantilla.texto)) {
+            modoNombre = 'huesped_confirmacion';
+        }
+    }
     const instruccionesTarjetas = plantilla.emailConfig?.tarjetasCorreo || plantilla.emailConfig?.tarjetasConfirmacionHuesped || [];
     const fixedTemplate = modoNombre === 'admin_confirmacion_reserva'
         ? generarPlantillaConfirmacionAdminHtml({
@@ -229,7 +270,8 @@ const procesarPlantilla = async (db, empresaId, plantillaId, datos) => {
                 instruccionesTarjetas,
             })
             : null);
-    const textoBase = fixedTemplate?.texto || plantilla.texto;
+    const textoBaseRaw = fixedTemplate?.texto || plantilla.texto;
+    const textoBase = _ensureBloqueAbonoPlaceholdersEnTexto(textoBaseRaw);
     const textoConEtiquetas = _normalizarTextoPlantillaRender(reemplazarEtiquetas(textoBase, datos));
     const asuntoBase = fixedTemplate?.asunto || ((plantilla.asunto && String(plantilla.asunto).trim()) ? plantilla.asunto : plantilla.nombre);
     const asuntoFinal = _normalizarTextoPlantillaRender(reemplazarEtiquetas(asuntoBase, datos));

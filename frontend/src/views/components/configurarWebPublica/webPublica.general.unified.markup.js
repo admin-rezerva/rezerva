@@ -84,6 +84,15 @@ function unifyBasicSection(empresa, general, booking) {
                 </div>
                 <div class="border border-gray-200 rounded-lg p-3 bg-gray-50">
                     <p class="text-xs font-semibold text-gray-700 mb-2">Depósito / abono para reserva web</p>
+                    <p class="text-xs text-gray-600 mb-3 leading-relaxed">
+                        Define cuánto debe pagar el huésped al reservar en el sitio público y en cuántas horas.
+                        Ese monto alimenta la página de confirmación, el correo de confirmación (bloque de transferencia)
+                        y el estado &quot;Pendiente de abono&quot;. Los <strong>datos de cuenta bancaria</strong> van en
+                        <span class="font-medium text-gray-800">Configuración empresa</span> (no aquí).
+                        <strong>Texto legal del abono</strong> se muestra bajo los datos de transferencia en el correo si lo rellenas.
+                        <strong>Política operativa de garantía</strong> y <strong>nota interna</strong> son recordatorios para el equipo
+                        (p. ej. validar comprobante antes de marcar la reserva confirmada); no se envían al huésped.
+                    </p>
                     <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
                         <label class="inline-flex items-center gap-2 text-sm text-gray-700">
                             <input type="checkbox" id="deposito-activo" ${depActivo ? 'checked' : ''}>
