@@ -6,6 +6,8 @@
 
 **Plan activo (revisión flujo y formato):** [`plan-accion-correos-flujo-plantillas.md`](plan-accion-correos-flujo-plantillas.md).
 
+**Abono / depósito (canales, textos, orden en UI — sin código):** [`producto-abono-deposito-canales-y-ui.md`](producto-abono-deposito-canales-y-ui.md).
+
 **HTML en plantillas:** prefijo `[[HTML_EMAIL]]` al inicio del cuerpo (o `email_config.cuerpoEsHtml: true`) para no escapar etiquetas; motor sigue sustituyendo `[ETIQUETAS]`. IA: `backend/services/ai/prompts/plantillasIa.js`.
 
 **Presets listos para pegar (tablas + inline CSS, etiquetas motor):** [`plantillas-preset-html-gemini-react-port.md`](plantillas-preset-html-gemini-react-port.md) — portación desde diseño tipo React/Tailwind (no usar JSX en correo).
