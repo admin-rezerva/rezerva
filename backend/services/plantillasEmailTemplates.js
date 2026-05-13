@@ -257,17 +257,6 @@ function renderAdminBodyContent(tarjetasHtml) {
     ${renderAdminResumenReserva()}
     [DESGLOSE_PRECIO_HTML]
     [BLOQUE_ABONO_TRANSFERENCIA_ADMIN_HTML]
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;padding:0;border:0;"><tr><td align="center" style="padding:24px 12px 24px 12px;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;margin:0 auto;border:1px solid #e2e8f0;border-radius:12px;background:#ffffff;border-collapse:separate;">
-      <tr><td style="padding:16px 18px;color:#334155;font-size:14px;line-height:1.6;">
-        <strong style="display:block;color:#1e293b;font-size:16px;margin:0 0 8px 0;">Estado de pago</strong>
-        [ESTADO_PAGO]<br>
-        Abono requerido: [MONTO_ABONO]<br>
-        Saldo pendiente: [SALDO_PENDIENTE]<br>
-        Plazo de abono: [PLAZO_ABONO]
-      </td></tr>
-      </table>
-    </td></tr></table>
     ${renderAdminComentario()}
     ${tarjetasHtml}
     ${renderAdminAcciones()}

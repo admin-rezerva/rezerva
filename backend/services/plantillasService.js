@@ -190,15 +190,21 @@ const HTML_EMAIL_MARKER = '[[HTML_EMAIL]]';
  */
 function _textoPareceLayoutConfirmacionAdmin(texto) {
     const s = String(texto || '');
-    return s.includes(HTML_EMAIL_MARKER)
-        && s.includes('[DESGLOSE_PRECIO_HTML]')
-        && s.includes('Abono requerido:');
+    if (!s.includes(HTML_EMAIL_MARKER) || !s.includes('[DESGLOSE_PRECIO_HTML]')) return false;
+    if (s.includes('[LINK_CONFIRMACION_PUBLICA]')) return false;
+    return s.includes('Nueva reserva confirmada')
+        || (s.includes('[LINK_GESTION_RESERVA]') && s.includes('Ver reserva en el panel'))
+        || (s.includes('Abono requerido:') && s.includes('Estado de pago'));
 }
 
 function _textoPareceLayoutConfirmacionHuesped(texto) {
     const s = String(texto || '');
     if (!s.includes(HTML_EMAIL_MARKER) || !s.includes('[DESGLOSE_PRECIO_HTML]')) return false;
-    if (s.includes('Abono requerido:')) return false;
+    if (s.includes('Nueva reserva confirmada')) return false;
+    if (s.includes('[LINK_GESTION_RESERVA]') && s.includes('Ver reserva en el panel') && !s.includes('[LINK_CONFIRMACION_PUBLICA]')) {
+        return false;
+    }
+    if (s.includes('Abono requerido:') && s.includes('Estado de pago')) return false;
     return s.includes('[LINK_CONFIRMACION_PUBLICA]') || s.includes('¡Tu reserva está confirmada!');
 }
 
@@ -209,7 +215,9 @@ function _ensureBloqueAbonoPlaceholdersEnTexto(texto) {
     if (t.includes('[BLOQUE_ABONO_TRANSFERENCIA_HTML]') || t.includes('[BLOQUE_ABONO_TRANSFERENCIA_ADMIN_HTML]')) {
         return t;
     }
-    if (t.includes('Abono requerido:') && t.includes('Estado de pago')) {
+    const esAdminLegacy = t.includes('Abono requerido:') && t.includes('Estado de pago');
+    const esAdminShell = t.includes('[LINK_GESTION_RESERVA]') && t.includes('Ver reserva en el panel') && !t.includes('[LINK_CONFIRMACION_PUBLICA]');
+    if (esAdminLegacy || esAdminShell) {
         return t.replace(/(\[DESGLOSE_PRECIO_HTML\])(\s*)/, '$1\n    [BLOQUE_ABONO_TRANSFERENCIA_ADMIN_HTML]\n');
     }
     if (t.includes('[LINK_CONFIRMACION_PUBLICA]')) {
