@@ -144,10 +144,16 @@ function _buildEmpresaLogoEmailHtml(logoUrl, empresaNombre) {
 }
 
 /**
- * URL pública del sitio SSR de la empresa (reseñas, home).
+ * URL pública del sitio SSR de la empresa (reseñas, home, confirmación en correo).
+ * Si hay subdominio de plataforma (`{sub}.rezerva.cl`), va antes que un dominio custom
+ * en websiteSettings: el motor de reservas y páginas legales SSR viven en el host Rezerva.
  */
 async function obtenerBaseUrlPublica(empresaId) {
     const ctx = await _obtenerEmpresaEmailContext(empresaId);
+    const platformOrigin = buildPlatformTenantOrigin(ctx);
+    if (platformOrigin) {
+        return platformOrigin;
+    }
     const ws = ctx.configuracion.websiteSettings || {};
     const sub = ws.general?.subdomain || '';
     const domain = (ws.general?.domain || '').trim().toLowerCase();
